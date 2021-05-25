@@ -51,13 +51,16 @@ data(avg_counts,package="SBF")
 # SBF call
 sbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
          transformData = FALSE)
+         
 # SBF call using correlation matrix
 sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-transformData = TRUE)
+              transformData = TRUE)
+              
 # A-SBF call
 asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-transformData = FALSE)
+           transformData = FALSE)
+           
 # A-SBF call using correlation matrix
 asbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-transformData = TRUE)
+               transformData = TRUE)
 }
