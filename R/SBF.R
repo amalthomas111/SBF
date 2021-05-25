@@ -25,15 +25,18 @@
 #' # SBF call
 #' sbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
 #'          transformData = FALSE)
+#'          
 #' # SBF call using correlation matrix
 #' sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-#' transformData = TRUE)
+#'               transformData = TRUE)
+#'               
 #' # A-SBF call
 #' asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-#' transformData = FALSE)
+#'            transformData = FALSE)
+#'            
 #' # A-SBF call using correlation matrix
 #' asbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-#' transformData = TRUE)
+#'                transformData = TRUE)
 SBF <- function(avg_counts = NULL, check_col_matching = TRUE,
                 colNameSep="_", colIndex = NULL,
                 approximate = TRUE, transformData = FALSE,verbose =FALSE){

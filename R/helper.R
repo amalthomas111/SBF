@@ -9,12 +9,18 @@
 #' @export
 #'
 #' @examples
+#' # load dataset
 #' data(avg_counts,package="SBF")
+#' # call sbf
 #' sbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-#' transformData = FALSE,verbose = FALSE)
-#' calcDecompError(avg_counts,sbf$sigma,sbf$u,sbf$v)
+#'          transformData = FALSE,verbose = FALSE)
+#'          
+#' # calcualte decomp error
+#' calcDecompError(avg_counts,sbf$sigma,sbf$u,sbf$v)$error
+#' 
+#' # e.g 2
 #' sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-#' transformData = TRUE,verbose = FALSE)
+#'               transformData = TRUE,verbose = FALSE)
 #' calcDecompError(avg_counts,sbf.cor$sigma,sbf.cor$u,sbf.cor$v)
 calcDecompError <- function(matrix.list.start,sig_i,u_i,v_i){
   decomp.error <- 0
