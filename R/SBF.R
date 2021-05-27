@@ -78,7 +78,8 @@ SBF <- function(avg_counts = NULL, check_col_matching = TRUE,
     V <- ev$vectors
     B = sigma = sigma.ortho = U = U.ortho = list()
     for(species in species.names){
-      B[[species]] <- as.matrix(avg_counts[[species]]) %*% solve(t(V))
+      #B[[species]] <- as.matrix(avg_counts[[species]]) %*% solve(t(V))
+      B[[species]] <- as.matrix(avg_counts[[species]]) %*% V
       sigma[[species]] <- sqrt(colSums(B[[species]]^2))
       U[[species]] <- sweep(B[[species]],2,sigma[[species]],"/")
       if(verbose){
