@@ -4,12 +4,12 @@
 \alias{calcDecompError}
 \title{Calculate decomposition error (Forbenius norm)}
 \usage{
-calcDecompError(matrix.list.start, sig_i, u_i, v_i)
+calcDecompError(matrix_initial, delta_i, u_i, v_i)
 }
 \arguments{
-\item{matrix.list.start}{list with Di matrix}
+\item{matrix_initial}{list with initial Di matrices}
 
-\item{sig_i}{sigma values computed using SBF/A-SBF function}
+\item{delta_i}{delta values computed using SBF/A-SBF function}
 
 \item{u_i}{Ui values computed using SBF/A-SBF function}
 
@@ -25,14 +25,15 @@ Calculate decomposition error (Forbenius norm)
 # load dataset
 avg_counts <- SBF::avg_counts
 # call sbf
-sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-           transformData = FALSE, verbose = FALSE)
+sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+           transform_matrix = FALSE, verbose = FALSE)
 
 # calculate decomposition error
-calcDecompError(avg_counts,sbf$sigma,sbf$u,sbf$v)$error
+decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 
 # e.g. 2
-sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-               transformData = TRUE, verbose = FALSE)
-calcDecompError(avg_counts,sbf.cor$sigma,sbf.cor$u,sbf.cor$v)
+asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+               transform_matrix = TRUE, verbose = FALSE)
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+                               asbf_cor$v)
 }

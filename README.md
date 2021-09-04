@@ -48,8 +48,8 @@ names(avg_counts[["Homo_sapiens"]])
 ```
 # compute SBF factorization
 avg_counts <- SBF::avg_counts
-sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-           transformData = FALSE)
+sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+           transform_matrix = FALSE)
 ```
 `?SBF` help function shows all arguments for the SBF call.
 
@@ -58,8 +58,8 @@ sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
 ```
 # SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
-sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-               transformData = TRUE)
+sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+               transform_matrix = TRUE)
 ```
 
 #### Approximate SBF (A-SBF) computation
@@ -67,8 +67,10 @@ sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
 ```
 # A-SBF call
 avg_counts <- SBF::avg_counts
-asbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = TRUE,
-            transformData = FALSE)
+asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
+            transform_matrix = FALSE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u, asbf$v)
 ````
 
 #### Approximate SBF (A-SBF) computation based on inter-sample correlation
@@ -76,8 +78,11 @@ asbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = TRUE,
 ````
 # A-SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
-asbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = TRUE,
-                transformData = TRUE)
+asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
+                transform_matrix = TRUE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+                                asbf_cor$v)
 ````
 
 ### Contacts ###

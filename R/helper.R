@@ -1,7 +1,7 @@
 #' Calculate decomposition error (Forbenius norm)
 #'
-#' @param matrix.list.start list with Di matrix
-#' @param sig_i sigma values computed using SBF/A-SBF function
+#' @param matrix_initial list with initial Di matrices
+#' @param delta_i delta values computed using SBF/A-SBF function
 #' @param u_i  Ui values computed using SBF/A-SBF function
 #' @param v_i V computed using SBF/A-SBF function
 #'
@@ -12,28 +12,28 @@
 #' # load dataset
 #' avg_counts <- SBF::avg_counts
 #' # call sbf
-#' sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-#'            transformData = FALSE, verbose = FALSE)
+#' sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+#'            transform_matrix = FALSE, verbose = FALSE)
 #'
 #' # calculate decomposition error
-#' calcDecompError(avg_counts,sbf$sigma,sbf$u,sbf$v)$error
+#' decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 #'
 #' # e.g. 2
-#' sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-#'                transformData = TRUE, verbose = FALSE)
-#' calcDecompError(avg_counts,sbf.cor$sigma,sbf.cor$u,sbf.cor$v)
-calcDecompError <- function(matrix.list.start, sig_i, u_i, v_i) {
-    decomp.error <- 0
-    matrix.list.new <- list()
-    for (species in names(matrix.list.start)) {
-        if (length(sig_i[[species]]) == 1)
-            phi <- as.matrix(diag(as.matrix(sig_i[[species]])))
-        else phi <- as.matrix(diag(sig_i[[species]]))
-        matrix.list.new[[species]] <- as.matrix(u_i[[species]]) %*% phi %*%
+#' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+#'                transform_matrix = TRUE, verbose = FALSE)
+#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+#'                                asbf_cor$v)
+calcDecompError <- function(matrix_initial, delta_i, u_i, v_i) {
+    decomp_error <- 0
+    matrix_new <- list()
+    for (mat in names(matrix_initial)) {
+        if (length(delta_i[[mat]]) == 1)
+            phi <- as.matrix(diag(as.matrix(delta_i[[mat]])))
+        else phi <- as.matrix(diag(delta_i[[mat]]))
+        matrix_new[[mat]] <- as.matrix(u_i[[mat]]) %*% phi %*%
                                                 as.matrix(t(v_i))
-        delta <- as.matrix(matrix.list.start[[species]]) -
-                            matrix.list.new[[species]]
-        decomp.error <- decomp.error + norm(delta, type = "F")^2
+        delta <- as.matrix(matrix_initial[[mat]]) - matrix_new[[mat]]
+        decomp_error <- decomp_error + norm(delta, type = "F")^2
     }
-    return(list(error = decomp.error))
+    return(decomp_error)
 }

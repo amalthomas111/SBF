@@ -6,17 +6,17 @@
 Approximate Shared Basis Factorization (A-SBF)}
 \usage{
 SBF(
-  avg_counts = NULL,
+  matrix_list = NULL,
   check_col_matching = TRUE,
-  colNameSep = "_",
-  colIndex = NULL,
+  col_sep = "_",
+  col_index = NULL,
   approximate = TRUE,
-  transformData = FALSE,
+  transform_matrix = FALSE,
   verbose = FALSE
 )
 }
 \arguments{
-\item{avg_counts}{A list containing Di matrices for joint matrix
+\item{matrix_list}{A list containing Di matrices for joint matrix
 factorization. Column names of each Di matrix may or may not have information
 about tissue or cell type.}
 
@@ -24,25 +24,25 @@ about tissue or cell type.}
 cell type and one-to-one correspondence of tissue types across species has to
 be checked, set this parameter to be TRUE. Otherwise, set it to FALSE.}
 
-\item{colNameSep}{separator in column names to separate different fields.
+\item{col_sep}{separator in column names to separate different fields.
 E.g. for column names 'hsapiens_brain', 'hsapiens_heart' etc., the separator
 is underscore. Set it to NULL if column matching across species has to be
 performed and there is no separator in the column names.
 Only checked if check_col_matching = TRUE. Default underscore.}
 
-\item{colIndex}{If a separator separates information in column names,
-the colIndex is the index in the column name corresponding to tissue or
-cell type. E.g. for column name 'hsapiens_brain', colIndex is 2.
-Only checked if check_col_matching = TRUE. Default NULL}
+\item{col_index}{If a separator separates information in column names,
+the col_index is the index in the column name corresponding to tissue or
+cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
+Only checked if check_col_matching = TRUE. Default NULL.}
 
-\item{approximate}{TRUE will compute A-SBF. Default TRUE}
+\item{approximate}{TRUE will compute A-SBF. Default TRUE.}
 
-\item{transformData}{if TRUE, then Di will be transformed to compute
+\item{transform_matrix}{if TRUE, then Di will be transformed to compute
 correlation matrix, and V is computed based on this instead of
 Di^TDi. An unbiased estimate of covariance (denominator n-1) is
-used for the computing correlation. Default FALSE}
+used for the computing correlation. Default FALSE.}
 
-\item{verbose}{if TRUE print verbose lines. Default FALSE}
+\item{verbose}{if TRUE print verbose lines. Default FALSE.}
 }
 \value{
 
@@ -54,21 +54,26 @@ Approximate Shared Basis Factorization (A-SBF)
 \examples{
 # SBF call
 avg_counts <- SBF::avg_counts
-sbf <- SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-         transformData = FALSE)
+sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+           transform_matrix = FALSE)
 
 # SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
-sbf.cor <- SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-              transformData = TRUE)
+sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+               transform_matrix = TRUE)
 
 # A-SBF call
 avg_counts <- SBF::avg_counts
-asbf <- SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-           transformData = FALSE)
+asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
+            transform_matrix = FALSE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u, asbf$v)
 
 # A-SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
-asbf.cor <- SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-               transformData = TRUE)
+asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
+                transform_matrix = TRUE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+                                asbf_cor$v)
 }
