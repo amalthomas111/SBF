@@ -1,8 +1,9 @@
 ## SBF: A R package for **S**hared **B**asis **F**actorization
 
-**S**hared **B**asis **F**actorization (SBF) is joint matrix diagonalization
-approach we developed. Approximate Shared Basis Factorization (A-SBF) is
-an extention of the SBF approach.
+**S**hared **B**asis **F**actorization (SBF) is a joint matrix diagonalization
+approach we developed for cross-species gene expression analysis.
+Approximate Shared Basis Factorization (A-SBF) is an extention of the SBF
+approach.
 
 ### Installation
 ```
