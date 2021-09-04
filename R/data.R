@@ -5,7 +5,7 @@
 #'
 #' @usage data(avg_counts)
 #'
-#' @format An object of class \code{"cross"}; see \code{\link[qtl]{read.cross}}.
+#' @format An object of class \code{'cross'}; see \code{\link[qtl]{read.cross}}.
 #'
 #' @keywords datasets
 #'
