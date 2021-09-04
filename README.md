@@ -36,7 +36,7 @@ nine tissues in five species
 
 ```
 # load sample dataset from SBF package
-data(avg_counts, package = "SBF")
+avg_counts <- SBF::avg_counts
 # dimension of matrices for different species
 sapply(avg_counts)
 # names of different tissue types in humans
@@ -47,7 +47,7 @@ names(avg_counts[["Homo_sapiens"]])
 
 ```
 # compute SBF factorization
-data(avg_counts, package = "SBF")
+avg_counts <- SBF::avg_counts
 sbf = SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
               transformData = FALSE)
 ```
@@ -57,6 +57,7 @@ sbf = SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
 
 ```
 # SBF call using correlation matrix
+avg_counts <- SBF::avg_counts
 sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
                transformData = TRUE)
 ```
@@ -65,6 +66,7 @@ sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
 
 ```
 # A-SBF call
+avg_counts <- SBF::avg_counts
 asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
         transformData = FALSE)
 ````
@@ -73,6 +75,7 @@ asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
 
 ````
 # A-SBF call using correlation matrix
+avg_counts <- SBF::avg_counts
 asbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
             transformData = TRUE)
 ````
