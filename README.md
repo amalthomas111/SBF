@@ -10,11 +10,12 @@ approach.
 ```
 git clone https://github.com/amalthomas111/SBF.git
 # Inside R
-install.packages("<path to SBF>/SBF",repos=NULL)
+library(devtools)
+install("<path to SBF>/SBF")
 # load package
 library(SBF)
 ```
-- install via `devtools`
+- install directly from Github via `devtools`
 ```
 library(devtools)
 devtools::install_github("amalthomas111/SBF")
