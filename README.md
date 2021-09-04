@@ -8,14 +8,15 @@ install.packages("<path to SBF>/SBF",repos=NULL)
 library(SBF)
 ```
 
-If you have trouble with the installation, please contact us via e-mail or
-through a [GitHub issue](https://github.com/amalthomas111/issues).
+Please contact us via e-mail or through
+a [GitHub issue](https://github.com/amalthomas111/issues)
+if there is any trouble with installation.
 
 ### Examples
 
 #### load test dataset
 
-- Load a sample gene expession matrix with mean expression values for different
+- Load a sample gene expression matrix with mean expression values for different
 tissues from different species
 
 ```
@@ -35,7 +36,7 @@ data(avg_counts, package = "SBF")
 sbf = SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
               transformData = FALSE)
 ```
-`?SBF` shows all arguments for the SBF function
+`?SBF` shows all arguments for the SBF function.
 
 #### SBF computation based on inter-sample correlation
 
@@ -79,7 +80,7 @@ the terms of the GNU General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your
 option) any later version.
 
-abismal is distributed in the hope that it will be useful, but WITHOUT
+SBF is distributed in the hope that it will be useful, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
