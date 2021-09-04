@@ -6,10 +6,19 @@ Approximate Shared Basis Factorization (A-SBF) is an extention of the SBF
 approach.
 
 ### Installation
+- Clone from Github
 ```
 git clone https://github.com/amalthomas111/SBF.git
 # Inside R
 install.packages("<path to SBF>/SBF",repos=NULL)
+# load package
+library(SBF)
+```
+- install via `devtools`
+```
+library(devtools)
+devtools::install_github("amalthomas111/SBF")
+# load package
 library(SBF)
 ```
 
