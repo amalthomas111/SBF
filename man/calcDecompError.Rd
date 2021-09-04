@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper.R
 \name{calcDecompError}
 \alias{calcDecompError}
-\title{Title Function to calulate Frobenium norm for decomposition}
+\title{Calculate decomposition error (Forbenius norm)}
 \usage{
 calcDecompError(matrix.list.start, sig_i, u_i, v_i)
 }
@@ -19,20 +19,20 @@ calcDecompError(matrix.list.start, sig_i, u_i, v_i)
 
 }
 \description{
-Title Function to calulate Frobenium norm for decomposition
+Calculate decomposition error (Forbenius norm)
 }
 \examples{
 # load dataset
-data(avg_counts,package="SBF")
+avg_counts <- SBF::avg_counts
 # call sbf
-sbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-         transformData = FALSE,verbose = FALSE)
-         
-# calcualte decomp error
+sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
+           transformData = FALSE, verbose = FALSE)
+
+# calculate decomposition error
 calcDecompError(avg_counts,sbf$sigma,sbf$u,sbf$v)$error
 
-# e.g 2
-sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-              transformData = TRUE,verbose = FALSE)
+# e.g. 2
+sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
+               transformData = TRUE, verbose = FALSE)
 calcDecompError(avg_counts,sbf.cor$sigma,sbf.cor$u,sbf.cor$v)
 }

@@ -7,15 +7,15 @@ Authors@R:
            role = c("aut", "cre"),
            email = "amalthom@usc.edu",
            comment = c(ORCID = "https://orcid.org/0000-0003-4494-4487"))
-Description: This R package implements two joint matrix factorization
-    approaches.The first approach is Shared Basis Factorization (SBF) which
-    is an exact matrix factorization. The second approach is an extension of
-    SBF called Approximated Shared Basis Factorization.
-License: MIT + file LICENSE
+Description: The R package implements Shared Basis Factorization (SBF) and
+    Approximate Shared Basis Factorization (A-SBF). Shared Basis Factorization
+    (SBF) is an exact joint diagonalization approach. Approximate Shared Basis
+    Factorization is an extension of the SBF
+License: GNU General Public License v3.0
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.1.9001
 Depends: 
     R (>= 2.10)
 Imports: 

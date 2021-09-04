@@ -3,18 +3,20 @@
 \docType{data}
 \name{avg_counts}
 \alias{avg_counts}
-\title{Datasets with average expression of 9 tissue types in 5 different species}
+\title{Example dataset with average expression of nine tissues in five
+different species}
 \format{
-An object of class \code{"cross"}; see \code{\link[qtl]{read.cross}}.
+An object of class \code{'cross'}; see \code{\link[qtl]{read.cross}}.
 }
 \usage{
-data(avg_counts)
+avg_counts <- SBF::avg_counts
 }
 \description{
-Datasets with average expression of 9 tissue types in 5 different species
+Example dataset with average expression of nine tissues in five
+different species
 }
 \examples{
-data(avg_counts)
+avg_counts <- SBF::avg_counts
 # species names
 names(avg_counts)
 }

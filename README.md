@@ -2,7 +2,7 @@
 
 **S**hared **B**asis **F**actorization (SBF) is a joint matrix diagonalization
 approach we developed for cross-species gene expression analysis.
-Approximate Shared Basis Factorization (A-SBF) is an extention of the SBF
+Approximate Shared Basis Factorization (A-SBF) is an extension of the SBF
 approach.
 
 ### Installation
@@ -12,7 +12,7 @@ git clone https://github.com/amalthomas111/SBF.git
 # Inside R
 library(devtools)
 install("<path to SBF>/SBF")
-# load package
+# load SBF package
 library(SBF)
 ```
 - install directly from Github via `devtools`
@@ -48,8 +48,8 @@ names(avg_counts[["Homo_sapiens"]])
 ```
 # compute SBF factorization
 avg_counts <- SBF::avg_counts
-sbf = SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
-              transformData = FALSE)
+sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
+           transformData = FALSE)
 ```
 `?SBF` help function shows all arguments for the SBF call.
 
@@ -58,7 +58,7 @@ sbf = SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
 ```
 # SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
-sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
+sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
                transformData = TRUE)
 ```
 
@@ -67,8 +67,8 @@ sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
 ```
 # A-SBF call
 avg_counts <- SBF::avg_counts
-asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-        transformData = FALSE)
+asbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = TRUE,
+            transformData = FALSE)
 ````
 
 #### Approximate SBF (A-SBF) computation based on inter-sample correlation
@@ -76,8 +76,8 @@ asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
 ````
 # A-SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
-asbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
-            transformData = TRUE)
+asbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = TRUE,
+                transformData = TRUE)
 ````
 
 ### Contacts ###

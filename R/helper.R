@@ -1,4 +1,4 @@
-#' Title Function to calulate Frobenium norm for decomposition
+#' Calculate decomposition error (Forbenius norm)
 #'
 #' @param matrix.list.start list with Di matrix
 #' @param sig_i sigma values computed using SBF/A-SBF function
@@ -10,17 +10,17 @@
 #'
 #' @examples
 #' # load dataset
-#' data(avg_counts,package='SBF')
+#' avg_counts <- SBF::avg_counts
 #' # call sbf
-#' sbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-#'          transformData = FALSE,verbose = FALSE)
+#' sbf <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
+#'            transformData = FALSE, verbose = FALSE)
 #'
-#' # calcualte decomp error
+#' # calculate decomposition error
 #' calcDecompError(avg_counts,sbf$sigma,sbf$u,sbf$v)$error
 #'
-#' # e.g 2
-#' sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
-#'               transformData = TRUE,verbose = FALSE)
+#' # e.g. 2
+#' sbf.cor <- SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
+#'                transformData = TRUE, verbose = FALSE)
 #' calcDecompError(avg_counts,sbf.cor$sigma,sbf.cor$u,sbf.cor$v)
 calcDecompError <- function(matrix.list.start, sig_i, u_i, v_i) {
     decomp.error <- 0

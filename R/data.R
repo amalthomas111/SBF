@@ -1,9 +1,10 @@
-#' Datasets with average expression of 9 tissue types in 5 different species
+#' Example dataset with average expression of nine tissues in five
+#' different species
 #'
 #'
 #' @docType data
 #'
-#' @usage data(avg_counts)
+#' @usage avg_counts <- SBF::avg_counts
 #'
 #' @format An object of class \code{'cross'}; see \code{\link[qtl]{read.cross}}.
 #'
@@ -11,7 +12,7 @@
 #'
 #'
 #' @examples
-#' data(avg_counts)
+#' avg_counts <- SBF::avg_counts
 #' # species names
 #' names(avg_counts)
 "avg_counts"
