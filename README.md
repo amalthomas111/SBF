@@ -1,4 +1,8 @@
-## SBF: A R package for **S**hared **B**asis **F**actorization 
+## SBF: A R package for **S**hared **B**asis **F**actorization
+
+**S**hared **B**asis **F**actorization (SBF) is joint matrix diagonalization
+approach we developed. Approximate Shared Basis Factorization (A-SBF) is
+an extention of the SBF approach.
 
 ### Installation
 ```
@@ -9,18 +13,18 @@ library(SBF)
 ```
 
 Please contact us via e-mail or through
-a [GitHub issue](https://github.com/amalthomas111/issues)
+a [GitHub issue](https://github.com/amalthomas111/SBF/issues)
 if there is any trouble with installation.
 
 ### Examples
 
 #### load test dataset
 
-- Load a sample gene expression matrix with mean expression values for different
-tissues from different species
+- SBF package has a sample gene expression data with the mean expression of
+nine tissues in five species
 
 ```
-# check sample dataset in from SBF package
+# load sample dataset from SBF package
 data(avg_counts, package = "SBF")
 # dimension of matrices for different species
 sapply(avg_counts)
@@ -36,12 +40,12 @@ data(avg_counts, package = "SBF")
 sbf = SBF(avg_counts = avg_counts, colIndex = 2, approximate = FALSE,
               transformData = FALSE)
 ```
-`?SBF` shows all arguments for the SBF function.
+`?SBF` help function shows all arguments for the SBF call.
 
 #### SBF computation based on inter-sample correlation
 
 ```
- # SBF call using correlation matrix
+# SBF call using correlation matrix
 sbf.cor = SBF(avg_counts = avg_counts,colIndex = 2, approximate = FALSE,
                transformData = TRUE)
 ```
@@ -54,7 +58,7 @@ asbf = SBF(avg_counts = avg_counts,colIndex = 2, approximate = TRUE,
         transformData = FALSE)
 ````
 
-#### Approximate SBF (A-SBF) computation based on inter-sample
+#### Approximate SBF (A-SBF) computation based on inter-sample correlation
 
 ````
 # A-SBF call using correlation matrix
