@@ -1,6 +1,6 @@
-## SBF: A R package for **S**hared **B**asis **F**actorization
+## SBF: A R package for Shared Basis Factorization
 
-**S**hared **B**asis **F**actorization (SBF) is a joint matrix diagonalization
+Shared Basis Factorization (SBF) is a joint matrix diagonalization
 approach we developed for cross-species gene expression analysis.
 Approximate Shared Basis Factorization (A-SBF) is an extension of the SBF
 approach.
@@ -12,8 +12,6 @@ git clone https://github.com/amalthomas111/SBF.git
 # Inside R
 library(devtools)
 install("<path to SBF>/SBF")
-# load SBF package
-library(SBF)
 ```
 - install directly from Github via `devtools`
 ```
@@ -28,6 +26,13 @@ a [GitHub issue](https://github.com/amalthomas111/SBF/issues)
 if there is any trouble with installation.
 
 ### Examples
+
+###  load SBF package
+
+```
+# load SBF package
+library(SBF)
+```
 
 #### load test dataset
 
@@ -70,7 +75,7 @@ avg_counts <- SBF::avg_counts
 asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
             transform_matrix = FALSE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u, asbf$v)
+decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 ````
 
 #### Approximate SBF (A-SBF) computation based on inter-sample correlation
@@ -81,9 +86,13 @@ avg_counts <- SBF::avg_counts
 asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
                 transform_matrix = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
                                 asbf_cor$v)
 ````
+
+### Dependencies ###
+
+- `data.table`
 
 ### Contacts ###
 

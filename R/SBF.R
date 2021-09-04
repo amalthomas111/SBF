@@ -41,14 +41,14 @@
 #' asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
 #'             transform_matrix = FALSE)
 #' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u, asbf$v)
+#' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 #'
 #' # A-SBF call using correlation matrix
 #' avg_counts <- SBF::avg_counts
 #' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
 #'                 transform_matrix = TRUE)
 #' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 #'                                 asbf_cor$v)
 SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
                 col_index = NULL, approximate = TRUE, transform_matrix = FALSE,

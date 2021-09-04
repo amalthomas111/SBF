@@ -21,7 +21,7 @@
 #' # e.g. 2
 #' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
 #'                transform_matrix = TRUE, verbose = FALSE)
-#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 #'                                asbf_cor$v)
 calcDecompError <- function(matrix_initial, delta_i, u_i, v_i) {
     decomp_error <- 0
