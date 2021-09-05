@@ -2,8 +2,8 @@
 % Please edit documentation in R/SBF.R
 \name{SBF}
 \alias{SBF}
-\title{Function to compute Shared Basis Factorization (SBF) and
-Approximate Shared Basis Factorization (A-SBF)}
+\title{Compute Shared Basis Factorization (SBF) and Approximate Shared Basis
+Factorization (A-SBF)}
 \usage{
 SBF(
   matrix_list = NULL,
@@ -45,10 +45,11 @@ used for the computing correlation. Default FALSE.}
 \item{verbose}{if TRUE print verbose lines. Default FALSE.}
 }
 \value{
-
+a list containing u, v, lambda, and other outputs
+of SBF/A-SBF factorization.
 }
 \description{
-Function to compute Shared Basis Factorization (SBF) and
+\code{SBF} computes Shared Basis Factorization (SBF) and
 Approximate Shared Basis Factorization (A-SBF)
 }
 \examples{
@@ -67,13 +68,13 @@ avg_counts <- SBF::avg_counts
 asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
             transform_matrix = FALSE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u, asbf$v)
+decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 
 # A-SBF call using correlation matrix
 avg_counts <- SBF::avg_counts
 asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
                 transform_matrix = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
                                 asbf_cor$v)
 }

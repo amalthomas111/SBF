@@ -1,4 +1,7 @@
-#' Function to compute Shared Basis Factorization (SBF) and
+#' Compute Shared Basis Factorization (SBF) and Approximate Shared Basis
+#' Factorization (A-SBF)
+#'
+#' \code{SBF} computes Shared Basis Factorization (SBF) and
 #' Approximate Shared Basis Factorization (A-SBF)
 #' @param matrix_list A list containing Di matrices for joint matrix
 #' factorization. Column names of each Di matrix may or may not have information
@@ -22,7 +25,8 @@
 #' used for the computing correlation. Default FALSE.
 #' @param verbose if TRUE print verbose lines. Default FALSE.
 #'
-#' @return
+#' @return a list containing u, v, lambda, and other outputs
+#' of SBF/A-SBF factorization.
 #' @export
 #'
 #' @examples

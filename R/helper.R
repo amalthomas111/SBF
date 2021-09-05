@@ -1,11 +1,13 @@
-#' Calculate decomposition error (Forbenius norm)
+#' Calculate decomposition error
+#'
+#' Function to compute Forbenius norm between two sets of matrix
 #'
 #' @param matrix_initial list with initial Di matrices
 #' @param delta_i delta values computed using SBF/A-SBF function
 #' @param u_i  Ui values computed using SBF/A-SBF function
 #' @param v_i V computed using SBF/A-SBF function
 #'
-#' @return
+#' @return a numeric value for the factorization error
 #' @export
 #'
 #' @examples

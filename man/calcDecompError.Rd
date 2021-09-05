@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper.R
 \name{calcDecompError}
 \alias{calcDecompError}
-\title{Calculate decomposition error (Forbenius norm)}
+\title{Calculate decomposition error}
 \usage{
 calcDecompError(matrix_initial, delta_i, u_i, v_i)
 }
@@ -16,10 +16,10 @@ calcDecompError(matrix_initial, delta_i, u_i, v_i)
 \item{v_i}{V computed using SBF/A-SBF function}
 }
 \value{
-
+a numeric value for the factorization error
 }
 \description{
-Calculate decomposition error (Forbenius norm)
+Function to compute Forbenius norm between two sets of matrix
 }
 \examples{
 # load dataset
@@ -34,6 +34,6 @@ decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 # e.g. 2
 asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
                transform_matrix = TRUE, verbose = FALSE)
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u,
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
                                asbf_cor$v)
 }
