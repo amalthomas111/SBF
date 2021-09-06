@@ -41,9 +41,9 @@ nine tissues in five species
 
 ```
 # load sample dataset from SBF package
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 # dimension of matrices for different species
-sapply(avg_counts)
+sapply(avg_counts, dim)
 # names of different tissue types in humans
 names(avg_counts[["Homo_sapiens"]])
 ```
@@ -52,7 +52,7 @@ names(avg_counts[["Homo_sapiens"]])
 
 ```
 # compute SBF factorization
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
            transform_matrix = FALSE)
 ```
@@ -62,7 +62,7 @@ sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
 
 ```
 # SBF call using correlation matrix
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
                transform_matrix = TRUE)
 ```
@@ -71,7 +71,7 @@ sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
 
 ```
 # A-SBF call
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
             transform_matrix = FALSE)
 # calculate decomposition error
@@ -82,7 +82,7 @@ decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 
 ````
 # A-SBF call using correlation matrix
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
                 transform_matrix = TRUE)
 # calculate decomposition error

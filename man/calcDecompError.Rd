@@ -23,7 +23,7 @@ Function to compute Forbenius norm between two sets of matrix
 }
 \examples{
 # load dataset
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 # call sbf
 sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
            transform_matrix = FALSE, verbose = FALSE)

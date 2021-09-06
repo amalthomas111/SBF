@@ -25,30 +25,30 @@
 #' used for the computing correlation. Default FALSE.
 #' @param verbose if TRUE print verbose lines. Default FALSE.
 #'
-#' @return a list containing u, v, lambda, and other outputs
+#' @return a list containing u, v, lambda, m, and other outputs
 #' of SBF/A-SBF factorization.
 #' @export
 #'
 #' @examples
 #' # SBF call
-#' avg_counts <- SBF::avg_counts
+#' avg_counts <- SBF::TissueExprSpecies
 #' sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
 #'            transform_matrix = FALSE)
 #'
 #' # SBF call using correlation matrix
-#' avg_counts <- SBF::avg_counts
+#' avg_counts <- SBF::TissueExprSpecies
 #' sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
 #'                transform_matrix = TRUE)
 #'
 #' # A-SBF call
-#' avg_counts <- SBF::avg_counts
+#' avg_counts <- SBF::TissueExprSpecies
 #' asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
 #'             transform_matrix = FALSE)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 #'
 #' # A-SBF call using correlation matrix
-#' avg_counts <- SBF::avg_counts
+#' avg_counts <- SBF::TissueExprSpecies
 #' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
 #'                 transform_matrix = TRUE)
 #' # calculate decomposition error
@@ -69,9 +69,9 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
         if (!all(sapply(matrix_list, ncol) == ncol(matrix_list[[names(matrix_list)[1]]])))
             stop(paste0("\nAll matrices should have same number of columns"))
         if (approximate)
-            cat("\nA-SBF is computed")
+            cat("\nA-SBF is computed\n")
         if (transform_matrix)
-            cat("\nV is computed using inter-sample correlation")
+            cat("\nV is computed using inter-sample correlation\n")
         # Compute Di^TDi or Ri^TRi----------------------------------------------
         matrix_names <- names(matrix_list)
         mat_list_trans <- list()
@@ -95,6 +95,9 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
         # Eigen decomposition of S to find V, compute U, delta----------------
         ev <- eigen(mat_list_trans_sum)
         lambda <- ev$values
+        if (!all(duplicated(lambda) == FALSE)) {
+            cat("\n[Warning] Non-defective M matrix\n")
+        }
         V <- ev$vectors
         B <- delta <- U <- U_ortho <- list()
         for (mat in matrix_names) {
@@ -129,11 +132,11 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
             initial_error <- calcDecompError(matrix_list, delta, U_ortho, V)
             out <- list(v = V, lambda = lambda,
                         u = U, u_ortho = U_ortho,
-                        delta = delta, s = mat_list_trans_sum,
+                        delta = delta, m = mat_list_trans_sum,
                         error = initial_error)
         } else {
             out <- list(v = V, lambda = lambda, u = U, delta = delta,
-                        s = mat_list_trans_sum)
+                        m = mat_list_trans_sum)
         }
         return(out)
     } else {

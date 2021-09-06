@@ -45,7 +45,7 @@ used for the computing correlation. Default FALSE.}
 \item{verbose}{if TRUE print verbose lines. Default FALSE.}
 }
 \value{
-a list containing u, v, lambda, and other outputs
+a list containing u, v, lambda, m, and other outputs
 of SBF/A-SBF factorization.
 }
 \description{
@@ -54,24 +54,24 @@ Approximate Shared Basis Factorization (A-SBF)
 }
 \examples{
 # SBF call
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
            transform_matrix = FALSE)
 
 # SBF call using correlation matrix
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
                transform_matrix = TRUE)
 
 # A-SBF call
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
             transform_matrix = FALSE)
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 
 # A-SBF call using correlation matrix
-avg_counts <- SBF::avg_counts
+avg_counts <- SBF::TissueExprSpecies
 asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
                 transform_matrix = TRUE)
 # calculate decomposition error
