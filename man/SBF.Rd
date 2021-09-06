@@ -49,7 +49,7 @@ a list containing u, v, lambda, m, and other outputs
 of SBF/A-SBF factorization.
 }
 \description{
-\code{SBF} computes Shared Basis Factorization (SBF) and
+Function to compute Shared Basis Factorization (SBF) and
 Approximate Shared Basis Factorization (A-SBF)
 }
 \examples{
