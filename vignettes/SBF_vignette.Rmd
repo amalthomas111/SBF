@@ -1,0 +1,104 @@
+---
+title: "SBF vignette"
+author: "Amal Thomas"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{SBF_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Background
+
+Joint matrix factorization facilitates the comparison of
+expression profiles from different species without using gene mapping.
+Transforming gene expression profiles into reduced eigengene space using
+singular value decomposition (SVD) has been shown to capture meaningful
+biological information [@alter2000singular].
+@tamayo2007metagene used a non-negative matrix factorization
+approach to learn a low-dimensional approximation of the
+microarray expression datasets and used the reduced space for comparisons.
+Matrix factorization based methods are commonly used for gene expression
+analysis [@alter2000singular; @tamayo2007metagene].
+Joint matrix factorization facilitates the comparison of 
+expression profiles from different species without using gene mapping.
+An orthology independent matrix factorization framework based on generalized
+singular value decomposition [GSVD; @van1976generalizing] was used
+by @alter2003generalized to compare gene-expression
+profiles from two species.
+This framework was later extended to develop higher-order generalized singular
+value decomposition (HO GSVD) to analyze data from more than two species 
+[@ponnapalli2011higher].
+
+This study developed a joint diagonalization approach called
+approximate shared basis factorization (A-SBF)
+for cross-species expression comparisons.
+This approach extends the exact factorization approach we 
+developed called shared basis factorization (SBF). We discuss
+the details of the two approaches in the following sections.
+
+## Approximate shared basis factorization
+
+Consider a set of $N$ gene expression matrices
+$D_i \in \mathbb{R}^{m_i \times k}$,  %($i={1,\ldots,N}$),
+where each $D_i$ represents the mean expression of $k$
+tissues (columns) in species $i$ with $m_i$ genes (rows) annotated for
+that species.
+The $p\mbox{-th}$ column of each $D_i$ matrices correspond
+to the average gene-expression profile of an analogous tissue representing
+a similar phenotype across species.
+The space shared by $N$ species is learned using a joint diagonalization
+approach called approximate shared basis factorization (A-SBF).
+A-SBF factorization is defined as
+
+\begin{align*}
+    D_1 &= U_1\Delta_1V^T + \epsilon_1, \\
+    D_2 &= U_2\Delta_2V^T + \epsilon_2, \\
+     & \vdots \\
+    D_N &= U_N\Delta_NV^T + \epsilon_N.
+\end{align*}
+
+Each $U_i \in \mathbb{R}^{m_i \times k}$ is a species-specific left basis
+matrix with orthonormal columns (eigengenes),
+$\Delta_i \in \mathbb{R}^{k \times k}$ is a diagonal matrix with positive
+values $\Delta_{ik}$ and $V$ is a non-singular square matrix.
+The right basis matrix $V$ is identical in all the $N$ matrix factorizations
+and defines the common space shared by all species.
+
+```{r setup}
+# load SBF package
+library(SBF)
+```
+
+Lets load SBF package's in-built gene expression dataset. The dataset contains
+average gene expression profile of five similar tissues in three species.
+```{r}
+# load dataset
+avg_counts <- SBF::TissueExprSpecies
+# check the names of species
+names(avg_counts)
+```
+
+The number of genes annotated in different species are different. As a result,
+the number of rows (genes) in the expression data will be different for
+different species.
+
+```{r}
+sapply(avg_counts, dim)
+```
+
+## References

@@ -21,3 +21,7 @@ Depends:
 Imports: 
     rlang,
     data.table
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
