@@ -93,6 +93,11 @@ avg_counts <- SBF::TissueExprSpecies
 names(avg_counts)
 ```
 
+```{r}
+# head for first species
+avg_counts[[names(avg_counts)[1]]][1:5,1:5]
+```
+
 The number of genes annotated in different species are different. As a result,
 the number of rows (genes) in the expression data will be different for
 different species.
