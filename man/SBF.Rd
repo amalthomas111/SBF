@@ -10,6 +10,7 @@ SBF(
   check_col_matching = TRUE,
   col_sep = "_",
   col_index = NULL,
+  weighted = FALSE,
   approximate = TRUE,
   transform_matrix = FALSE,
   verbose = FALSE
@@ -34,6 +35,9 @@ Only checked if check_col_matching = TRUE. Default underscore.}
 the col_index is the index in the column name corresponding to tissue or
 cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
 Only checked if check_col_matching = TRUE. Default NULL.}
+
+\item{weighted}{If TRUE each Di^TDi is scaled using inverse variance weights
+Default FALSE.}
 
 \item{approximate}{TRUE will compute A-SBF. Default TRUE.}
 

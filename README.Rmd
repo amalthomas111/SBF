@@ -1,138 +1,133 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
 ## SBF: A R package for Shared Basis Factorization
 
 Shared Basis Factorization (SBF) is a joint matrix diagonalization
 approach we developed for cross-species gene expression analysis.
-Approximate Shared Basis Factorization (A-SBF) is an extension of the
-SBF approach.
+Approximate Shared Basis Factorization (A-SBF) is an extension of the SBF
+approach.
 
 ### Installation
-
--   Clone from Github
-
-``` r
+- Clone from Github
+```r
 git clone https://github.com/amalthomas111/SBF.git
 # Inside R
 library(devtools)
 install("<path to SBF>/SBF")
 ```
-
--   install directly from Github via `devtools`
-
-``` r
+- install directly from Github via `devtools`
+```r
 library(devtools)
 devtools::install_github("amalthomas111/SBF")
 # load package
 library(SBF)
 ```
 
-Please contact us via e-mail or through a [GitHub
-issue](https://github.com/amalthomas111/SBF/issues) if there is any
-trouble with installation.
+Please contact us via e-mail or through
+a [GitHub issue](https://github.com/amalthomas111/SBF/issues)
+if there is any trouble with installation.
 
 ### Quick demo
 
-### load SBF package
+###  load SBF package
 
-``` r
+```{r}
 # load SBF package
 library(SBF)
 ```
 
 #### load test dataset
 
--   SBF package has a sample gene expression data with the mean
-    expression of nine tissues in five species
+- SBF package has a sample gene expression data with the mean expression of
+nine tissues in five species
 
-``` r
+```{r}
 # load sample dataset from SBF package
 avg_counts <- SBF::TissueExprSpecies
 # dimension of matrices for different species
 sapply(avg_counts, dim)
-#>      Homo_sapiens Macaca_mulatta Mus_musculus
-#> [1,]        58676          30807        54446
-#> [2,]            5              5            5
 # names of different tissue types in humans
 names(avg_counts[["Homo_sapiens"]])
-#> [1] "hsapiens_brain"  "hsapiens_heart"  "hsapiens_kidney" "hsapiens_liver" 
-#> [5] "hsapiens_testis"
 ```
 
 #### SBF computation
 
-``` r
+```{r}
 # compute SBF factorization
 avg_counts <- SBF::TissueExprSpecies
 sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
            transform_matrix = FALSE)
 ```
-
 `?SBF` help function shows all arguments for the SBF call.
 
 #### SBF computation based on inter-sample correlation
 
-``` r
+```{r}
 # SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
 sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
                transform_matrix = TRUE)
-#> 
-#> V is computed using inter-sample correlation
 ```
 
 #### Approximate SBF (A-SBF) computation
 
-``` r
+```{r}
 # A-SBF call
 avg_counts <- SBF::TissueExprSpecies
 asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
             transform_matrix = FALSE)
-#> 
-#> A-SBF is computed
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
-```
+````
 
 #### Approximate SBF (A-SBF) computation based on inter-sample correlation
 
-``` r
+````{r}
 # A-SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
 asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
                 transform_matrix = TRUE)
-#> 
-#> V is computed using inter-sample correlation
-#> 
-#> A-SBF is computed
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
                                 asbf_cor$v)
-```
+````
 
-### Dependencies
+### Dependencies ###
 
--   `data.table`
+- `data.table`
 
-### Contacts
+### Contacts ###
 
-***Amal Thomas*** *<amalthom@usc.edu>*
+***Amal Thomas*** *amalthom@usc.edu*
 
-***Andrew D Smith*** *<andrewds@usc.edu>*
+***Andrew D Smith*** *andrewds@usc.edu*
 
-### Copyright
 
-Copyright (C) 2018-2021 Amal Thomas and Andrew D. Smith
+### Copyright ###
+
+Copyright (C) 2018-2021  Amal Thomas and Andrew D. Smith
 
 Authors: Amal Thomas and Andrew D. Smith
 
-SBF is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free
+SBF is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your
 option) any later version.
 
-SBF is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-more details.
+SBF is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.

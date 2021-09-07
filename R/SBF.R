@@ -18,6 +18,8 @@
 #' the col_index is the index in the column name corresponding to tissue or
 #' cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
 #' Only checked if check_col_matching = TRUE. Default NULL.
+#' @param weighted If TRUE each Di^TDi is scaled using inverse variance weights
+#' Default FALSE.
 #' @param approximate TRUE will compute A-SBF. Default TRUE.
 #' @param transform_matrix if TRUE, then Di will be transformed to compute
 #' correlation matrix, and V is computed based on this instead of
@@ -55,7 +57,8 @@
 #' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 #'                                 asbf_cor$v)
 SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
-                col_index = NULL, approximate = TRUE, transform_matrix = FALSE,
+                col_index = NULL, weighted = FALSE,
+                approximate = TRUE, transform_matrix = FALSE,
                 verbose = FALSE) {
     if (length(matrix_list) >= 2 & !is.null(matrix_list)) {
         if (check_col_matching) {
@@ -68,10 +71,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
         }
         if (!all(sapply(matrix_list, ncol) == ncol(matrix_list[[names(matrix_list)[1]]])))
             stop(paste0("\nAll matrices should have same number of columns"))
-        if (approximate)
-            cat("\nA-SBF is computed\n")
-        if (transform_matrix)
-            cat("\nV is computed using inter-sample correlation\n")
+
         # Compute Di^TDi or Ri^TRi----------------------------------------------
         matrix_names <- names(matrix_list)
         mat_list_trans <- list()
@@ -79,19 +79,34 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
                                      ncol(matrix_list[[matrix_names[1]]]),
                                     ncol = ncol(matrix_list[[matrix_names[1]]]))
         if (transform_matrix) {
+            cat("\nV is computed using inter-sample correlation\n")
             for (mat in matrix_names) {
               mat_list_trans[[mat]] <- stats::cor(matrix_list[[mat]],
                                            method = "pearson")
               mat_list_trans_sum <- mat_list_trans_sum + mat_list_trans[[mat]]
             }
+            mat_list_trans_sum <- mat_list_trans_sum / length(matrix_names)
+        } else if (weighted) {
+            cat("\nInverse variance weighting applied\n")
+            tot_var_sum <- 0
+            for (mat in matrix_names) {
+                w_i <- sum(diag(stats::cov(matrix_list[[mat]])))
+                mat_list_trans[[mat]] <- (t(as.matrix(matrix_list[[mat]])) %*%
+                                              as.matrix(matrix_list[[mat]]))/w_i
+                mat_list_trans_sum <- mat_list_trans_sum + mat_list_trans[[mat]]
+                tot_var_sum <- tot_var_sum + w_i^(-1)
+            }
+            mat_list_trans_sum <- mat_list_trans_sum/tot_var_sum
         } else {
+            # no weights and no transformation applied
             for (mat in matrix_names) {
               mat_list_trans[[mat]] <- t(as.matrix(matrix_list[[mat]])) %*%
                   as.matrix(matrix_list[[mat]])
               mat_list_trans_sum <- mat_list_trans_sum + mat_list_trans[[mat]]
             }
+            mat_list_trans_sum <- mat_list_trans_sum / length(matrix_names)
         }
-        mat_list_trans_sum <- mat_list_trans_sum / length(matrix_names)
+
         # Eigen decomposition of S to find V, compute U, delta----------------
         ev <- eigen(mat_list_trans_sum)
         lambda <- ev$values
@@ -129,6 +144,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
             }
         }
         if (approximate) {
+            cat("\nA-SBF is computed\n")
             initial_error <- calcDecompError(matrix_list, delta, U_ortho, V)
             out <- list(v = V, lambda = lambda,
                         u = U, u_ortho = U_ortho,
