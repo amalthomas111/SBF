@@ -21,7 +21,8 @@
 #' decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 #'
 #' # e.g. 2
-#' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
+#' avg_counts <- SBF::TissueExprSpecies
+#' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
 #'                transform_matrix = TRUE, verbose = FALSE)
 #' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 #'                                asbf_cor$v)
