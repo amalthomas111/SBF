@@ -10,7 +10,7 @@ Authors@R:
 Description: The R package implements Shared Basis Factorization (SBF) and
     Approximate Shared Basis Factorization (A-SBF). Shared Basis Factorization
     (SBF) is an exact joint diagonalization approach. Approximate Shared Basis
-    Factorization is an extension of the SBF
+    Factorization is an extension of the SBF approach.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
@@ -20,7 +20,7 @@ Depends:
     R (>= 2.10)
 Imports: 
     rlang,
-    data.table
+    data.table (>= 1.11.0)
 Suggests: 
     rmarkdown,
     knitr

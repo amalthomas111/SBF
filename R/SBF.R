@@ -34,25 +34,37 @@
 #' @examples
 #' # SBF call
 #' avg_counts <- SBF::TissueExprSpecies
-#' sbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
-#'            transform_matrix = FALSE)
+#' sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+#'            approximate = FALSE, transform_matrix = FALSE)
+#'
+#' # SBF call. Estimate V using inverse-variance weighted Di^TDi
+#' sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
+#'            approximate = FALSE, transform_matrix = FALSE)
 #'
 #' # SBF call using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
-#' sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = FALSE,
-#'                transform_matrix = TRUE)
+#' sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+#'                approximate = FALSE, transform_matrix = TRUE)
 #'
 #' # A-SBF call
 #' avg_counts <- SBF::TissueExprSpecies
-#' asbf <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
-#'             transform_matrix = FALSE)
+#' asbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+#'             approximate = TRUE, transform_matrix = FALSE)
+#' # calculate decomposition error
+#' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+#'
+#'
+#' # A-SBF call with inverse variance weighting
+#' avg_counts <- SBF::TissueExprSpecies
+#' asbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
+#'             approximate = TRUE, transform_matrix = FALSE)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 #'
 #' # A-SBF call using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
-#' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, approximate = TRUE,
-#'                 transform_matrix = TRUE)
+#' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+#'                 approximate = TRUE, transform_matrix = TRUE)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 #'                                 asbf_cor$v)
@@ -78,6 +90,10 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
         mat_list_trans_sum <- matrix(0L, nrow =
                                      ncol(matrix_list[[matrix_names[1]]]),
                                     ncol = ncol(matrix_list[[matrix_names[1]]]))
+        if (weighted & transform_matrix) {
+            cat(paste("\nWith inter-sample correlation, no additional scaling",
+                       "is required.\n",sep=" "))
+        }
         if (transform_matrix) {
             cat("\nV is computed using inter-sample correlation\n")
             for (mat in matrix_names) {
@@ -92,11 +108,11 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
             for (mat in matrix_names) {
                 w_i <- sum(diag(stats::cov(matrix_list[[mat]])))
                 mat_list_trans[[mat]] <- (t(as.matrix(matrix_list[[mat]])) %*%
-                                              as.matrix(matrix_list[[mat]]))/w_i
+                                            as.matrix(matrix_list[[mat]])) / w_i
                 mat_list_trans_sum <- mat_list_trans_sum + mat_list_trans[[mat]]
                 tot_var_sum <- tot_var_sum + w_i^(-1)
             }
-            mat_list_trans_sum <- mat_list_trans_sum/tot_var_sum
+            mat_list_trans_sum <- mat_list_trans_sum / tot_var_sum
         } else {
             # no weights and no transformation applied
             for (mat in matrix_names) {
@@ -106,6 +122,8 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
             }
             mat_list_trans_sum <- mat_list_trans_sum / length(matrix_names)
         }
+        colnames(mat_list_trans_sum) <- NULL
+        rownames(mat_list_trans_sum) <- NULL
 
         # Eigen decomposition of S to find V, compute U, delta----------------
         ev <- eigen(mat_list_trans_sum)
