@@ -58,9 +58,9 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
                 col_index = NULL, approximate = TRUE, transform_matrix = FALSE,
                 verbose = FALSE) {
     if (length(matrix_list) >= 2 & !is.null(matrix_list)) {
-        if (is.null(col_index) | !is.numeric(col_index))
-            stop(paste0("\nInvalid index to match columns. Exiting!"))
         if (check_col_matching) {
+            if (is.null(col_index) | !is.numeric(col_index))
+                stop(paste0("\nInvalid index to match columns. Exiting!"))
             col_selected <- as.data.frame(sapply(matrix_list, function(x)
               data.table::tstrsplit(colnames(x), col_sep)[[col_index]]))
             if (!all(apply(col_selected, 1, function(x) all(x == x[1]))))
