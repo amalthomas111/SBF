@@ -2,3 +2,4 @@
 
 export(SBF)
 export(calcDecompError)
+export(createRandomMatrices)
