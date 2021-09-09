@@ -1,11 +1,19 @@
 ---
 title: "SBF vignette"
 author: "Amal Thomas"
-output: rmarkdown::html_vignette
+output:
+  pdf_document:
+    toc: yes
+    number_section: yes
+  knitr:::html_vignette:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
 bibliography: references.bib
 vignette: >
-  %\VignetteIndexEntry{SBF_vignette}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{SBF_vignette}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -21,8 +29,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+\newcommand{\tr}{\mathrm{tr}}
 
-## Background
+# Background
 
 Joint matrix factorization facilitates the comparison of
 expression profiles from different species without using gene mapping.
@@ -32,7 +41,7 @@ biological information [@alter2000singular].
 @tamayo2007metagene used a non-negative matrix factorization
 approach to learn a low-dimensional approximation of the
 microarray expression datasets and used the reduced space for comparisons.
-Matrix factorization based methods are commonly used for gene expression
+Matrix factorization-based methods are commonly used for gene expression
 analysis [@alter2000singular; @tamayo2007metagene].
 An orthology independent matrix factorization framework based on generalized
 singular value decomposition [GSVD; @van1976generalizing] was used
@@ -45,12 +54,12 @@ value decomposition (HO GSVD) to analyze data from more than two species
 This study developed a joint diagonalization approach called
 approximate shared basis factorization (A-SBF)
 for cross-species expression comparisons.
-This approach extends the exact factorization approach we 
+This approach extends the exact factorization approach we
 developed called shared basis factorization (SBF). We discuss
-the details of the two approaches in the following sections.
+the details of the two methods in the following sections.
 
 
-## Shared basis factorization
+# Shared basis factorization
 
 Consider a set of real matrices $D_i \in \mathbb{R}^{m_i \times k}$
 ($i={1,\ldots ,N}$) with full column rank. We define 
@@ -68,7 +77,7 @@ left basis matrix, each $\Delta_i \in \mathbb{R}^{k \times k}$ is a
 diagonal matrix with positive values $\delta_{ik}$, and $V$ is
 a square invertible matrix.
 
-### Learning the shared right basis matrix
+## Estimating the shared right basis matrix
 
 Let $M$ be the scaled sum of the $D_i^T D_i$.
 We define $M$ is defined as
@@ -91,13 +100,14 @@ If all the variances are equal, $M$ becomes the arithmetic mean of the sum of
 $D_i^T D_i$.
 The shared right basis matrix  $V$ is then determined from the eigenvalue
 decomposition of $M$, where $M=V \Theta V^T$.
+The shared right basis matrix $V$ is an orthogonal matrix as $M$ is symmetric.
 Given $V$, we compute $U_i$ and $\Delta_i$ by solving the linear system
 $D_i V = U_i \Delta_i = L_i$.
 By normalizing the columns of $L_i$, we have
 $\delta_{ik} = \|l_{ik}\|$ and
 $\Delta_i = \mbox{diag}(\delta_{i1},\ldots,\delta_{ik})$.
 
-## Approximate shared basis factorization
+# Approximate shared basis factorization
 
 Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times k}$
 ($i= 1,\ldots,N$), each with full column rank. We define
@@ -120,13 +130,267 @@ We learn the factorization such that the learned $V$ is closest to that in
 the exact decomposition and by minimizing the total decomposition error 
 $\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
 
+# Usage cases
+
+## SBF examples
+
 ```{r setup}
 # load SBF package
 library(SBF)
 ```
 
-Lets load SBF package's in-built gene expression dataset. The dataset contains
-average gene expression profile of five similar tissues in three species.
+Let's create some random matrices using `createRandomMatrices` function from
+SBF package. We will create four matrices, each with three columns with rows
+varying from 4 to 6.
+
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+sapply(mymat, dim)
+```
+Rank of each of this matrices
+```{r}
+sapply(mymat, function(x) {qr(x)$rank})
+```
+
+
+Let's compute SBF using different approaches.
+
+- Estimate $V$ using sum of $D_i^T D_i$
+- Estimate $V$ using sum of $D_i^T D_i$ with inverse variance weighting
+- Estimate $V$ using inter-sample correlation
+```{r}
+sbf <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
+            approximate = FALSE, transform_matrix = FALSE)
+sbf_inv <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = TRUE,
+           approximate = FALSE, transform_matrix = FALSE)
+sbf_cor <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
+               approximate = FALSE, transform_matrix = TRUE)
+
+```
+When $D_i$'s are transformed to compute inter-sample correlation, we do not need
+to scale it using inverse-variance weighting anymore. We recommend using inverse
+variance weights, giving a more robust estimate of $V$ when noisy datasets are
+present. We usually estimate $V$ using inter-sample correlation when dealing
+with gene expression data sets from different species.
+
+Let's look into the outputs of `sbf`.
+
+```{r}
+names(sbf)
+```
+`sbf$u`, `sbf$v`, and `sbf$delta` correspond to the estimated left basis
+matrix, shared right basis matrix, and diagonal matrices.
+
+
+The estimated $V \in R^{k \times k}$ has a dimension of $k \times k$,
+where $k$ is the number of columns in $D_i$.
+```{r}
+sbf$v
+sbf_inv$v
+sbf_cor$v
+```
+The delta values for each matrix for the three cases is shown below.
+```{r}
+printDelta <- function(l) {
+  for (eachmat in names(l$delta)) {
+  cat(eachmat, ":", l$delta[[eachmat]], "\n")
+  }
+}
+cat("sbf\n");printDelta(sbf)
+cat("sbf_inv\n");printDelta(sbf_inv)
+cat("sbf_cor\n");printDelta(sbf_cor)
+```
+
+The $V \in R^{k \times k}$ estimated in SBF is also orthogonal. So $V^T V = I$.
+
+```{r}
+zapsmall(t(sbf$v) %*% sbf$v)
+```
+The estimated $V$ is an invertible matrix.
+
+```{r}
+qr(sbf$v)$rank
+```
+
+The $U_i$ matrices estimated in the SBF do not have orthonormal columns.
+Let's explore that. 
+
+```{r}
+sapply(sbf$u, dim)
+```
+Let's take the first matrix $U_i \in R^{m_i \times k}$ to check this.
+For this matrix, $U_i^T U_i$ will be $k \times k$ matrix where $k = 3$.
+
+```{r}
+t(sbf$u[[names(sbf$u)[1]]]) %*% sbf$u[[names(sbf$u)[1]]]
+```
+
+
+The estimated $M$ matrix is stored `sbf$m` and `sbf$lambda` gives the
+eigenvalues in the eigenvalue decomposition ($M=V \Theta V^T$).
+
+```{r}
+sbf$lambda
+sbf_inv$lambda
+sbf_cor$lambda
+```
+
+```{r}
+names(mymat)
+sbf$delta
+```
+
+SBF is an exact factorization. Let compute the factorization error for the 
+three cases.
+```{r}
+calcDecompError(mymat, sbf$delta, sbf$u, sbf$v)
+calcDecompError(mymat, sbf_inv$delta, sbf_inv$u, sbf_inv$v)
+calcDecompError(mymat, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
+```
+The errors are close to zero in all three cases.
+
+### Noisy dataset
+
+```{r}
+sapply(mymat, function(x) sum(diag(cov(x))))
+```
+The total column variance of matrix 1-4 is approximately in the same range.
+Now, let's add a dataset with similar and high variance.
+
+```{r}
+mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = T,
+                    nrow = 3, ncol = 3)
+mat5_highvar <- matrix(c(406, 319, 388, 292, 473, 287, 390, 533, 452), byrow = T,
+                    nrow = 3, ncol = 3)
+
+mymat_new <- mymat
+mymat_new[["mat5"]] <- mat5
+sapply(mymat_new, function(x) sum(diag(cov(x))))
+mymat_new_noisy <- mymat
+mymat_new_noisy[["mat5"]] <- mat5_highvar
+sapply(mymat_new_noisy, function(x) sum(diag(cov(x))))
+```
+
+Let us compute SBF with the new datasets
+```{r}
+sbf_new <- SBF(matrix_list = mymat_new, check_col_matching = FALSE,
+               weighted = FALSE, approximate = FALSE, transform_matrix = FALSE)
+sbf_inv_new <- SBF(matrix_list = mymat_new, check_col_matching = FALSE,
+                   weighted = TRUE, approximate = FALSE,
+                   transform_matrix = FALSE)
+
+
+sbf_new_noisy <- SBF(matrix_list = mymat_new_noisy, check_col_matching = FALSE,
+                     weighted = FALSE, approximate = FALSE,
+                     transform_matrix = FALSE)
+sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy,
+                         check_col_matching = FALSE, weighted = TRUE,
+                         approximate = FALSE, transform_matrix = FALSE)
+```
+Lets compare the decomposition error for the two cases with and without
+inverse variance weightinng.
+```{r}
+e1 <- calcDecompError(mymat, sbf_new$delta[1:4], sbf_new$u[1:4], sbf_new$v)
+e2 <- calcDecompError(mymat, sbf_new_noisy$delta[1:4], sbf_new_noisy$u[1:4],
+                      sbf_new_noisy$v)
+e2 / e1
+```
+
+```{r}
+e3 <- calcDecompError(mymat, sbf_inv_new$delta[1:4],
+                      sbf_inv_new$u[1:4], sbf_inv_new$v)
+e4 <- calcDecompError(mymat, sbf_inv_new_noisy$delta[1:4],
+                      sbf_inv_new_noisy$u[1:4], sbf_inv_new_noisy$v)
+e4 / e3
+```
+Inverse variance weighting reduces the total error.
+
+
+
+
+## ASBF examples
+
+Now let's compute Approximate SBF for the same datasets.
+
+- ASBF
+- ASBF with inverse variance weighting
+- ASBF with inter-sample correlation
+
+```{r}
+asbf <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
+            approximate = TRUE, transform_matrix = FALSE)
+asbf_inv <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = TRUE,
+           approximate = TRUE, transform_matrix = FALSE)
+asbf_cor <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
+                approximate = TRUE, transform_matrix = TRUE)
+```
+
+ASBF is not an exact factorization. Let compute the factorization error.
+
+```{r}
+names(asbf)
+```
+ASBF output has two additional values. `asbf$u_ortho` is the left basis matrix
+with orthonormal columns and `asbf$error` gives the decomposition error.
+
+```{r}
+asbf$error
+asbf_inv$error
+asbf_cor$error
+```
+The same error can also be computed using `calcDecompError` function.
+
+```{r}
+calcDecompError(mymat, asbf$delta, asbf$u_ortho, asbf$v)
+calcDecompError(mymat, asbf_inv$delta, asbf_inv$u_ortho, asbf_inv$v)
+calcDecompError(mymat, asbf_cor$delta, asbf_cor$u_ortho, asbf_cor$v)
+```
+In ASBF factorization, $U_i$ has orthonormal columns and $V$ is orthogonal.
+```{r}
+zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
+           asbf$u_ortho[[names(asbf$u_ortho)[1]]])
+```
+```{r}
+zapsmall(t(asbf$v) %*% asbf$v)
+```
+
+# Cross-species gene expression dataset analysis
+
+For cross-species gene expression datasets, we learn the common space $V$ based
+on correlation ($R_i$) between column phenotypes
+(such as tissues, cell types, etc.) within a species.
+In our study, we have shown that the inter-tissue gene expression correlation
+is similar across species.
+Let $X_i \in \mathbb{R}^{m_i \times k}$ be a standardized gene expression
+matrix where $X_i = C_i D_i {S_i}^{-1}$.
+Here $C_i = I_{m_i} - {m_i}^{-1} 1_{m_i} {1_{m_i}}^T$ is a centering matrix and
+$S_i = \mbox{diag}(s_1,\ldots,s_k)$ is a diagonal scaling matrix,
+where $s_p$ is the standard deviation of $p$-th column of $D_i$.
+The matrix $X_i$ is a matrix with columns of $D_i$ mean-centered and scaled
+by the standard deviation.
+The correlation between expression profiles of $k$ tissue types in species $i$
+is given by $R_i = X_i^T X_i/m_i$.
+We then define an expected correlation matrix ($\mathbb{E}(R_i)$) across $N$
+species as $M$, where $M$ is defined as
+
+\[
+  M = \frac{\sum_{i=1}^{N} R_i}{N}.
+\]
+
+The shared right basis matrix $V$ capturing the inter-tissue gene expression
+correlation is determined from the eigenvalue
+decomposition of $M$, where $M=V \Theta V^T$.
+Once the $V$ is learned, we compute $U_i$ and $\Delta_i$ by
+minimizing the total decomposition error
+$\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$
+
+## Usage examples
+
+Let us load the SBF package's in-built gene expression dataset.
+The dataset contains average gene expression profile of five similar tissues
+in three species.
+
 ```{r}
 # load dataset
 avg_counts <- SBF::TissueExprSpecies
@@ -136,10 +400,10 @@ names(avg_counts)
 
 ```{r}
 # head for first species
-avg_counts[[names(avg_counts)[1]]][1:5,1:5]
+avg_counts[[names(avg_counts)[1]]][1:5, 1:5]
 ```
 
-The number of genes annotated in different species are different. As a result,
+The number of genes annotated in different species is different. As a result,
 the number of rows (genes) in the expression data will be different for
 different species.
 
@@ -147,4 +411,15 @@ different species.
 sapply(avg_counts, dim)
 ```
 
-## References
+Lets compute A-SBF with inter-tissue correlation 
+```{r}
+# A-SBF call using correlation matrix
+asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+                approximate = TRUE, transform_matrix = TRUE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
+                                asbf_cor$v)
+decomperror
+```
+
+# References

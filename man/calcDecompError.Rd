@@ -4,22 +4,25 @@
 \alias{calcDecompError}
 \title{Calculate decomposition error}
 \usage{
-calcDecompError(matrix_initial, delta_i, u_i, v_i)
+calcDecompError(matrix_initial, delta, u, v)
 }
 \arguments{
 \item{matrix_initial}{list with initial Di matrices}
 
-\item{delta_i}{delta values computed using SBF/A-SBF function}
+\item{delta}{delta_i values computed using SBF/A-SBF function}
 
-\item{u_i}{Ui values computed using SBF/A-SBF function}
+\item{u}{U_i values computed using SBF/A-SBF function}
 
-\item{v_i}{V computed using SBF/A-SBF function}
+\item{v}{V computed using SBF/A-SBF function}
 }
 \value{
 a numeric value for the factorization error
 }
 \description{
-Function to compute Forbenius norm between two sets of matrix
+Function to compute Forbenius norm between two sets of matrix.
+Computes sum of Forbenius norm for
+\code{matrix_initial[[i]] - u[[i]]  diag(delta[[i]])  t(v)} for
+all i.
 }
 \examples{
 # load dataset

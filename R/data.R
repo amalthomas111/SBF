@@ -1,7 +1,7 @@
 #' Gene expression dataset of five tissues in three
 #' different species
 #'
-#' An example dataset containing average gene expression values of
+#' An example dataset containing average gene expression values (logTPM) of
 #' five tissues in three different species.
 #'
 #' @docType data

@@ -92,7 +92,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
                                     ncol = ncol(matrix_list[[matrix_names[1]]]))
         if (weighted & transform_matrix) {
             cat(paste("\nWith inter-sample correlation, no additional scaling",
-                       "is required.\n",sep=" "))
+                       "is required.\n", sep = " "))
         }
         if (transform_matrix) {
             cat("\nV is computed using inter-sample correlation\n")
@@ -110,7 +110,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
                 mat_list_trans[[mat]] <- (t(as.matrix(matrix_list[[mat]])) %*%
                                             as.matrix(matrix_list[[mat]])) / w_i
                 mat_list_trans_sum <- mat_list_trans_sum + mat_list_trans[[mat]]
-                tot_var_sum <- tot_var_sum + w_i^(-1)
+                tot_var_sum <- tot_var_sum + w_i^-1
             }
             mat_list_trans_sum <- mat_list_trans_sum / tot_var_sum
         } else {
