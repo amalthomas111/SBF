@@ -8,7 +8,7 @@
 #' about tissue or cell type.
 #' @param check_col_matching if the column names have information about tissue/
 #' cell type and one-to-one correspondence of tissue types across species has to
-#' be checked, set this parameter to be TRUE. Otherwise, set it to FALSE.
+#' be checked, set this parameter to be TRUE. Default FALSE.
 #' @param col_sep separator in column names to separate different fields.
 #' E.g. for column names 'hsapiens_brain', 'hsapiens_heart' etc., the separator
 #' is underscore. Set it to NULL if column matching across species has to be
@@ -19,8 +19,8 @@
 #' cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
 #' Only checked if check_col_matching = TRUE. Default NULL.
 #' @param weighted If TRUE each Di^TDi is scaled using inverse variance weights
-#' Default FALSE.
-#' @param approximate TRUE will compute A-SBF. Default TRUE.
+#' Default TRUE.
+#' @param approximate TRUE will compute A-SBF. Default FALSE.
 #' @param transform_matrix if TRUE, then Di will be transformed to compute
 #' correlation matrix, and V is computed based on this instead of
 #' Di^TDi. An unbiased estimate of covariance (denominator n-1) is
@@ -34,8 +34,9 @@
 #' @examples
 #' # SBF call
 #' avg_counts <- SBF::TissueExprSpecies
-#' sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
-#'            approximate = FALSE, transform_matrix = FALSE)
+#' sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+#'            col_index = 2, weighted = FALSE, approximate = FALSE,
+#'            transform_matrix = FALSE)
 #'
 #' # SBF call. Estimate V using inverse-variance weighted Di^TDi
 #' sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
@@ -43,12 +44,14 @@
 #'
 #' # SBF call using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
-#' sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
-#'                approximate = FALSE, transform_matrix = TRUE)
+#' sbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+#'            col_index = 2, weighted = FALSE, approximate = FALSE,
+#'            transform_matrix = TRUE)
 #'
 #' # A-SBF call
 #' avg_counts <- SBF::TissueExprSpecies
-#' asbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+#' asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+#'             col_index = 2, weighted = FALSE,
 #'             approximate = TRUE, transform_matrix = FALSE)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
@@ -56,21 +59,23 @@
 #'
 #' # A-SBF call with inverse variance weighting
 #' avg_counts <- SBF::TissueExprSpecies
-#' asbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
+#' asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+#'             col_index = 2, weighted = TRUE,
 #'             approximate = TRUE, transform_matrix = FALSE)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 #'
 #' # A-SBF call using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
-#' asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+#' asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+#'                 col_index = 2, weighted = FALSE,
 #'                 approximate = TRUE, transform_matrix = TRUE)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 #'                                 asbf_cor$v)
-SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
-                col_index = NULL, weighted = FALSE,
-                approximate = TRUE, transform_matrix = FALSE,
+SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
+                col_index = NULL, weighted = TRUE,
+                approximate = FALSE, transform_matrix = FALSE,
                 verbose = FALSE) {
     if (length(matrix_list) >= 2 & !is.null(matrix_list)) {
         if (check_col_matching) {
@@ -136,7 +141,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = TRUE, col_sep = "_",
         for (mat in matrix_names) {
             B[[mat]] <- as.matrix(matrix_list[[mat]]) %*% V
             delta[[mat]] <- sqrt(colSums(B[[mat]]^2))
-            U[[mat]] <- sweep(B[[mat]], 2, delta[[mat]], "/")
+            U[[mat]] <- sweep(B[[mat]], 2, delta[[mat]], FUN = "/")
             if (verbose) {
                 cat("\nMatrix:", mat)
                 cat("\nDim of matrix:", dim(matrix_list[[mat]]))

@@ -156,8 +156,8 @@ sapply(mymat, function(x) {qr(x)$rank})
 
 Let's compute SBF using different approaches.
 
-- Estimate $V$ using sum of $D_i^T D_i$
-- Estimate $V$ using sum of $D_i^T D_i$ with inverse variance weighting
+- Estimate $V$ using sum of $D_i^T D_i / N$
+- Estimate $V$ using sum of $D_i^T D_i / N$ with inverse variance weighting
 - Estimate $V$ using inter-sample correlation
 ```{r}
 sbf <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
@@ -174,7 +174,7 @@ variance weights, giving a more robust estimate of $V$ when noisy datasets are
 present. We usually estimate $V$ using inter-sample correlation when dealing
 with gene expression data sets from different species.
 
-Let's look into the outputs of `sbf`.
+Let's inspect the outputs of `sbf`.
 
 ```{r}
 names(sbf)
@@ -190,6 +190,7 @@ sbf$v
 sbf_inv$v
 sbf_cor$v
 ```
+
 The delta values for each matrix for the three cases is shown below.
 ```{r}
 printDelta <- function(l) {

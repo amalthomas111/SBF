@@ -65,8 +65,8 @@ names(avg_counts[["Homo_sapiens"]])
 ``` r
 # SBF call. Estimate V using sum of Di^TDi
 avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
-            approximate = FALSE, transform_matrix = FALSE)
+sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
+           weighted = FALSE, approximate = FALSE, transform_matrix = FALSE)
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 ```
@@ -76,8 +76,8 @@ decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 ``` r
 # SBF call. Estimate V using inverse-variance weighted Di^TDi
 avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
-           approximate = FALSE, transform_matrix = FALSE)
+sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
+           weighted = TRUE, approximate = FALSE, transform_matrix = FALSE)
 #> 
 #> Inverse variance weighting applied
 # calculate decomposition error
@@ -89,7 +89,8 @@ decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 ``` r
 # SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-sbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+sbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+               col_index = 2, weighted = FALSE,
                approximate = FALSE, transform_matrix = TRUE)
 #> 
 #> V is computed using inter-sample correlation
@@ -101,8 +102,8 @@ decomperror <- calcDecompError(avg_counts, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
 ``` r
 # A-SBF call
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
-            approximate = TRUE, transform_matrix = FALSE)
+asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
+            weighted = FALSE, approximate = TRUE, transform_matrix = FALSE)
 #> 
 #> A-SBF is computed
 # calculate decomposition error
@@ -112,8 +113,8 @@ decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 ``` r
 # A-SBF call with inverse variance weighting
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
-            approximate = TRUE, transform_matrix = FALSE)
+asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
+            weighted = TRUE, approximate = TRUE, transform_matrix = FALSE)
 #> 
 #> Inverse variance weighting applied
 #> 
@@ -127,7 +128,8 @@ decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 ``` r
 # A-SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
+asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+                col_index = 2, weighted = FALSE,
                 approximate = TRUE, transform_matrix = TRUE)
 #> 
 #> V is computed using inter-sample correlation
