@@ -42,6 +42,8 @@ calcDecompError <- function(matrix_initial, delta, u, v) {
         else phi <- as.matrix(diag(delta[[mat]]))
         matrix_new[[mat]] <- as.matrix(u[[mat]]) %*% phi %*%
                                                 as.matrix(t(v))
+        if (!identical(dim(matrix_new[[mat]]), dim(matrix_initial[[mat]])))
+            stop("Dimension of the matrices not matching. Error")
         error <- as.matrix(matrix_initial[[mat]]) - matrix_new[[mat]]
         decomp_error <- decomp_error + norm(error, type = "F")^2
     }

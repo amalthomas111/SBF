@@ -14,12 +14,14 @@ SBF approach.
 
 ``` r
 git clone https://github.com/amalthomas111/SBF.git
-# Inside R
-library(devtools)
-install("<path to SBF>/SBF")
 ```
 
--   install directly from Github via `devtools`
+Inside an R console
+
+    library(devtools)
+    install("<path to SBF>/SBF")
+
+-   \[OR\] install directly from Github via `devtools`
 
 ``` r
 library(devtools)
