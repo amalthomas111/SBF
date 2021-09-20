@@ -100,7 +100,8 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                        "is required.\n", sep = " "))
         }
         if (transform_matrix) {
-            cat("\nV is computed using inter-sample correlation\n")
+            if (verbose)
+                cat("\nV is computed using inter-sample correlation\n")
             for (mat in matrix_names) {
               mat_list_trans[[mat]] <- stats::cor(matrix_list[[mat]],
                                            method = "pearson")
@@ -108,7 +109,8 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
             }
             mat_list_trans_sum <- mat_list_trans_sum / length(matrix_names)
         } else if (weighted) {
-            cat("\nInverse variance weighting applied\n")
+            if (verbose)
+                cat("\nInverse variance weighting applied\n")
             tot_var_sum <- 0
             for (mat in matrix_names) {
                 w_i <- sum(diag(stats::cov(matrix_list[[mat]])))
@@ -167,7 +169,8 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
             }
         }
         if (approximate) {
-            cat("\nA-SBF is computed\n")
+            if (verbose)
+                cat("\nA-SBF is computed\n")
             initial_error <- calcDecompError(matrix_list, delta, U_ortho, V)
             out <- list(v = V, lambda = lambda,
                         u = U, u_ortho = U_ortho,
