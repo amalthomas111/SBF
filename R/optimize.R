@@ -1,4 +1,4 @@
-#' Find Nearest orthogonal matrix
+#' Find the Nearest orthogonal matrix
 #'
 #' Function to compute nearest orthogonal matrix to a set of matrices.
 #' @param mat_list A list of numeric matrices
@@ -164,19 +164,19 @@ updateV <- function(mat_list, u, d) {
 }
 #' Function to minimize decomposition error
 #'
-#' Function iteratively update u, delta and V and finds the
+#' Function iteratively updates u, delta, and V and finds the
 #' minimum decomposition error.
 #' @param mat_list A list containing numeric matrices
 #' @param u A list containing U matrices
 #' @param d A list containing delta matrices
 #' @param v V matrix
-#' @param initial_exact Whether initial value of U, Delta
+#' @param initial_exact Whether the initial value of U, Delta,
 #' and V gives exact factorization. Default FALSE
 #' @param max_iter Maximum number of iterations. Default 1e5
 #' @param tol if factorization error becomes < tol, no more optimization
 #' is performed. Default tol = 1e-5
 #'
-#' @return a list containing optimal U, delta and V that
+#' @return a list containing optimal U, delta, and V that
 #' minimizes the factorization error
 #' @export
 #'
@@ -228,13 +228,13 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
     if (min_error < tol)
       break
   }
-  min_pos <- which(error_vec == min_error)
-  if (min_pos[1] == 3 * max_iter)
+  min_pos <- which.min(error_vec)
+  if (min_pos == 3 * max_iter)
     cat("\nNot converged! Try increasing max_iter\n")
   return(list(u = u_opt,
               v = v_opt,
               d = d_opt,
               error = min_error,
-              error_pos = min_pos[1],
+              error_pos = min_pos,
               error_vec = error_vec))
 }

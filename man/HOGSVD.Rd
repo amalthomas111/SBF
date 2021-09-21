@@ -27,8 +27,9 @@ cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
 Only checked if check_col_matching = TRUE. Default NULL.}
 
 \item{col_sep}{separator in column names to separate different fields.
-E.g. for column names 'hsapiens_brain', 'hsapiens_heart' etc., the separator
-is underscore. Set it to NULL if column matching across species has to be
+Example for column names 'hsapiens_brain', 'hsapiens_heart', etc., the
+separator is underscore.
+Set it to NULL if column matching across species has to be
 performed and there is no separator in the column names.
 Only checked if check_col_matching = TRUE. Default underscore.}
 

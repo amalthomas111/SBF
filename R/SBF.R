@@ -10,8 +10,9 @@
 #' cell type and one-to-one correspondence of tissue types across species has to
 #' be checked, set this parameter to be TRUE. Default FALSE.
 #' @param col_sep separator in column names to separate different fields.
-#' E.g. for column names 'hsapiens_brain', 'hsapiens_heart' etc., the separator
-#' is underscore. Set it to NULL if column matching across species has to be
+#' Example for column names 'hsapiens_brain', 'hsapiens_heart' etc.,
+#' the separator is underscore.
+#' Set it to NULL if column matching across species has to be
 #' performed and there is no separator in the column names.
 #' Only checked if check_col_matching = TRUE. Default underscore.
 #' @param col_index If a separator separates information in column names,
@@ -77,9 +78,9 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 col_index = NULL, weighted = TRUE,
                 approximate = FALSE, transform_matrix = FALSE,
                 verbose = FALSE) {
-    if (length(matrix_list) >= 2 & !is.null(matrix_list)) {
+    if (length(matrix_list) >= 2 && !is.null(matrix_list)) {
         if (check_col_matching) {
-            if (is.null(col_index) | !is.numeric(col_index))
+            if (is.null(col_index) || !is.numeric(col_index))
                 stop(paste0("\nInvalid index to match columns. Exiting!"))
             col_selected <- as.data.frame(sapply(matrix_list, function(x)
               data.table::tstrsplit(colnames(x), col_sep)[[col_index]]))
@@ -95,11 +96,11 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
         mat_list_trans_sum <- matrix(0L, nrow =
                                      ncol(matrix_list[[matrix_names[1]]]),
                                     ncol = ncol(matrix_list[[matrix_names[1]]]))
-        if (weighted & transform_matrix) {
+        if (weighted == TRUE && transform_matrix == TRUE) {
             cat(paste("\nWith inter-sample correlation, no additional scaling",
                        "is required.\n", sep = " "))
         }
-        if (transform_matrix) {
+        if (transform_matrix == TRUE) {
             if (verbose)
                 cat("\nV is computed using inter-sample correlation\n")
             for (mat in matrix_names) {

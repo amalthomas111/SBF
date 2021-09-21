@@ -2,7 +2,7 @@
 % Please edit documentation in R/optimize.R
 \name{calcNearestOrthoMatrix}
 \alias{calcNearestOrthoMatrix}
-\title{Find Nearest orthogonal matrix}
+\title{Find the Nearest orthogonal matrix}
 \usage{
 calcNearestOrthoMatrix(mat_list)
 }

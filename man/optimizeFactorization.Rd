@@ -23,7 +23,7 @@ optimizeFactorization(
 
 \item{v}{V matrix}
 
-\item{initial_exact}{Whether initial value of U, Delta
+\item{initial_exact}{Whether the initial value of U, Delta,
 and V gives exact factorization. Default FALSE}
 
 \item{max_iter}{Maximum number of iterations. Default 1e5}
@@ -32,11 +32,11 @@ and V gives exact factorization. Default FALSE}
 is performed. Default tol = 1e-5}
 }
 \value{
-a list containing optimal U, delta and V that
+a list containing optimal U, delta, and V that
 minimizes the factorization error
 }
 \description{
-Function iteratively update u, delta and V and finds the
+Function iteratively updates u, delta, and V and finds the
 minimum decomposition error.
 }
 \examples{

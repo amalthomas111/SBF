@@ -49,8 +49,9 @@ GSVD <- function(D1, D2) {
 #' cell type and one-to-one correspondence of tissue types across species has to
 #' be checked, set this parameter to be TRUE. Default FALSE.
 #' @param col_sep separator in column names to separate different fields.
-#' E.g. for column names 'hsapiens_brain', 'hsapiens_heart' etc., the separator
-#' is underscore. Set it to NULL if column matching across species has to be
+#' Example for column names 'hsapiens_brain', 'hsapiens_heart', etc., the
+#' separator is underscore.
+#' Set it to NULL if column matching across species has to be
 #' performed and there is no separator in the column names.
 #' Only checked if check_col_matching = TRUE. Default underscore.
 #' @param col_index If a separator separates information in column names,
