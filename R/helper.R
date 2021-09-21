@@ -72,7 +72,7 @@ calcDecompError <- function(matrix_initial, delta, u, v) {
 #' mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:8)
 createRandomMatrices <- function(n = 3, ncols = 3, nrows = 3:6,
                                  max_iter = 1000) {
-    if (!is.numeric(n) | !is.numeric(ncols) | !is.integer(nrows)) {
+    if (!is.numeric(n) | !is.numeric(ncols) | !is.numeric(nrows)) {
         stop("Integer n, ncols, and nrows values expected")
     }
     if (!all(nrows == floor(nrows))) {

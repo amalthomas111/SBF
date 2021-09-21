@@ -352,7 +352,6 @@ In ASBF factorization, $U_i$ has orthonormal columns and $V$ is orthogonal.
 zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
            asbf$u_ortho[[names(asbf$u_ortho)[1]]])
 ```
-
 ```{r}
 zapsmall(t(asbf$v) %*% asbf$v)
 ```
