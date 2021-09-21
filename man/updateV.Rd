@@ -17,7 +17,7 @@ updateV(mat_list, u, d)
 a list containing new U matrices
 }
 \description{
-Function to update V using give Delta and U. The new V is set as
+Function to update V using given Delta and U. The new V is set as
 X Y^T, where SVD of D^T U Delta = X Sigma Y^T.
 }
 \examples{

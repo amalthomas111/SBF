@@ -13,7 +13,7 @@ calcNearestOrthoMatrix(mat_list)
 orthogonal matrix
 }
 \description{
-Function to compute nearest orthogonal matrix to a set of matrices
+Function to compute nearest orthogonal matrix to a set of matrices.
 }
 \examples{
 set.seed(1231)

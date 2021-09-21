@@ -37,7 +37,7 @@ minimizes the factorization error
 }
 \description{
 Function iteratively update u, delta and V and finds the
-minimum decomposition error
+minimum decomposition error.
 }
 \examples{
 set.seed(1231)

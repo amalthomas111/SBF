@@ -17,8 +17,8 @@ updateDelta(mat_list, u, v)
 a list containing new U matrices
 }
 \description{
-Function to update Delta using give Uis and V. The new Delta is set as
-diag(U^T D V)
+Function to update Delta using given Uis and V. The new Delta is set as
+diag(U^T D V).
 }
 \examples{
 set.seed(1231)

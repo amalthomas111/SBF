@@ -1,6 +1,6 @@
 #' Find Nearest orthogonal matrix
 #'
-#' Function to compute nearest orthogonal matrix to a set of matrices
+#' Function to compute nearest orthogonal matrix to a set of matrices.
 #' @param mat_list A list of numeric matrices
 #'
 #' @return orthogonal matrix
@@ -28,7 +28,7 @@ calcNearestOrthoMatrix <- function(mat_list) {
 
 #' Compute U and Delta for a given set of matrices and a V
 #'
-#' Function to compute  and Delta for a given set of matrices and a V
+#' Function to compute U and Delta for a given set of matrices and V.
 #' @param mat_list A list containing numeric matrices
 #' @param V A numeric matrix of dimension ncol(matrix1) * ncol(matrix1)
 #' @param approximate Compute U with orthonormal columns. Default TRUE
@@ -71,8 +71,8 @@ computeUDelta <- function(mat_list, V, approximate = TRUE) {
 }
 #' Update U with orthonormal columns
 #'
-#' Function to update U using give delta and V. The new U is set as XY^T, where
-#' SVD of D V Delta = X Sigma Y^T
+#' Function to update U using given delta and V. The new U is set as XY^T,
+#' where SVD of D V Delta = X Sigma Y^T.
 #' @param mat_list A list containing numeric matrices
 #' @param d A list containing delta matrices
 #' @param v V matrix
@@ -102,8 +102,8 @@ updateU <- function(mat_list, d, v) {
 
 #' Update Delta
 #'
-#' Function to update Delta using give Uis and V. The new Delta is set as
-#' diag(U^T D V)
+#' Function to update Delta using given Uis and V. The new Delta is set as
+#' diag(U^T D V).
 #' @param mat_list A list containing numeric matrices
 #' @param u A list containing U matrices
 #' @param v V matrix
@@ -129,7 +129,7 @@ updateDelta <- function(mat_list, u, v) {
 
 #' Update V
 #'
-#' Function to update V using give Delta and U. The new V is set as
+#' Function to update V using given Delta and U. The new V is set as
 #' X Y^T, where SVD of D^T U Delta = X Sigma Y^T.
 #' @param mat_list A list containing numeric matrices
 #' @param d A list containing delta matrices
@@ -165,7 +165,7 @@ updateV <- function(mat_list, u, d) {
 #' Function to minimize decomposition error
 #'
 #' Function iteratively update u, delta and V and finds the
-#' minimum decomposition error
+#' minimum decomposition error.
 #' @param mat_list A list containing numeric matrices
 #' @param u A list containing U matrices
 #' @param d A list containing delta matrices

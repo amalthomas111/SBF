@@ -17,8 +17,8 @@ updateU(mat_list, d, v)
 a list containing new U matrices
 }
 \description{
-Function to update U using give delta and V. The new U is set as XY^T, where
-SVD of D V Delta = X Sigma Y^T
+Function to update U using given delta and V. The new U is set as XY^T,
+where SVD of D V Delta = X Sigma Y^T.
 }
 \examples{
 set.seed(1231)

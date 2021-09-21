@@ -17,7 +17,7 @@ computeUDelta(mat_list, V, approximate = TRUE)
 list of U and delta
 }
 \description{
-Function to compute  and Delta for a given set of matrices and a V
+Function to compute U and Delta for a given set of matrices and V.
 }
 \examples{
 set.seed(1231)
