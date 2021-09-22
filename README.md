@@ -28,7 +28,7 @@ library(devtools)
 devtools::install_github("amalthomas111/SBF")
 ```
 
-Please contact us via e-mail or through a [GitHub
+Please contact us via e-mail or submit a [GitHub
 issue](https://github.com/amalthomas111/SBF/issues) if there is any
 trouble with installation.
 
@@ -45,7 +45,7 @@ library(SBF)
 
 -   We will first create a test dataset. SBF package has the function
     `createRandomMatrices` to create matrices with full column rank and
-    number of different rows. All the matrices will have the same number
+    different number of rows. All the matrices will have the same number
     of columns.
 
 ``` r
@@ -56,8 +56,6 @@ sapply(mymat, dim)
 #> [1,]    5    6    4    5
 #> [2,]    3    3    3    3
 ```
-
-Rank of each of this matrices
 
 ``` r
 sapply(mymat, function(x) {qr(x)$rank})
@@ -116,7 +114,7 @@ decomperror
 ```
 
 SBF computation based on inter-sample correlation. *V* is estimated
-using *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
+using sum of *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
 
 ``` r
 # SBF call using correlation matrix
@@ -154,6 +152,7 @@ zapsmall(t(asbf$v) %*% asbf$v)
 ```
 
 ``` r
+# check the columns of first matrix of U_ortho
 zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[[1]]]]) %*%
            asbf$u_ortho[[names(asbf$u_ortho)[[1]]]])
 #>      [,1] [,2] [,3]
@@ -176,7 +175,7 @@ This error is already computed and stored in `asbf$error`.
 A-SBF call with inverse variance weighting. Estimating V using the sum
 of inverse-variance weighted
 *D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
-*U*<sub>*i*</sub>’s such that columns are orthonormal.
+*U*<sub>*i*</sub>’s such that the columns are orthonormal.
 
 ``` r
 # A-SBF call with inverse variance weighting
@@ -188,7 +187,7 @@ decomperror_inv
 ```
 
 A-SBF computation based on inter-sample correlation. *V* is estimated
-using *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
+using sum of *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
 
 ``` r
 # A-SBF call using correlation matrix
@@ -202,9 +201,10 @@ decomperror_cor
 
 ### Reduce A-SBF factorization error
 
-Let us optimize the factorization for the three cases of A-SBF using the
-`optimizeFactorization` function. Depending upon the mymat and initial
-values, optimization could take some time.
+Let us optimize the factorization error using the
+`optimizeFactorization` function, for the three cases of A-SBF
+computation shown before. Depending upon the mymat and initial values,
+optimization could take some time.
 
 ``` r
 myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
@@ -263,7 +263,7 @@ decomperror
 ```
 
 ``` r
-# SBF call using correlation matrix
+# A-SBF call using correlation matrix
 asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
                 transform_matrix = TRUE)
 asbf_gem$error
@@ -279,7 +279,7 @@ function, as shown previously.
 
 ***Andrew D Smith*** *<andrewds@usc.edu>*
 
-Contact us via e-mail or through a [GitHub
+Contact us via e-mail or submit a [GitHub
 issue](https://github.com/amalthomas111/SBF/issues)
 
 ### Copyright
