@@ -4,14 +4,14 @@
 \alias{calcDecompError}
 \title{Calculate decomposition error}
 \usage{
-calcDecompError(matrix_initial, delta, u, v)
+calcDecompError(matrix_initial, u, delta, v)
 }
 \arguments{
 \item{matrix_initial}{list with initial Di matrices}
 
-\item{delta}{delta_i values computed using SBF/A-SBF function}
-
 \item{u}{U_i values computed using SBF/A-SBF function}
+
+\item{delta}{delta_i values computed using SBF/A-SBF function}
 
 \item{v}{V computed using SBF/A-SBF function}
 }
@@ -33,13 +33,13 @@ sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
            transform_matrix = FALSE, verbose = FALSE)
 
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
+decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
 
 # e.g. 2
 avg_counts <- SBF::TissueExprSpecies
 asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
                 col_index = 2, approximate = TRUE,
                 transform_matrix = TRUE, verbose = FALSE)
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
+decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
                                asbf_cor$v)
 }
