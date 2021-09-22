@@ -80,8 +80,6 @@ decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 avg_counts <- SBF::TissueExprSpecies
 sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
            weighted = TRUE, approximate = FALSE, transform_matrix = FALSE)
-#> 
-#> Inverse variance weighting applied
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
 ```
@@ -94,8 +92,6 @@ avg_counts <- SBF::TissueExprSpecies
 sbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
                col_index = 2, weighted = FALSE,
                approximate = FALSE, transform_matrix = TRUE)
-#> 
-#> V is computed using inter-sample correlation
 decomperror <- calcDecompError(avg_counts, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
 ```
 
@@ -106,8 +102,6 @@ decomperror <- calcDecompError(avg_counts, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
 avg_counts <- SBF::TissueExprSpecies
 asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
             weighted = FALSE, approximate = TRUE, transform_matrix = FALSE)
-#> 
-#> A-SBF is computed
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 ```
@@ -117,10 +111,6 @@ decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 avg_counts <- SBF::TissueExprSpecies
 asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
             weighted = TRUE, approximate = TRUE, transform_matrix = FALSE)
-#> 
-#> Inverse variance weighting applied
-#> 
-#> A-SBF is computed
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
 ```
@@ -133,18 +123,10 @@ avg_counts <- SBF::TissueExprSpecies
 asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
                 col_index = 2, weighted = FALSE,
                 approximate = TRUE, transform_matrix = TRUE)
-#> 
-#> V is computed using inter-sample correlation
-#> 
-#> A-SBF is computed
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
                                 asbf_cor$v)
 ```
-
-### Dependencies
-
--   `data.table`
 
 ### Contacts
 

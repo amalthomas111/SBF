@@ -75,8 +75,10 @@ HOGSVD <- function(matrix_list = NULL, check_col_matching = FALSE,
     if (check_col_matching) {
       if (is.null(col_index) | !is.numeric(col_index))
         stop(paste0("\nInvalid index to match columns. Exiting!"))
-      col_selected <- as.data.frame(sapply(matrix_list, function(x)
-        data.table::tstrsplit(colnames(x), col_sep)[[col_index]]))
+      col_selected <- as.data.frame(sapply(matrix_list, function(x) {
+        sapply(strsplit(as.character(colnames(x)), col_sep), function(y) {
+          y[col_index] })
+      }))
       if (!all(apply(col_selected, 1, function(x) all(x == x[1]))))
         stop(paste0("\nNames are not matching.Exiting!"))
     }

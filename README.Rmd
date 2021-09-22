@@ -130,9 +130,6 @@ decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
                                 asbf_cor$v)
 ````
 
-### Dependencies ###
-
-- `data.table`
 
 ### Contacts ###
 
