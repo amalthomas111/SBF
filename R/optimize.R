@@ -195,8 +195,12 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
   min_error <- calcDecompError(mat_list, d, u, v)
   if (initial_exact == TRUE)
     min_error <- Inf
+  if (min_error < tol) {
+    stop(paste("\nInitial factorization error is already < tol.",
+                "Try setting initial_exact = TRUE"))
+  }
   error_vec <- c()
-  previous_min <- Inf
+  error_decreased <- FALSE
   for (i in 1:max_iter) {
     d <- updateDelta(mat_list, u, v)
     error <- calcDecompError(mat_list, d, u, v)
@@ -207,6 +211,7 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       d_opt <- d
       previous_min <- min_error
       min_error <- error
+      error_decreased <- TRUE
       if (abs(min_error - previous_min) < tol) {
         break
       }
@@ -220,6 +225,7 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       d_opt <- d
       previous_min <- min_error
       min_error <- error
+      error_decreased <- TRUE
       if (abs(min_error - previous_min) < tol) {
         break
       }
@@ -233,18 +239,24 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       d_opt <- d
       previous_min <- min_error
       min_error <- error
+      error_decreased <- TRUE
       if (abs(min_error - previous_min) < tol) {
         break
       }
     }
   }
-  min_pos <- which.min(error_vec)
-  if (min_pos == (3 * max_iter))
-    cat("\nNot converged! Try increasing max_iter\n")
-  return(list(u = u_opt,
-              v = v_opt,
-              d = d_opt,
-              error = min_error,
-              error_pos = min_pos,
-              error_vec = error_vec))
+  if (error_decreased == TRUE) {
+    min_pos <- which.min(error_vec)
+    if (min_pos == (3 * max_iter))
+      cat("\nNot converged! Try increasing max_iter\n")
+    return(list(u = u_opt,
+                v = v_opt,
+                d = d_opt,
+                error = min_error,
+                error_pos = min_pos,
+                error_vec = error_vec))
+  } else {
+    cat("\nFatorization error could not be decreased further\n")
+    return(NULL)
+  }
 }
