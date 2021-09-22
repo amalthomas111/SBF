@@ -67,7 +67,7 @@ We will use the test dataset as our *D*<sub>*i*</sub> matrices.
 
 ### SBF computation
 
-Estimating V using the sum of
+Estimating *V* using the sum of
 *D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>.
 
 ``` r
@@ -101,7 +101,7 @@ decomperror
 #> [1] 1.851693e-26
 ```
 
-Estimating V using sum of inverse-variance weighted
+Estimating *V* using sum of inverse-variance weighted
 *D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>.
 
 ``` r
@@ -126,7 +126,7 @@ decomperror
 
 ### Approximate-SBF (A-SBF)
 
-Estimating V using the sum of
+Estimating *V* using the sum of
 *D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
 *U*<sub>*i*</sub>’s such that columns are orthonormal.
 
@@ -172,7 +172,7 @@ decomperror
 
 This error is already computed and stored in `asbf$error`.
 
-A-SBF call with inverse variance weighting. Estimating V using the sum
+A-SBF call with inverse variance weighting. Estimating *V* using the sum
 of inverse-variance weighted
 *D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
 *U*<sub>*i*</sub>’s such that the columns are orthonormal.

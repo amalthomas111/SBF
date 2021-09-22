@@ -68,7 +68,7 @@ We will use the test dataset as our $D_i$ matrices.
 
 ### SBF computation
 
-Estimating V using the sum of $D_i^T D_i$.
+Estimating $V$ using the sum of $D_i^T D_i$.
 ```{r}
 # SBF call. Estimate V using the sum of Di^TDi
 sbf <- SBF(matrix_list = mymat)
@@ -92,7 +92,7 @@ decomperror <- calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
 decomperror
 ```
 
-Estimating V using sum of inverse-variance weighted $D_i^TD_i$.
+Estimating $V$ using sum of inverse-variance weighted $D_i^TD_i$.
 ```{r}
 # SBF call. Estimate V using inverse-variance weighted Di^TDi
 sbf <- SBF(matrix_list = mymat, weighted = TRUE)
@@ -113,7 +113,7 @@ decomperror
 
 ### Approximate-SBF (A-SBF)
 
-Estimating V using the sum of $D_i^T D_i$ and estimating $U_i$'s
+Estimating $V$ using the sum of $D_i^T D_i$ and estimating $U_i$'s
 such that columns are orthonormal.
 ```{r}
 # A-SBF call
@@ -148,7 +148,7 @@ decomperror
 This error is already computed and stored in `asbf$error`.
 
 
-A-SBF call with inverse variance weighting. Estimating V using the sum of
+A-SBF call with inverse variance weighting. Estimating $V$ using the sum of
 inverse-variance weighted $D_i^T D_i$ and estimating $U_i$'s such that the
 columns are orthonormal.
 
