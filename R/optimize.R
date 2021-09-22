@@ -207,11 +207,10 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       d_opt <- d
       previous_min <- min_error
       min_error <- error
+      if (abs(min_error - previous_min) < tol) {
+        break
+      }
     }
-    if ((min_error < previous_min) && (abs(min_error - previous_min) < tol)) {
-      break
-    }
-
     v <- updateV(mat_list, u, d)
     error <- calcDecompError(mat_list, d, u, v)
     error_vec <- c(error_vec, error)
@@ -221,9 +220,9 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       d_opt <- d
       previous_min <- min_error
       min_error <- error
-    }
-    if ((min_error < previous_min) && (abs(min_error - previous_min) < tol)) {
-      break
+      if (abs(min_error - previous_min) < tol) {
+        break
+      }
     }
     u <- updateU(mat_list, d, v)
     error <- calcDecompError(mat_list, d, u, v)
@@ -234,9 +233,9 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       d_opt <- d
       previous_min <- min_error
       min_error <- error
-    }
-    if ((min_error < previous_min) && (abs(min_error - previous_min) < tol)) {
-      break
+      if (abs(min_error - previous_min) < tol) {
+        break
+      }
     }
   }
   min_pos <- which.min(error_vec)
