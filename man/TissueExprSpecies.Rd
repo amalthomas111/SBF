@@ -9,7 +9,7 @@ different species}
 A list containing gene expression data frame from three species.
 }
 \usage{
-avg_counts <- SBF::TissueExprSpecies
+TissueExprSpecies
 }
 \description{
 An example dataset containing average gene expression values (logTPM) of

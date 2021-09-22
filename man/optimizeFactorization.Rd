@@ -10,8 +10,8 @@ optimizeFactorization(
   d,
   v,
   initial_exact = FALSE,
-  max_iter = 1e+05,
-  tol = 1e-05
+  max_iter = 10000,
+  tol = 1e-10
 )
 }
 \arguments{
@@ -26,10 +26,11 @@ optimizeFactorization(
 \item{initial_exact}{Whether the initial value of U, Delta,
 and V gives exact factorization. Default FALSE}
 
-\item{max_iter}{Maximum number of iterations. Default 1e5}
+\item{max_iter}{Maximum number of iterations. Default 1e4}
 
-\item{tol}{if factorization error becomes < tol, no more optimization
-is performed. Default tol = 1e-5}
+\item{tol}{Tolerance value. During the iterations, if the difference between
+previous best and current best factorization error becomes less than tol,
+no more iteration is performed. Default tol = 1e-10}
 }
 \value{
 a list containing optimal U, delta, and V that
@@ -47,5 +48,5 @@ sbf <- SBF(matrix_list = mymat, approximate = FALSE,
 newU <- updateU(mymat, sbf$delta, sbf$v)
 newDelta <- updateDelta(mymat, newU, sbf$v)
 newV <- updateV(mymat, newU, newDelta)
-opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 100)
+opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 1e4)
 }

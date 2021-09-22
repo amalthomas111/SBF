@@ -172,9 +172,10 @@ updateV <- function(mat_list, u, d) {
 #' @param v V matrix
 #' @param initial_exact Whether the initial value of U, Delta,
 #' and V gives exact factorization. Default FALSE
-#' @param max_iter Maximum number of iterations. Default 1e5
-#' @param tol if factorization error becomes < tol, no more optimization
-#' is performed. Default tol = 1e-5
+#' @param max_iter Maximum number of iterations. Default 1e4
+#' @param tol Tolerance value. During the iterations, if the difference between
+#' previous best and current best factorization error becomes less than tol,
+#' no more iteration is performed. Default tol = 1e-10
 #'
 #' @return a list containing optimal U, delta, and V that
 #' minimizes the factorization error
@@ -188,13 +189,14 @@ updateV <- function(mat_list, u, d) {
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 #' newDelta <- updateDelta(mymat, newU, sbf$v)
 #' newV <- updateV(mymat, newU, newDelta)
-#' opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 100)
+#' opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 1e4)
 optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
-                                  max_iter = 1e5, tol = 1e-5) {
+                                  max_iter = 1e4, tol = 1e-10) {
   min_error <- calcDecompError(mat_list, d, u, v)
-  if (initial_exact)
+  if (initial_exact == TRUE)
     min_error <- Inf
   error_vec <- c()
+  previous_min <- Inf
   for (i in 1:max_iter) {
     d <- updateDelta(mat_list, u, v)
     error <- calcDecompError(mat_list, d, u, v)
@@ -203,7 +205,11 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       u_opt <- u
       v_opt <- v
       d_opt <- d
+      previous_min <- min_error
       min_error <- error
+    }
+    if ((min_error < previous_min) && (abs(min_error - previous_min) < tol)) {
+      break
     }
 
     v <- updateV(mat_list, u, d)
@@ -213,9 +219,12 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       u_opt <- u
       v_opt <- v
       d_opt <- d
+      previous_min <- min_error
       min_error <- error
     }
-
+    if ((min_error < previous_min) && (abs(min_error - previous_min) < tol)) {
+      break
+    }
     u <- updateU(mat_list, d, v)
     error <- calcDecompError(mat_list, d, u, v)
     error_vec <- c(error_vec, error)
@@ -223,13 +232,15 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       u_opt <- u
       v_opt <- v
       d_opt <- d
+      previous_min <- min_error
       min_error <- error
     }
-    if (min_error < tol)
+    if ((min_error < previous_min) && (abs(min_error - previous_min) < tol)) {
       break
+    }
   }
   min_pos <- which.min(error_vec)
-  if (min_pos == 3 * max_iter)
+  if (min_pos == (3 * max_iter))
     cat("\nNot converged! Try increasing max_iter\n")
   return(list(u = u_opt,
               v = v_opt,

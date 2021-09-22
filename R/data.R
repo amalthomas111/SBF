@@ -6,7 +6,6 @@
 #'
 #' @docType data
 #'
-#' @usage avg_counts <- SBF::TissueExprSpecies
 #'
 #' @format A list containing gene expression data frame from three species.
 #'
