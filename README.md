@@ -65,7 +65,7 @@ names(avg_counts[["Homo_sapiens"]])
 ### SBF computation
 
 Estimating V using the sum of
-*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>
+*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>.
 
 ``` r
 # SBF call. Estimate V using the sum of Di^TDi
@@ -80,7 +80,7 @@ names(sbf)
 #> [1] "v"      "lambda" "u"      "delta"  "m"
 ```
 
-Check whether the estimated *V* is orthogonal
+Check whether the estimated *V* is orthogonal.
 
 ``` r
 zapsmall(sbf$v %*% t(sbf$v))
@@ -101,8 +101,8 @@ decomperror
 #> [1] 3.251627e-25
 ```
 
-Estimating V using inverse-variance weighted
-*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>
+Estimating V using sum of inverse-variance weighted
+*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>.
 
 ``` r
 # SBF call. Estimate V using inverse-variance weighted Di^TDi
@@ -130,7 +130,7 @@ decomperror
 
 Estimating V using the sum of
 *D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
-orthogonal *U*<sub>*i*</sub>’s such that columns are orthonormal.
+*U*<sub>*i*</sub>’s such that columns are orthonormal.
 
 ``` r
 # A-SBF call
@@ -225,8 +225,7 @@ The number of iteration taken for optimizing and new factorization
 error:
 
 ``` r
-cat("\nFor asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
-#> 
+cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
 #> For asbf, # iteration = 952 final error = 7081.105
 cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
     myopt_inv$error)
@@ -238,7 +237,6 @@ cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
 #> For asbf cor, # iteration = 1690 final error = 7081.105
 ```
 
-    #> 
     #> For all three factorizations, after optimizing the final errors is the same(up to 2 decimals)
     #> The final error is 7081.11
 

@@ -67,7 +67,7 @@ names(avg_counts[["Homo_sapiens"]])
 
 ### SBF computation
 
-Estimating V using the sum of $D_i^T D_i$
+Estimating V using the sum of $D_i^T D_i$.
 ```{r}
 # SBF call. Estimate V using the sum of Di^TDi
 avg_counts <- SBF::TissueExprSpecies
@@ -80,7 +80,7 @@ sbf <- SBF(matrix_list = avg_counts)
 names(sbf)
 ```
 
-Check whether the estimated $V$ is orthogonal
+Check whether the estimated $V$ is orthogonal.
 ```{r}
 zapsmall(sbf$v %*% t(sbf$v))
 ```
@@ -92,7 +92,7 @@ decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
 decomperror
 ```
 
-Estimating V using inverse-variance weighted $D_i^TD_i$
+Estimating V using sum of inverse-variance weighted $D_i^TD_i$.
 ```{r}
 # SBF call. Estimate V using inverse-variance weighted Di^TDi
 avg_counts <- SBF::TissueExprSpecies
@@ -115,7 +115,7 @@ decomperror
 
 ### Approximate-SBF (A-SBF)
 
-Estimating V using the sum of $D_i^T D_i$ and estimating orthogonal $U_i$'s
+Estimating V using the sum of $D_i^T D_i$ and estimating $U_i$'s
 such that columns are orthonormal.
 ```{r}
 # A-SBF call
@@ -190,7 +190,7 @@ myopt_cor <- optimizeFactorization(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
 
 The number of iteration taken for optimizing and new factorization error:
 ```{r}
-cat("\nFor asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
+cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
 cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
     myopt_inv$error)
 cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
@@ -198,7 +198,7 @@ cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
 ```
 ```{r, echo = FALSE}
 if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
-  cat("\nFor all three factorizations, after optimizing the final errors is the same(up to 2 decimals)")
+  cat("For all three factorizations, after optimizing the final errors is the same(up to 2 decimals)")
   cat("\nThe final error is", round(myopt$error,2))  
 }
 ```
