@@ -191,14 +191,14 @@ myopt_cor <- optimizeFactorization(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
 The number of iteration taken for optimizing and new factorization error:
 ```{r}
 cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
-cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
+cat("For asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
     myopt_inv$error)
-cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
+cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
     myopt_cor$error)
 ```
 ```{r, echo = FALSE}
 if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
-  cat("For all three factorizations, after optimizing the final errors is the same(up to 2 decimals)")
+  cat("For all three A-SBF factorizations, the final errors is the same (up to 2 decimals) after optimizing")
   cat("\nThe final error is", round(myopt$error,2))  
 }
 ```

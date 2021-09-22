@@ -227,24 +227,24 @@ error:
 ``` r
 cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
 #> For asbf, # iteration = 952 final error = 7081.105
-cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
+cat("For asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
     myopt_inv$error)
-#> 
 #> For asbf inv, # iteration = 883 final error = 7081.105
-cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
+cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
     myopt_cor$error)
-#> 
 #> For asbf cor, # iteration = 1690 final error = 7081.105
 ```
 
-    #> For all three factorizations, after optimizing the final errors is the same(up to 2 decimals)
+    #> For all three A-SBF factorizations, the final errors is the same (up to 2 decimals) after optimizing
     #> The final error is 7081.11
 
 ### Contacts
 
-***Amal Thomas*** *<amalthom@usc.edu>*
+***Amal Thomas***
+*<a href="mailto:amalthom@usc.edu" class="email">amalthom@usc.edu</a>*
 
-***Andrew D Smith*** *<andrewds@usc.edu>*
+***Andrew D Smith***
+*<a href="mailto:andrewds@usc.edu" class="email">andrewds@usc.edu</a>*
 
 Contact us via e-mail or through a [GitHub
 issue](https://github.com/amalthomas111/SBF/issues)
