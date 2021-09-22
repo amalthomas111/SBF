@@ -43,7 +43,7 @@ trouble with installation.
 library(SBF)
 ```
 
-#### load test dataset
+### load test dataset
 
 -   SBF package has a sample gene expression data with the mean
     expression of nine tissues in five species
@@ -62,77 +62,194 @@ names(avg_counts[["Homo_sapiens"]])
 #> [5] "hsapiens_testis"
 ```
 
-#### SBF computation
+### SBF computation
+
+Estimating V using the sum of
+*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>
 
 ``` r
-# SBF call. Estimate V using sum of Di^TDi
+# SBF call. Estimate V using the sum of Di^TDi
 avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-           weighted = FALSE, approximate = FALSE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
+sbf <- SBF(matrix_list = avg_counts)
 ```
 
 `?SBF` help function shows all arguments for the SBF call.
 
 ``` r
-# SBF call. Estimate V using inverse-variance weighted Di^TDi
-avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-           weighted = TRUE, approximate = FALSE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
+names(sbf)
+#> [1] "v"      "lambda" "u"      "delta"  "m"
 ```
 
-##### SBF computation based on inter-sample correlation
+Check whether the estimated *V* is orthogonal
+
+``` r
+zapsmall(sbf$v %*% t(sbf$v))
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    0    0    0    0
+#> [2,]    0    1    0    0    0
+#> [3,]    0    0    1    0    0
+#> [4,]    0    0    0    1    0
+#> [5,]    0    0    0    0    1
+```
+
+Let us check the factorization error.
+
+``` r
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
+decomperror
+#> [1] 3.251627e-25
+```
+
+Estimating V using inverse-variance weighted
+*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>
+
+``` r
+# SBF call. Estimate V using inverse-variance weighted Di^TDi
+avg_counts <- SBF::TissueExprSpecies
+sbf <- SBF(matrix_list = avg_counts, weighted = TRUE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
+decomperror
+#> [1] 4.694125e-25
+```
+
+SBF computation based on inter-sample correlation. *V* is estimated
+using *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
 
 ``` r
 # SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-sbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-               col_index = 2, weighted = FALSE,
-               approximate = FALSE, transform_matrix = TRUE)
-decomperror <- calcDecompError(avg_counts, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
+sbf_cor <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
+decomperror <- calcDecompError(avg_counts, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
+decomperror
+#> [1] 9.938196e-25
 ```
 
-#### Approximate SBF (A-SBF) computation
+### Approximate-SBF (A-SBF)
+
+Estimating V using the sum of
+*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
+orthogonal *U*<sub>*i*</sub>’s such that columns are orthonormal.
 
 ``` r
 # A-SBF call
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-            weighted = FALSE, approximate = TRUE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+asbf <- SBF(matrix_list = avg_counts, approximate = TRUE)
 ```
+
+``` r
+names(asbf)
+#> [1] "v"       "lambda"  "u"       "u_ortho" "delta"   "m"       "error"
+```
+
+In A-SBF, *V* is orthogonal and columns of *U*<sub>*i*</sub>’s are
+orthonormal (*U*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub> = *I*).
+
+``` r
+zapsmall(t(asbf$v) %*% asbf$v)
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    0    0    0    0
+#> [2,]    0    1    0    0    0
+#> [3,]    0    0    1    0    0
+#> [4,]    0    0    0    1    0
+#> [5,]    0    0    0    0    1
+```
+
+``` r
+zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[[1]]]]) %*%
+           asbf$u_ortho[[names(asbf$u_ortho)[[1]]]])
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    1    0    0    0    0
+#> [2,]    0    1    0    0    0
+#> [3,]    0    0    1    0    0
+#> [4,]    0    0    0    1    0
+#> [5,]    0    0    0    0    1
+```
+
+A-SBF is not an exact factorization.
+
+``` r
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
+decomperror
+#> [1] 7131.625
+```
+
+This error is already computed and stored in `asbf$error`.
+
+A-SBF call with inverse variance weighting. Estimating V using the sum
+of inverse-variance weighted
+*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
+*U*<sub>*i*</sub>’s such that columns are orthonormal.
 
 ``` r
 # A-SBF call with inverse variance weighting
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-            weighted = TRUE, approximate = TRUE, transform_matrix = FALSE)
+asbf_inv <- SBF(matrix_list = avg_counts, weighted = TRUE, approximate = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+decomperror_inv <- asbf_inv$error
+decomperror_inv
+#> [1] 7270.009
 ```
 
-##### Approximate SBF (A-SBF) computation based on inter-sample correlation
+A-SBF computation based on inter-sample correlation. *V* is estimated
+using *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
 
 ``` r
 # A-SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-                col_index = 2, weighted = FALSE,
-                approximate = TRUE, transform_matrix = TRUE)
+asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
+                transform_matrix = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
-                                asbf_cor$v)
+decomperror_cor <- asbf_cor$error
+decomperror_cor
+#> [1] 65865.92
 ```
+
+### Reduce A-SBF factorization error
+
+Let us optimize the factorization for the three cases of A-SBF using the
+`optimizeFactorization` function. Depending upon the initial values,
+optimization could take some time.
+
+``` r
+myopt <- optimizeFactorization(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
+myopt_inv <- optimizeFactorization(avg_counts, asbf_inv$u_ortho, asbf_inv$delta,
+                                   asbf_inv$v)
+myopt_cor <- optimizeFactorization(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
+                                   asbf_cor$v)
+```
+
+The number of iteration taken for optimizing and new factorization
+error:
+
+``` r
+cat("\nFor asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
+#> 
+#> For asbf, # iteration = 952 final error = 7081.105
+cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
+    myopt_inv$error)
+#> 
+#> For asbf inv, # iteration = 883 final error = 7081.105
+cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
+    myopt_cor$error)
+#> 
+#> For asbf cor, # iteration = 1690 final error = 7081.105
+```
+
+    #> 
+    #> For all three factorizations, after optimizing the final errors is the same(up to 2 decimals)
+    #> The final error is 7081.11
 
 ### Contacts
 
 ***Amal Thomas*** *<amalthom@usc.edu>*
 
 ***Andrew D Smith*** *<andrewds@usc.edu>*
+
+Contact us via e-mail or through a [GitHub
+issue](https://github.com/amalthomas111/SBF/issues)
 
 ### Copyright
 

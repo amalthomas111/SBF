@@ -51,7 +51,7 @@ if there is any trouble with installation.
 library(SBF)
 ```
 
-#### load test dataset
+### load test dataset
 
 - SBF package has a sample gene expression data with the mean expression of
 nine tissues in five species
@@ -65,71 +65,143 @@ sapply(avg_counts, dim)
 names(avg_counts[["Homo_sapiens"]])
 ```
 
-#### SBF computation
+### SBF computation
 
+Estimating V using the sum of $D_i^T D_i$
 ```{r}
-# SBF call. Estimate V using sum of Di^TDi
+# SBF call. Estimate V using the sum of Di^TDi
 avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-           weighted = FALSE, approximate = FALSE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
+sbf <- SBF(matrix_list = avg_counts)
 ```
+
 `?SBF` help function shows all arguments for the SBF call.
 
 ```{r}
-# SBF call. Estimate V using inverse-variance weighted Di^TDi
-avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-           weighted = TRUE, approximate = FALSE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
+names(sbf)
 ```
 
-##### SBF computation based on inter-sample correlation
+Check whether the estimated $V$ is orthogonal
+```{r}
+zapsmall(sbf$v %*% t(sbf$v))
+```
+Let us check the factorization error.
+
+```{r}
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
+decomperror
+```
+
+Estimating V using inverse-variance weighted $D_i^TD_i$
+```{r}
+# SBF call. Estimate V using inverse-variance weighted Di^TDi
+avg_counts <- SBF::TissueExprSpecies
+sbf <- SBF(matrix_list = avg_counts, weighted = TRUE)
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
+decomperror
+```
+
+SBF computation based on inter-sample correlation. 
+$V$ is estimated using $R_i^T R_i$.
 
 ```{r}
 # SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-sbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-               col_index = 2, weighted = FALSE,
-               approximate = FALSE, transform_matrix = TRUE)
-decomperror <- calcDecompError(avg_counts, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
+sbf_cor <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
+decomperror <- calcDecompError(avg_counts, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
+decomperror
 ```
 
-#### Approximate SBF (A-SBF) computation
+### Approximate-SBF (A-SBF)
 
+Estimating V using the sum of $D_i^T D_i$ and estimating orthogonal $U_i$'s
+such that columns are orthonormal.
 ```{r}
 # A-SBF call
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-            weighted = FALSE, approximate = TRUE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+asbf <- SBF(matrix_list = avg_counts, approximate = TRUE)
 ```
+
+```{r}
+names(asbf)
+```
+
+In A-SBF, $V$ is orthogonal and columns of $U_i$'s are orthonormal
+($U_i^T U_i = I$).
+
+```{r}
+zapsmall(t(asbf$v) %*% asbf$v)
+```
+```{r}
+zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[[1]]]]) %*%
+           asbf$u_ortho[[names(asbf$u_ortho)[[1]]]])
+```
+
+A-SBF is not an exact factorization.
+
+```{r}
+# calculate decomposition error
+decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
+decomperror
+```
+
+This error is already computed and stored in `asbf$error`.
+
+
+A-SBF call with inverse variance weighting. Estimating V using the sum of
+inverse-variance weighted $D_i^T D_i$ and estimating $U_i$'s such that columns
+are orthonormal.
 
 ```{r}
 # A-SBF call with inverse variance weighting
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE, col_index = 2,
-            weighted = TRUE, approximate = TRUE, transform_matrix = FALSE)
+asbf_inv <- SBF(matrix_list = avg_counts, weighted = TRUE, approximate = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+decomperror_inv <- asbf_inv$error
+decomperror_inv
 ```
 
-##### Approximate SBF (A-SBF) computation based on inter-sample correlation
+A-SBF computation based on inter-sample correlation.
+$V$ is estimated using $R_i^T R_i$.
 
 ````{r}
 # A-SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-                col_index = 2, weighted = FALSE,
-                approximate = TRUE, transform_matrix = TRUE)
+asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
+                transform_matrix = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
-                                asbf_cor$v)
+decomperror_cor <- asbf_cor$error
+decomperror_cor
 ````
+### Reduce A-SBF factorization error
 
+Let us optimize the factorization for the three cases of A-SBF using the
+`optimizeFactorization` function. Depending upon the initial values,
+optimization could take some time.
+
+```{r}
+myopt <- optimizeFactorization(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
+myopt_inv <- optimizeFactorization(avg_counts, asbf_inv$u_ortho, asbf_inv$delta,
+                                   asbf_inv$v)
+myopt_cor <- optimizeFactorization(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
+                                   asbf_cor$v)
+```
+
+The number of iteration taken for optimizing and new factorization error:
+```{r}
+cat("\nFor asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
+cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
+    myopt_inv$error)
+cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
+    myopt_cor$error)
+```
+```{r, echo = FALSE}
+if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
+  cat("\nFor all three factorizations, after optimizing the final errors is the same(up to 2 decimals)")
+  cat("\nThe final error is", round(myopt$error,2))  
+}
+```
 
 ### Contacts ###
 
@@ -137,6 +209,8 @@ decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
 
 ***Andrew D Smith*** *andrewds@usc.edu*
 
+Contact us via e-mail or through
+a [GitHub issue](https://github.com/amalthomas111/SBF/issues)
 
 ### Copyright ###
 
