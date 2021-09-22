@@ -6,8 +6,8 @@
 #' all i.
 #'
 #' @param matrix_initial list with initial Di matrices
-#' @param delta delta_i values computed using SBF/A-SBF function
 #' @param u  U_i values computed using SBF/A-SBF function
+#' @param delta delta_i values computed using SBF/A-SBF function
 #' @param v V computed using SBF/A-SBF function
 #'
 #' @return a numeric value for the factorization error
@@ -22,16 +22,16 @@
 #'            transform_matrix = FALSE, verbose = FALSE)
 #'
 #' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, sbf$delta, sbf$u, sbf$v)
+#' decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
 #'
 #' # e.g. 2
 #' avg_counts <- SBF::TissueExprSpecies
 #' asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
 #'                 col_index = 2, approximate = TRUE,
 #'                 transform_matrix = TRUE, verbose = FALSE)
-#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
+#' decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
 #'                                asbf_cor$v)
-calcDecompError <- function(matrix_initial, delta, u, v) {
+calcDecompError <- function(matrix_initial, u, delta, v) {
     decomp_error <- 0
     matrix_new <- list()
     if (! all(names(matrix_initial) == names(delta)))

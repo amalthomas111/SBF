@@ -20,7 +20,7 @@
 #' cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
 #' Only checked if check_col_matching = TRUE. Default NULL.
 #' @param weighted If TRUE each Di^TDi is scaled using inverse variance weights
-#' Default TRUE.
+#' Default FALSE.
 #' @param approximate TRUE will compute A-SBF. Default FALSE.
 #' @param transform_matrix if TRUE, then Di will be transformed to compute
 #' correlation matrix, and V is computed based on this instead of
@@ -28,8 +28,8 @@
 #' used for the computing correlation. Default FALSE.
 #' @param verbose if TRUE print verbose lines. Default FALSE.
 #'
-#' @return a list containing u, v, lambda, m, and other outputs
-#' of SBF/A-SBF factorization.
+#' @return a list containing u, delta, v, m, lambda (eigenvalues of m), and
+#' other outputs of SBF/A-SBF factorization.
 #' @export
 #'
 #' @examples
@@ -55,7 +55,7 @@
 #'             col_index = 2, weighted = FALSE,
 #'             approximate = TRUE, transform_matrix = FALSE)
 #' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+#' decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
 #'
 #'
 #' # A-SBF call with inverse variance weighting
@@ -64,7 +64,7 @@
 #'             col_index = 2, weighted = TRUE,
 #'             approximate = TRUE, transform_matrix = FALSE)
 #' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+#' decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
 #'
 #' # A-SBF call using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
@@ -72,10 +72,10 @@
 #'                 col_index = 2, weighted = FALSE,
 #'                 approximate = TRUE, transform_matrix = TRUE)
 #' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
+#' decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
 #'                                 asbf_cor$v)
 SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
-                col_index = NULL, weighted = TRUE,
+                col_index = NULL, weighted = FALSE,
                 approximate = FALSE, transform_matrix = FALSE,
                 verbose = FALSE) {
     if (length(matrix_list) >= 2 && !is.null(matrix_list)) {
@@ -99,8 +99,8 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                                      ncol(matrix_list[[matrix_names[1]]]),
                                     ncol = ncol(matrix_list[[matrix_names[1]]]))
         if (weighted == TRUE && transform_matrix == TRUE) {
-            cat(paste("\nWith inter-sample correlation, no additional scaling",
-                       "is required.\n", sep = " "))
+            cat(paste("\nWith inter-sample correlation transfromation,",
+                "no additional scaling is required.\n", sep = " "))
         }
         if (transform_matrix == TRUE) {
             if (verbose)
@@ -174,7 +174,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
         if (approximate) {
             if (verbose)
                 cat("\nA-SBF is computed\n")
-            initial_error <- calcDecompError(matrix_list, delta, U_ortho, V)
+            initial_error <- calcDecompError(matrix_list, U_ortho, delta, V)
             out <- list(v = V, lambda = lambda,
                         u = U, u_ortho = U_ortho,
                         delta = delta, m = mat_list_trans_sum,

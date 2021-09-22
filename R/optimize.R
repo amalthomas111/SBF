@@ -62,7 +62,7 @@ computeUDelta <- function(mat_list, V, approximate = TRUE) {
   }
   if (approximate) {
     delta_new <- updateDelta(mat_list, U_ortho, V)
-    error <- calcDecompError(mat_list, delta_new, U_ortho, V)
+    error <- calcDecompError(mat_list, U_ortho, delta_new, V)
     return(list(u = U, u_ortho = U_ortho, d = delta, d_ortho = delta_new,
                 error = error))
   } else {
@@ -87,6 +87,8 @@ computeUDelta <- function(mat_list, V, approximate = TRUE) {
 #'            transform_matrix = FALSE)
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 updateU <- function(mat_list, d, v) {
+  if (! all(names(mat_list) == names(d)))
+    stop("Different names for matrix list and d list")
   u_ortho <- list()
   for (matrix_name in names(mat_list)) {
     if (length(d[[matrix_name]]) == 1) {
@@ -94,7 +96,7 @@ updateU <- function(mat_list, d, v) {
     } else {
       phi <- as.matrix(diag(d[[matrix_name]]))
     }
-    mysvd <- svd(mat_list[[matrix_name]] %*% v %*% phi)
+    mysvd <- svd(as.matrix(mat_list[[matrix_name]]) %*% v %*% phi)
     u_ortho[[matrix_name]] <- mysvd$u %*% t(mysvd$v)
   }
   return(u_ortho)
@@ -119,10 +121,12 @@ updateU <- function(mat_list, d, v) {
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 #' newDelta <- updateDelta(mymat, newU, sbf$v)
 updateDelta <- function(mat_list, u, v) {
+  if (! all(names(mat_list) == names(u)))
+    stop("Different names for matrix list and u list")
   delta_updated <- list()
   for (matrix_name in names(mat_list)) {
-    delta_updated[[matrix_name]] <- diag(t(u[[matrix_name]]) %*%
-                                           mat_list[[matrix_name]] %*% v)
+    delta_updated[[matrix_name]] <- diag(t(as.matrix(u[[matrix_name]])) %*%
+                                    as.matrix(mat_list[[matrix_name]]) %*% v)
   }
   return(delta_updated)
 }
@@ -148,6 +152,10 @@ updateDelta <- function(mat_list, u, v) {
 #' newV <- updateV(mymat, newU, newDelta)
 updateV <- function(mat_list, u, d) {
   matrix_names <- names(mat_list)
+  if (! all(names(mat_list) == names(u)))
+    stop("Different names for matrix list and u list")
+  if (! all(names(mat_list) == names(d)))
+    stop("Different names for matrix list and d list")
   mat_sum <- matrix(0L, nrow =  ncol(mat_list[[matrix_names[1]]]),
                     ncol = ncol(mat_list[[matrix_names[1]]]))
   for (name in matrix_names) {
@@ -156,7 +164,8 @@ updateV <- function(mat_list, u, d) {
     } else {
       phi <- as.matrix(diag(d[[name]]))
     }
-    mat_sum <- mat_sum + (t(mat_list[[name]]) %*% u[[name]] %*% phi)
+    mat_sum <- mat_sum + (t(as.matrix(mat_list[[name]])) %*%
+                            as.matrix(u[[name]]) %*% phi)
   }
   mysvd <- svd(mat_sum)
   v <-  mysvd$u %*% t(mysvd$v)
@@ -172,7 +181,8 @@ updateV <- function(mat_list, u, d) {
 #' @param v V matrix
 #' @param initial_exact Whether the initial value of U, Delta,
 #' and V gives exact factorization. Default FALSE
-#' @param max_iter Maximum number of iterations. Default 1e4
+#' @param max_iter Maximum number of iterations. In each iteration u, d, and
+#' v are updated. Default 1e4
 #' @param tol Tolerance value. During the iterations, if the difference between
 #' previous best and current best factorization error becomes less than tol,
 #' no more iteration is performed. Default tol = 1e-10
@@ -192,7 +202,7 @@ updateV <- function(mat_list, u, d) {
 #' opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 1e4)
 optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
                                   max_iter = 1e4, tol = 1e-10) {
-  min_error <- calcDecompError(mat_list, d, u, v)
+  min_error <- calcDecompError(mat_list, u, d, v)
   if (initial_exact == TRUE)
     min_error <- Inf
   if (min_error < tol) {
@@ -203,7 +213,7 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
   error_decreased <- FALSE
   for (i in 1:max_iter) {
     d <- updateDelta(mat_list, u, v)
-    error <- calcDecompError(mat_list, d, u, v)
+    error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
     if (error < min_error) {
       u_opt <- u
@@ -217,7 +227,7 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       }
     }
     v <- updateV(mat_list, u, d)
-    error <- calcDecompError(mat_list, d, u, v)
+    error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
     if (error < min_error) {
       u_opt <- u
@@ -231,7 +241,7 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
       }
     }
     u <- updateU(mat_list, d, v)
-    error <- calcDecompError(mat_list, d, u, v)
+    error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
     if (error < min_error) {
       u_opt <- u

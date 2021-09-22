@@ -10,7 +10,7 @@ SBF(
   check_col_matching = FALSE,
   col_sep = "_",
   col_index = NULL,
-  weighted = TRUE,
+  weighted = FALSE,
   approximate = FALSE,
   transform_matrix = FALSE,
   verbose = FALSE
@@ -38,7 +38,7 @@ cell type. E.g. for column name 'hsapiens_brain', col_index is 2.
 Only checked if check_col_matching = TRUE. Default NULL.}
 
 \item{weighted}{If TRUE each Di^TDi is scaled using inverse variance weights
-Default TRUE.}
+Default FALSE.}
 
 \item{approximate}{TRUE will compute A-SBF. Default FALSE.}
 
@@ -50,8 +50,8 @@ used for the computing correlation. Default FALSE.}
 \item{verbose}{if TRUE print verbose lines. Default FALSE.}
 }
 \value{
-a list containing u, v, lambda, m, and other outputs
-of SBF/A-SBF factorization.
+a list containing u, delta, v, m, lambda (eigenvalues of m), and
+other outputs of SBF/A-SBF factorization.
 }
 \description{
 Function to compute Shared Basis Factorization (SBF) and
@@ -80,7 +80,7 @@ asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
             col_index = 2, weighted = FALSE,
             approximate = TRUE, transform_matrix = FALSE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
 
 
 # A-SBF call with inverse variance weighting
@@ -89,7 +89,7 @@ asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
             col_index = 2, weighted = TRUE,
             approximate = TRUE, transform_matrix = FALSE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$delta, asbf$u_ortho, asbf$v)
+decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
 
 # A-SBF call using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
@@ -97,6 +97,6 @@ asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
                 col_index = 2, weighted = FALSE,
                 approximate = TRUE, transform_matrix = TRUE)
 # calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
+decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
                                 asbf_cor$v)
 }

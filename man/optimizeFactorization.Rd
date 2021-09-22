@@ -26,7 +26,8 @@ optimizeFactorization(
 \item{initial_exact}{Whether the initial value of U, Delta,
 and V gives exact factorization. Default FALSE}
 
-\item{max_iter}{Maximum number of iterations. Default 1e4}
+\item{max_iter}{Maximum number of iterations. In each iteration u, d, and
+v are updated. Default 1e4}
 
 \item{tol}{Tolerance value. During the iterations, if the difference between
 previous best and current best factorization error becomes less than tol,
