@@ -58,44 +58,30 @@ Function to compute Shared Basis Factorization (SBF) and
 Approximate Shared Basis Factorization (A-SBF)
 }
 \examples{
-# SBF call
-avg_counts <- SBF::TissueExprSpecies
-sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-           col_index = 2, weighted = FALSE, approximate = FALSE,
-           transform_matrix = FALSE)
+# create test dataset
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+
+# SBF call. Estimate V using the sum of Di^TDi
+sbf <- SBF(matrix_list = mymat)
 
 # SBF call. Estimate V using inverse-variance weighted Di^TDi
-sbf <- SBF(matrix_list = avg_counts, col_index = 2, weighted = TRUE,
-           approximate = FALSE, transform_matrix = FALSE)
+sbf <- SBF(matrix_list = mymat, weighted = TRUE)
+# calculate decomposition error
+decomperror <- calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
 
 # SBF call using correlation matrix
-avg_counts <- SBF::TissueExprSpecies
-sbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-           col_index = 2, weighted = FALSE, approximate = FALSE,
-           transform_matrix = TRUE)
+sbf_cor <- SBF(matrix_list = mymat, transform_matrix = TRUE)
+decomperror <- calcDecompError(mymat, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
 
-# A-SBF call
+# SBF call for gene expression dataset using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-            col_index = 2, weighted = FALSE,
-            approximate = TRUE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
+sbf_cor <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
 
-
-# A-SBF call with inverse variance weighting
+# A-SBF call for gene expression dataset using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-asbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-            col_index = 2, weighted = TRUE,
-            approximate = TRUE, transform_matrix = FALSE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf$u_ortho, asbf$delta, asbf$v)
-
-# A-SBF call using correlation matrix
-avg_counts <- SBF::TissueExprSpecies
-asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-                col_index = 2, weighted = FALSE,
-                approximate = TRUE, transform_matrix = TRUE)
+asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
+                transform_matrix = TRUE)
 # calculate decomposition error
 decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
                                 asbf_cor$v)
