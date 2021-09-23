@@ -9,6 +9,7 @@ optimizeFactorization(
   u,
   d,
   v,
+  optimizeV = TRUE,
   initial_exact = FALSE,
   max_iter = 10000,
   tol = 1e-10
@@ -22,6 +23,8 @@ optimizeFactorization(
 \item{d}{A list containing delta matrices}
 
 \item{v}{V matrix}
+
+\item{optimizeV}{Whether initial V should be update or not. Default TRUE}
 
 \item{initial_exact}{Whether the initial value of U, Delta,
 and V gives exact factorization. Default FALSE}
