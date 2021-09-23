@@ -518,7 +518,7 @@ Compute $\epsilon^{k+1,k+1,k}$ \
 &nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k} < \epsilon^{k+1,k,k}$: \
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\Delta_i \leftarrow \Delta_i^{k+1}$
 6. Update $\mathbf{V^{k+1}}$: \
-&nbsp;&nbsp;&nbsp;$V^{k+1} =  M Q^T$, where
+&nbsp;&nbsp;&nbsp;$V^{k+1} =  M Q^T$, where SVD of
 $\sum_{i}^N D_i^T U_i^{k+1} \Delta_i^{k+1} = M \Phi Q^T$. Compute
 $\epsilon^{k+1,k+1,k+1}$\
 &nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k+1} < \epsilon^{k+1,k+1,k}$: \
