@@ -504,7 +504,7 @@ $V$. The steps of the iterative algorithm are shown below.
 
 1. Input: $D_i, i={1 \ldots N}$
 2. Output: $U_i,\Delta_i$, and $V$, where $U_i^T U_i = I$ and $V^T V = V V^T = I$
-3. Initialize $\Delta_i^{k}$,$V^{k}$ from the SBF factorization.
+3. Initialize $U_i^{k}$, $\Delta_i^{k}$, and $V^{k}$.
 Compute $\epsilon^{k,k,k} = {\sum^{N}_{i=1}\|D_i - U_i^{k} \Delta_i^{k} {V^{k}}^{\!T}\|^{2}}_F$
 4. Update $\mathbf{U_i^{k+1}}$:\
 &nbsp;&nbsp;&nbsp;$U_i^{k+1} = Z Y^T$, where SVD of
