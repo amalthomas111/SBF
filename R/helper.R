@@ -14,23 +14,21 @@
 #' @export
 #'
 #' @examples
-#' # load dataset
+#' # create test dataset
+#' set.seed(1231)
+#' mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+#'
+#' # SBF call. Estimate V using the sum of Di^TDi
+#' sbf <- SBF(matrix_list = mymat)
+#' # calculate decomposition error
+#' decomperror <- calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
+#'
+#' # load gene expression dataset
 #' avg_counts <- SBF::TissueExprSpecies
 #' # call sbf
-#' sbf <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-#'            col_index = 2, approximate = FALSE,
-#'            transform_matrix = FALSE, verbose = FALSE)
-#'
+#' sbf <- SBF(matrix_list = avg_counts)
 #' # calculate decomposition error
 #' decomperror <- calcDecompError(avg_counts, sbf$u, sbf$delta, sbf$v)
-#'
-#' # e.g. 2
-#' avg_counts <- SBF::TissueExprSpecies
-#' asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-#'                 col_index = 2, approximate = TRUE,
-#'                 transform_matrix = TRUE, verbose = FALSE)
-#' decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
-#'                                asbf_cor$v)
 calcDecompError <- function(matrix_initial, u, delta, v) {
     decomp_error <- 0
     matrix_new <- list()

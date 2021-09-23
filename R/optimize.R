@@ -179,6 +179,7 @@ updateV <- function(mat_list, u, d) {
 #' @param u A list containing U matrices
 #' @param d A list containing delta matrices
 #' @param v V matrix
+#' @param optimizeV Whether initial V should be update or not. Default TRUE
 #' @param initial_exact Whether the initial value of U, Delta,
 #' and V gives exact factorization. Default FALSE
 #' @param max_iter Maximum number of iterations. In each iteration u, d, and
@@ -200,7 +201,8 @@ updateV <- function(mat_list, u, d) {
 #' newDelta <- updateDelta(mymat, newU, sbf$v)
 #' newV <- updateV(mymat, newU, newDelta)
 #' opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 1e4)
-optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
+optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
+                                  initial_exact = FALSE,
                                   max_iter = 1e4, tol = 1e-10) {
   min_error <- calcDecompError(mat_list, u, d, v)
   if (initial_exact == TRUE)
@@ -226,18 +228,20 @@ optimizeFactorization <- function(mat_list, u, d, v, initial_exact = FALSE,
         break
       }
     }
-    v <- updateV(mat_list, u, d)
-    error <- calcDecompError(mat_list, u, d, v)
-    error_vec <- c(error_vec, error)
-    if (error < min_error) {
-      u_opt <- u
-      v_opt <- v
-      d_opt <- d
-      previous_min <- min_error
-      min_error <- error
-      error_decreased <- TRUE
-      if (abs(min_error - previous_min) < tol) {
-        break
+    if (optimizeV == TRUE) {
+      v <- updateV(mat_list, u, d)
+      error <- calcDecompError(mat_list, u, d, v)
+      error_vec <- c(error_vec, error)
+      if (error < min_error) {
+        u_opt <- u
+        v_opt <- v
+        d_opt <- d
+        previous_min <- min_error
+        min_error <- error
+        error_decreased <- TRUE
+        if (abs(min_error - previous_min) < tol) {
+          break
+        }
       }
     }
     u <- updateU(mat_list, d, v)
