@@ -1,0 +1,17 @@
+citHeader("To cite SBF in publications use:")
+
+citEntry(
+  entry    = "Manual",
+  title    = "SBF: R package for shared basis factorization",
+  author   = personList(as.person("Amal Thomas"),
+              as.person("Saket Choudhary"),
+              as.person("Andrew Smith")),
+  journal  = "XXX",
+  year     = "XXX",
+  volume   = "XXX",
+  number   = "XXX",
+  pages    = "XX-XX",
+  url      = "XXX",
+  textVersion = paste( "Amal Thomas, Saket Choudhary and Andrew Smith (XXXX)",
+  "SBF: R package for shared basis factorization. R package version 1.0.0")
+)
