@@ -14,24 +14,20 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 
 ## -----------------------------------------------------------------------------
-sapply(mymat, function(x) {qr(x)$rank})
+sapply(mymat, function(x) {
+  qr(x)$rank
+  })
 
 ## -----------------------------------------------------------------------------
-sbf <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
-            approximate = FALSE, transform_matrix = FALSE)
-sbf_inv <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = TRUE,
-           approximate = FALSE, transform_matrix = FALSE)
-sbf_cor <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
-               approximate = FALSE, transform_matrix = TRUE)
-
+sbf <- SBF(matrix_list = mymat)
+sbf_inv <- SBF(matrix_list = mymat, weighted = TRUE)
+sbf_cor <- SBF(matrix_list = mymat, transform_matrix = TRUE)
 
 ## -----------------------------------------------------------------------------
 names(sbf)
 
 ## -----------------------------------------------------------------------------
 sbf$v
-sbf_inv$v
-sbf_cor$v
 
 ## -----------------------------------------------------------------------------
 printDelta <- function(l) {
@@ -57,17 +53,11 @@ t(sbf$u[[names(sbf$u)[1]]]) %*% sbf$u[[names(sbf$u)[1]]]
 
 ## -----------------------------------------------------------------------------
 sbf$lambda
-sbf_inv$lambda
-sbf_cor$lambda
 
 ## -----------------------------------------------------------------------------
-names(mymat)
-sbf$delta
-
-## -----------------------------------------------------------------------------
-calcDecompError(mymat, sbf$delta, sbf$u, sbf$v)
-calcDecompError(mymat, sbf_inv$delta, sbf_inv$u, sbf_inv$v)
-calcDecompError(mymat, sbf_cor$delta, sbf_cor$u, sbf_cor$v)
+calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
+calcDecompError(mymat, sbf_inv$u, sbf_inv$delta, sbf_inv$v)
+calcDecompError(mymat, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
 
 ## -----------------------------------------------------------------------------
 sapply(mymat, function(x) sum(diag(cov(x))))
@@ -75,8 +65,8 @@ sapply(mymat, function(x) sum(diag(cov(x))))
 ## -----------------------------------------------------------------------------
 mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = T,
                     nrow = 3, ncol = 3)
-mat5_highvar <- matrix(c(406, 319, 388, 292, 473, 287, 390, 533, 452), byrow = T,
-                    nrow = 3, ncol = 3)
+mat5_highvar <- matrix(c(406, 319, 388, 292, 473, 287, 390, 533, 452),
+                       byrow = T, nrow = 3, ncol = 3)
 
 mymat_new <- mymat
 mymat_new[["mat5"]] <- mat5
@@ -86,40 +76,35 @@ mymat_new_noisy[["mat5"]] <- mat5_highvar
 sapply(mymat_new_noisy, function(x) sum(diag(cov(x))))
 
 ## -----------------------------------------------------------------------------
-sbf_new <- SBF(matrix_list = mymat_new, check_col_matching = FALSE,
-               weighted = FALSE, approximate = FALSE, transform_matrix = FALSE)
-sbf_inv_new <- SBF(matrix_list = mymat_new, check_col_matching = FALSE,
-                   weighted = TRUE, approximate = FALSE,
-                   transform_matrix = FALSE)
+sbf_new <- SBF(matrix_list = mymat_new)
+sbf_inv_new <- SBF(matrix_list = mymat_new, weighted = TRUE)
 
 
-sbf_new_noisy <- SBF(matrix_list = mymat_new_noisy, check_col_matching = FALSE,
-                     weighted = FALSE, approximate = FALSE,
-                     transform_matrix = FALSE)
-sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy,
-                         check_col_matching = FALSE, weighted = TRUE,
-                         approximate = FALSE, transform_matrix = FALSE)
+sbf_new_noisy <- SBF(matrix_list = mymat_new_noisy)
+sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy, weighted = TRUE)
 
 ## -----------------------------------------------------------------------------
-e1 <- calcDecompError(mymat, sbf_new$delta[1:4], sbf_new$u[1:4], sbf_new$v)
-e2 <- calcDecompError(mymat, sbf_new_noisy$delta[1:4], sbf_new_noisy$u[1:4],
+e1 <- calcDecompError(mymat, sbf_new$u[1:4], sbf_new$delta[1:4], sbf_new$v)
+e2 <- calcDecompError(mymat, sbf_new_noisy$u[1:4], sbf_new_noisy$delta[1:4],
                       sbf_new_noisy$v)
 e2 / e1
 
 ## -----------------------------------------------------------------------------
-e3 <- calcDecompError(mymat, sbf_inv_new$delta[1:4],
-                      sbf_inv_new$u[1:4], sbf_inv_new$v)
-e4 <- calcDecompError(mymat, sbf_inv_new_noisy$delta[1:4],
-                      sbf_inv_new_noisy$u[1:4], sbf_inv_new_noisy$v)
+e3 <- calcDecompError(mymat, sbf_inv_new$u[1:4], sbf_inv_new$delta[1:4],
+                      sbf_inv_new$v)
+e4 <- calcDecompError(mymat, sbf_inv_new_noisy$u[1:4],
+                      sbf_inv_new_noisy$delta[1:4], sbf_inv_new_noisy$v)
 e4 / e3
 
 ## -----------------------------------------------------------------------------
-asbf <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
-            approximate = TRUE, transform_matrix = FALSE)
-asbf_inv <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = TRUE,
-           approximate = TRUE, transform_matrix = FALSE)
-asbf_cor <- SBF(matrix_list = mymat, check_col_matching = FALSE, weighted = FALSE,
-                approximate = TRUE, transform_matrix = TRUE)
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+sapply(mymat, dim)
+
+## -----------------------------------------------------------------------------
+asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
 
 ## -----------------------------------------------------------------------------
 names(asbf)
@@ -130,9 +115,9 @@ asbf_inv$error
 asbf_cor$error
 
 ## -----------------------------------------------------------------------------
-calcDecompError(mymat, asbf$delta, asbf$u_ortho, asbf$v)
-calcDecompError(mymat, asbf_inv$delta, asbf_inv$u_ortho, asbf_inv$v)
-calcDecompError(mymat, asbf_cor$delta, asbf_cor$u_ortho, asbf_cor$v)
+calcDecompError(mymat, asbf$u_ortho, asbf$delta, asbf$v)
+calcDecompError(mymat, asbf_inv$u_ortho, asbf_inv$delta, asbf_inv$v)
+calcDecompError(mymat, asbf_cor$u_ortho, asbf_cor$delta, asbf_cor$v)
 
 ## -----------------------------------------------------------------------------
 zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
@@ -142,6 +127,27 @@ zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
 zapsmall(t(asbf$v) %*% asbf$v)
 
 ## -----------------------------------------------------------------------------
+myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
+myopt_inv <- optimizeFactorization(mymat, asbf_inv$u_ortho, asbf_inv$delta,
+                                   asbf_inv$v)
+myopt_cor <- optimizeFactorization(mymat, asbf_cor$u_ortho, asbf_cor$delta,
+                                   asbf_cor$v)
+
+## -----------------------------------------------------------------------------
+cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
+cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
+    myopt_inv$error)
+cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
+    myopt_cor$error)
+
+## ---- echo = FALSE------------------------------------------------------------
+if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
+  cat("After optimization, for all three A-SBF factorizations, the final error")
+  cat("\nis the same (up to 2 decimals).")
+  cat("\nThe final error is", round(myopt$error,2))  
+}
+
+## -----------------------------------------------------------------------------
 # load dataset
 avg_counts <- SBF::TissueExprSpecies
 # check the names of species
@@ -149,17 +155,33 @@ names(avg_counts)
 
 ## -----------------------------------------------------------------------------
 # head for first species
-avg_counts[[names(avg_counts)[1]]][1:5, 1:5]
+avg_counts[[names(avg_counts)[1]]][1:3, 1:3]
 
 ## -----------------------------------------------------------------------------
 sapply(avg_counts, dim)
 
 ## -----------------------------------------------------------------------------
 # A-SBF call using correlation matrix
-asbf_cor <- SBF(matrix_list = avg_counts, col_index = 2, weighted = FALSE,
-                approximate = TRUE, transform_matrix = TRUE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$delta, asbf_cor$u_ortho,
-                                asbf_cor$v)
-decomperror
+asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
+                col_index = 2, approximate = TRUE, transform_matrix = TRUE)
+# decomposition error
+asbf_cor$error
+
+## -----------------------------------------------------------------------------
+myopt_gef <- optimizeFactorization(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
+                                   asbf_cor$v, optimizeV = FALSE)
+names(myopt_gef)
+
+## -----------------------------------------------------------------------------
+# new error
+myopt_gef$error
+# number of iterations
+myopt_gef$error_pos
+
+## -----------------------------------------------------------------------------
+identical(asbf_cor$v, myopt_gef$v)
+
+## -----------------------------------------------------------------------------
+zapsmall(t(as.matrix(myopt_gef$u[[names(myopt_gef$u)[1]]])) %*%
+           as.matrix(myopt_gef$u[[names(myopt_gef$u)[1]]]))
 
