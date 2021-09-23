@@ -195,8 +195,9 @@ cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
 ```
 ```{r, echo = FALSE}
 if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
-  cat("After optimization, for all three A-SBF factorizations, the final error is the same (up to 2 decimals)")
-  cat("\nThe final error is", round(myopt$error,2))  
+  cat("After optimization, for all three A-SBF factorizations, the final error")
+  cat("is the same (up to 2 decimals).")
+  cat("The final error is", round(myopt$error,2))  
 }
 ```
 
@@ -229,8 +230,17 @@ asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
                 transform_matrix = TRUE)
 asbf_gem$error
 ```
-We can reduce the factorization error using the `optimizeFactorization`
-function, as shown previously.
+For gene-expression analysis, we do not update/change $V$ while optimizing the
+factorization error as we may not be able to interpret the new $V$ space.
+So in the `optimizeFactorization` function, we set `optimizeV = FALSE` while
+reducing the factorization error.
+
+```{r}
+asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
+                                      asbf_gem$delta, asbf_gem$v,
+                                      optimizeV = FALSE)
+asbf_gem_opt$error
+```
 
 ### Contacts ###
 

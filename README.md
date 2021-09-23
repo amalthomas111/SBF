@@ -228,8 +228,7 @@ cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
 #> For asbf cor, # iteration = 196 final error = 1411.555
 ```
 
-    #> After optimization, for all three A-SBF factorizations, the final error is the same (up to 2 decimals)
-    #> The final error is 1411.56
+    #> After optimization, for all three A-SBF factorizations, the final erroris the same (up to 2 decimals).The final error is 1411.56
 
 ### Analysis using a test gene expression dataset
 
@@ -270,8 +269,18 @@ asbf_gem$error
 #> [1] 65865.92
 ```
 
-We can reduce the factorization error using the `optimizeFactorization`
-function, as shown previously.
+For gene-expression analysis, we do not update/change *V* while
+optimizing the factorization error as we may not be able to interpret
+the new *V* space. So in the `optimizeFactorization` function, we set
+`optimizeV = FALSE` while reducing the factorization error.
+
+``` r
+asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
+                                      asbf_gem$delta, asbf_gem$v,
+                                      optimizeV = FALSE)
+asbf_gem_opt$error
+#> [1] 63540.08
+```
 
 ### Contacts
 
