@@ -502,26 +502,28 @@ $$
 Using these three propositions, we iteratively update $U_i$, $\Delta_i$, and
 $V$. The steps of the iterative algorithm are shown below.
 
-1. Initialize $\Delta_i^{k}$,$V^{k}$ from JSB factorization.
+1. Input: $D_i, i={1 \ldots N}$
+2. Output: $U_i,\Delta_i$, and $V$, where $U_i^T U_i = I$ and $V^T V = V V^T = I$
+3. Initialize $\Delta_i^{k}$,$V^{k}$ from the SBF factorization.
 Compute $\epsilon^{k,k,k} = {\sum^{N}_{i=1}\|D_i - U_i^{k} \Delta_i^{k} {V^{k}}^{\!T}\|^{2}}_F$
-2. Update $\mathbf{U_i^{k+1}}$:\
+4. Update $\mathbf{U_i^{k+1}}$:\
 &nbsp;&nbsp;&nbsp;$U_i^{k+1} = Z Y^T$, where SVD of
 $D_i V^{k} \Delta_i^{k} = Z \Sigma Y^T$.
 Compute $\epsilon^{k+1,k,k}$ \
 &nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k,k} < \epsilon^{k,k,k}$: \
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$U_i \leftarrow U_i^{k+1}$.
-3. Update $\mathbf{\Delta_i^{k+1}}$: \
+5. Update $\mathbf{\Delta_i^{k+1}}$: \
 &nbsp;&nbsp;&nbsp;$\mathbf{\Delta_i^{k+1}} = \mbox{diag}( (U_i^{k+1})^T D_i V^k)$.
 Compute $\epsilon^{k+1,k+1,k}$ \
 &nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k} < \epsilon^{k+1,k,k}$: \
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\Delta_i \leftarrow \Delta_i^{k+1}$
-4. Update $\mathbf{V^{k+1}}$: \
+6. Update $\mathbf{V^{k+1}}$: \
 &nbsp;&nbsp;&nbsp;$V^{k+1} =  M Q^T$, where
 $\sum_{i}^N D_i^T U_i^{k+1} \Delta_i^{k+1} = M \Phi Q^T$. Compute
 $\epsilon^{k+1,k+1,k+1}$\
 &nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k+1} < \epsilon^{k+1,k+1,k}$: \
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$V \leftarrow V^{k+1}$
-5. Repeat steps 4-6 until convergence.
+7. Repeat steps 4-6 until convergence.
 
 ## Examples
 
