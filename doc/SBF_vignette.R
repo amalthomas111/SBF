@@ -127,6 +127,13 @@ zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
 zapsmall(t(asbf$v) %*% asbf$v)
 
 ## -----------------------------------------------------------------------------
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
+
+## -----------------------------------------------------------------------------
 myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
 myopt_inv <- optimizeFactorization(mymat, asbf_inv$u_ortho, asbf_inv$delta,
                                    asbf_inv$v)
@@ -146,6 +153,97 @@ if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) 
   cat("\nis the same (up to 2 decimals).")
   cat("\nThe final error is", round(myopt$error,2))  
 }
+
+## -----------------------------------------------------------------------------
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+
+## -----------------------------------------------------------------------------
+set.seed(111)
+rand_mat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+cat("\nRank is:", qr(rand_mat[[1]])$rank,"\n")
+dim(rand_mat[[1]])
+
+## -----------------------------------------------------------------------------
+mysvd <- svd(rand_mat[[1]])
+randV <- mysvd$v
+
+## -----------------------------------------------------------------------------
+# get Ui and Delta for this newV
+out <- computeUDelta(mymat, randV)
+names(out)
+
+## -----------------------------------------------------------------------------
+calcDecompError(mymat, out$u_ortho, out$d, randV)
+
+## -----------------------------------------------------------------------------
+newopt <- optimizeFactorization(mymat, out$u_ortho, out$d, randV)
+# Number of updates taken
+newopt$error_pos
+# New error
+newopt$error
+
+## -----------------------------------------------------------------------------
+mysvd <- svd(rand_mat[[1]])
+randV <- mysvd$u
+dim(randV)
+
+## -----------------------------------------------------------------------------
+# get Ui and Delta for this newV
+out <- computeUDelta(mymat, randV)
+calcDecompError(mymat, out$u_ortho, out$d, randV)
+
+## -----------------------------------------------------------------------------
+newopt <- optimizeFactorization(mymat, out$u_ortho, out$d, randV)
+# Number of updates taken
+newopt$error_pos
+# New error
+newopt$error
+
+## -----------------------------------------------------------------------------
+set.seed(171)
+newmat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+newmat
+
+## -----------------------------------------------------------------------------
+set.seed(253)
+randmat_new <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+randmat_new
+newsvd <- svd(randmat_new[[1]])
+
+## -----------------------------------------------------------------------------
+newu <- newd <- list()
+newu[[names(randmat_new)]] <- newsvd$u
+newd[[names(randmat_new)]] <- newsvd$d
+
+## -----------------------------------------------------------------------------
+calcDecompError(newmat, newu, newd, newsvd$v)
+
+## -----------------------------------------------------------------------------
+opt_new <- optimizeFactorization(newmat, newu, newd, newsvd$v)
+cat("\n # of updates:", opt_new$error_pos,"\n")
+opt_new$error
+
+## -----------------------------------------------------------------------------
+newmat
+opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
+
+## -----------------------------------------------------------------------------
+opt_new1 <- optimizeFactorization(newmat, newu, newd, newsvd$v, tol = 1e-21)
+cat("\n # of updates:", opt_new1$error_pos,"\n")
+opt_new1$error
+opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
+
+## -----------------------------------------------------------------------------
+newmat_svd <- svd(newmat[[1]])
+
+## -----------------------------------------------------------------------------
+newmat_svd$u
+opt_new1$u[[1]]
+
+## -----------------------------------------------------------------------------
+newmat_svd$v
+opt_new1$v
 
 ## -----------------------------------------------------------------------------
 # load dataset

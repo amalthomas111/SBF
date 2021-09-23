@@ -142,7 +142,7 @@ library(SBF)
 ```
 
 Let us create some random matrices using the `createRandomMatrices` function
-from SBF package. We will create four matrices, each with three columns with
+from the SBF package. We will create four matrices, each with three columns with
 rows varying from 4 to 6.
 
 ```{r}
@@ -250,14 +250,14 @@ The errors are close to zero in all three cases.
 
 ### Adding new dataset
 
-The total column variance of matrix 1-4 in mymat is approximately in the
+The total column variance of matrix 1-4 in `mymat` is approximately in the
 same range.
 
 ```{r}
 sapply(mymat, function(x) sum(diag(cov(x))))
 ```
 
-Now, let us create two new matrix lists containing our mymat matrix list.
+Now, let us create two new matrix lists containing the `mymat`.
 We will add a dataset with a similar variance to the first list and
 a high variance to the second.
 
@@ -287,7 +287,7 @@ sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy, weighted = TRUE)
 ```
 
 Let us take the newly estimated values $U_i$, $\Delta_i$, and $V$ for the four
-initial matrices in mymat. 
+initial matrices in `mymat`. 
 We will then compare the decomposition error for the two cases with and without
 inverse variance weighting.
 
@@ -305,6 +305,7 @@ e4 <- calcDecompError(mymat, sbf_inv_new_noisy$u[1:4],
                       sbf_inv_new_noisy$delta[1:4], sbf_inv_new_noisy$v)
 e4 / e3
 ```
+
 With inverse variance weighting, the deviation is smaller.
 
 
@@ -316,7 +317,7 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 ```
 
-Now Let us compute Approximate-SBF for the same datasets.
+Now let us compute Approximate-SBF for the same datasets.
 
 - A-SBF
 - A-SBF with inverse variance weighting
@@ -364,9 +365,182 @@ zapsmall(t(asbf$v) %*% asbf$v)
 
 # Reduce A-SBF factorization error
 
+We will use the following propositions to develop an iterative approach to
+minimize the factorization error.
+
+## Proposition I
+
+Let $A \in \mathbb{R}^{m \times n}$ with rank $n$ and SVD of
+$A Q^T = X \Sigma Y^T$.
+Among all matrices $B \in \mathbb{R}^{m \times n}$ with orthonormal columns,
+the Forbenius norm $\|A - B Q\|^2_F$ is minimized when $B = X Y^T$.
+
+
+$$
+\begin{aligned}
+  \min \|A - B Q\|^2_F &= \tr\left( A - BQ \right)^T (A - BQ) \\
+  &= \tr(A^T A) + \tr(Q^T Q) - 2 \tr(A Q^T B^T).  
+\end{aligned}
+$$
+
+This is equivalent to maximizing $\tr(A Q^T B^T)$.
+Let SVD of  $AQ^T = X \Sigma Y^T$, where $X \in R^{m \times m}$
+is left singular matrix, 
+$\Sigma \in R^{m \times n} = \begin{bmatrix}
+           \Sigma_n \\
+            0
+            \end{bmatrix} \mbox{ with }
+ \Sigma_n = \mbox{diag}(\sigma_1, \ldots, \sigma_n)$, and 
+ $V \in R^{m \times n}$ is the right singular matrix.
+Let $Z = Y^T B^T X$. Now $Z$ is a rectangular matrix with 
+orthonormal rows ($Z Z^T = I$) as $B^T B = I$.
+Now we have,
+
+$$
+\begin{aligned}
+  \tr(A Q^T B^T) &= \tr(X \Sigma Y^T B^T)  =  \tr(Y^T B^T X \Sigma)
+  = \tr(Z\Sigma) \\
+  &= \sum_{i=1}^{n} z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i.
+  \end{aligned}
+$$
+The upper bound is obtained when $Z=I$ and thus $B=X Y^T$.
+
+## Proposition II
+
+Let $A \in \mathbb{R}^{m \times n}$ with rank $n$ and SVD of
+$A^T B = X \Sigma Y^T$. Among all orthogonal matrices $Q$, the Forbenius norm
+$\|A - B Q^T\|^2_F$ is minimized when $Q = X Y^T$.
+
+$$
+\begin{aligned}
+  \min \|A - B Q^T \|^2_F &= \tr\left( A - BQ^T \right)^T (A - B Q^T) \\
+  &= \tr(A^T A) + \tr(B^T B) - 2 \tr(A^T B Q^T).  
+\end{aligned}
+$$
+This is equivalent to maximizing $\tr(A^T B Q^T)$. Let SVD of 
+$A^T B = X \Sigma Y^T$, where
+$\Sigma = \mbox{diag}(\sigma_1, \ldots, \sigma_n)$.
+We define an orthogonal matrix $Z = Y^T Q X $. Now we have,
+
+$$
+\begin{aligned}
+  \tr(A^T B Q^T) &= \tr(X \Sigma Y^T Q^T)  =  \tr(Y^T Q^T X \Sigma)
+  = \tr(Z\Sigma)\\
+  &= \sum_{i=1}^{n} z_{ii}\sigma_i \leq \sum_{i=1}^{p} \sigma_i.
+\end{aligned}
+$$
+The upper bound is obtained when $Z=I$ and thus $Q = X Y^T$.
+
+## Proposition III
+
+For a set of $n$ matrices $A_1,A_2, \ldots, A_n$, where
+$A_i \in \mathbb{R}^{k \times k}$, the  orthogonal matrix
+$Q \in \mathbb{R}^{k \times k}$ minimizing the Forbenius norm 
+$\sum_{i=1}^n \|A_i- Q \|^2_F$ is given by
+$Q = X Y^T$, where SVD of $\sum_{i=1}^n A_i = X \Sigma Y^T$.
+  
+Let us first consider $i = 1$ case. We want to minimize the objective function:
+$$
+ \mathcal{F}(Q) = \|A_1- Q \|^2_F \mbox{ subject to } Q^T Q = I.
+$$
+
+The objective function can be reformulated as
+
+$$
+ \mathcal{F}(Q) =  \|A_1 - Q\|^2_{F} =  \tr\left(A_1^T A_1 - 2 A_1^T Q + Q^T Q \right).
+$$
+
+Let $\Phi$ be a matrix with Lagrange multipliers for constraint $Q^T Q - I = 0$.
+The Lagrange $\mathcal{L}$ is
+
+$$
+ \mathcal{L}(Q) = \tr\left(A_1^T A_1 - 2 A_1^T Q + Q^T Q \right) +
+ \tr \left( \Phi(Q^T Q - I) \right).
+$$
+
+The partial derivative of $\mathcal{L}$ with respect to $Q$ gives
+$$
+\begin{aligned}
+    \frac{\partial \mathcal{L}}{\partial Q} &= -2 A_1 + Q ( \Phi^T + \Phi) \\
+    A_1 &= Q \left( \frac{\Phi^T + \Phi}{2} \right) \\
+    Q &= A_1 \left(\frac{\Phi^T + \Phi}{2} \right)^{-1}.
+\end{aligned}
+$$
+
+Given that the $Q$ is orthogonal, we have
+
+$$
+\begin{aligned}
+    A_1^T A_1 &= \left(\frac{\Phi^T + \Phi}{2} \right)^2 \\
+    \left(\frac{\Phi^T + \Phi}{2} \right) &= (A_1^T A_1)^{1/2}.
+\end{aligned}
+$$
+
+Thus for $i = 1$, $Q = A_1 (A_1^T A_1)^{-1/2}$. Now for $i = 2$, we have
+
+$$
+\begin{aligned}
+    \frac{\partial \mathcal{L}}{\partial Q} &= -2 A_1 - 2 A_2 + Q ( \Phi^T + \Phi) \\
+    A_1 + A_2 &= Q \left(\frac{\Phi^T + \Phi}{2} \right) \\
+    Q &= (A_1 + A_2) \left(\frac{\Phi^T + \Phi}{2} \right)^{-1} \\
+      &= (A_1 + A_2) \left( (A_1 + A_2)^T (A_1 + A_2) \right)^{-1/2}.
+\end{aligned}
+$$
+
+Now for $i = n$, we have
+
+$$
+\begin{aligned}
+  Q &= M ( M^T M)^{-1/2} \mbox{ where } M = \sum_{i=1}^n A_i = X \Sigma Y^T \\
+    &=  X \Sigma Y^T ( Y \Sigma^2 Y^T)^{-1/2} \\
+    &= X Y^T.
+\end{aligned}
+$$
+
+## Iterative update
+
+Using these three propositions, we iteratively update $U_i$, $\Delta_i$, and
+$V$. The steps of the iterative algorithm are shown below.
+
+1. Initialize $\Delta_i^{k}$,$V^{k}$ from JSB factorization.
+Compute $\epsilon^{k,k,k} = {\sum^{N}_{i=1}\|D_i - U_i^{k} \Delta_i^{k} {V^{k}}^{\!T}\|^{2}}_F$
+2. Update $\mathbf{U_i^{k+1}}$:\
+&nbsp;&nbsp;&nbsp;$U_i^{k+1} = Z Y^T$, where SVD of
+$D_i V^{k} \Delta_i^{k} = Z \Sigma Y^T$.
+Compute $\epsilon^{k+1,k,k}$ \
+&nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k,k} < \epsilon^{k,k,k}$: \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$U_i \leftarrow U_i^{k+1}$.
+3. Update $\mathbf{\Delta_i^{k+1}}$: \
+&nbsp;&nbsp;&nbsp;$\mathbf{\Delta_i^{k+1}} = \mbox{diag}( (U_i^{k+1})^T D_i V^k)$.
+Compute $\epsilon^{k+1,k+1,k}$ \
+&nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k} < \epsilon^{k+1,k,k}$: \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\Delta_i \leftarrow \Delta_i^{k+1}$
+4. Update $\mathbf{V^{k+1}}$: \
+&nbsp;&nbsp;&nbsp;$V^{k+1} =  M Q^T$, where
+$\sum_{i}^N D_i^T U_i^{k+1} \Delta_i^{k+1} = M \Phi Q^T$. Compute
+$\epsilon^{k+1,k+1,k+1}$\
+&nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k+1} < \epsilon^{k+1,k+1,k}$: \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$V \leftarrow V^{k+1}$
+5. Repeat steps 4-6 until convergence.
+
+## Examples
+
+### Optimizing A-SBF error
+
 Let us optimize the factorization error using the `optimizeFactorization`
-function for the three cases of A-SBF computation shown before.
-Depending upon the mymat and initial values, optimization could take some time.
+function for the three cases of A-SBF computation.
+
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
+```
+
+
+Depending upon the data matrix and initial values of $U_i$, $\Delta_i$, and $V$,
+optimization could take some time.
 
 ```{r}
 myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
@@ -386,6 +560,7 @@ cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
 cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
     myopt_cor$error)
 ```
+
 ```{r, echo = FALSE}
 if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
   cat("After optimization, for all three A-SBF factorizations, the final error")
@@ -393,6 +568,180 @@ if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) 
   cat("\nThe final error is", round(myopt$error,2))  
 }
 ```
+
+### Using different initial values
+
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+```
+
+Let us initialize the `optimizeFactorization` function with a random
+orthogonal matrix and check the final optimization error. The $V$ matrix
+estimated from the `mymat` matrix has a dimension of $3 \times 3$.
+First we will create a random $3 \times 3$ matrix and obtain
+an orthogonal matrix based on this.
+
+```{r}
+set.seed(111)
+rand_mat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+cat("\nRank is:", qr(rand_mat[[1]])$rank,"\n")
+dim(rand_mat[[1]])
+```
+Get an orthogonal $V$ matrix using SVD. We will set $V$ as the right basis 
+matrix from the SVD.
+
+```{r}
+mysvd <- svd(rand_mat[[1]])
+randV <- mysvd$v
+```
+
+Now for this $V$, we will first compute $U_i$'s and $\Delta_i$ for different
+$D_i$ matrices in the `mymat`. We achieve this by
+solving the linear equations: $D_i = U_i \Delta_i V^T$ for $i = 1, \ldots, 4$.
+We then orthonormalize the columns of $U_i$ using Proposition I.
+
+```{r}
+# get Ui and Delta for this newV
+out <- computeUDelta(mymat, randV)
+names(out)
+```
+
+The initial decomposition error is :
+
+```{r}
+calcDecompError(mymat, out$u_ortho, out$d, randV)
+```
+
+Now we will try to optimize using the new random $V$ and corresponding $U_i$'s
+and $\Delta_i$'s.
+
+```{r}
+newopt <- optimizeFactorization(mymat, out$u_ortho, out$d, randV)
+# Number of updates taken
+newopt$error_pos
+# New error
+newopt$error
+```
+
+We achieve the same factorization error (```r newopt$error```) after the
+`optimizeFactorization` function call.
+
+
+Now instead of the right basis matrix from the SVD, we will
+set $V$ as the left basis matrix.
+
+```{r}
+mysvd <- svd(rand_mat[[1]])
+randV <- mysvd$u
+dim(randV)
+```
+
+```{r}
+# get Ui and Delta for this newV
+out <- computeUDelta(mymat, randV)
+calcDecompError(mymat, out$u_ortho, out$d, randV)
+```
+
+Now we will try to optimize with these matrices as our initial values.
+
+```{r}
+newopt <- optimizeFactorization(mymat, out$u_ortho, out$d, randV)
+# Number of updates taken
+newopt$error_pos
+# New error
+newopt$error
+```
+
+Again we get the same decomposition error after optimizing.
+This shows that the iterative update procedure converges to give the
+same decomposition error regardless of the initial values.
+
+### Estimating SVD
+
+We will further demonstrate the case for $N=1$ when we have just one matrix.
+The `optimizeFactorization` function gives $U_i$'s with orthonormal column,
+$\Delta_i$ a diagonal matrix, and an orthogonal $V$. If the function converges,
+the results should be identical to a standard SVD, except for the sign 
+changes corresponding to $U$ and $V$ columns.
+So we will compare the results from the `optimizeFactorization`
+function with the standard SVD output.
+Let us generate one example matrix say `newmat`.
+
+```{r}
+set.seed(171)
+newmat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+newmat
+```
+
+We will estimate the SVD of `newmat` using our iterative update function from
+another random matrix with the same dimension.
+
+```{r}
+set.seed(253)
+randmat_new <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+randmat_new
+newsvd <- svd(randmat_new[[1]])
+```
+
+Let us create a list for the $u$ and $\delta$ matrices we just obtained from the
+SVD of the random matrix. This allows us to use these matrices as the initial
+values for the `optimizeFactorization` function.
+
+```{r}
+newu <- newd <- list()
+newu[[names(randmat_new)]] <- newsvd$u
+newd[[names(randmat_new)]] <- newsvd$d
+```
+
+The factorization error
+```{r}
+calcDecompError(newmat, newu, newd, newsvd$v)
+```
+
+Let us optimize.
+
+```{r}
+opt_new <- optimizeFactorization(newmat, newu, newd, newsvd$v)
+cat("\n # of updates:", opt_new$error_pos,"\n")
+opt_new$error
+```
+
+Error is close to zero. Let us compare the original matrix with the
+reconstructed matrix based on the estimated $u$, $d$ and $v$ using
+the `optimizeFactorization` function.
+
+```{r}
+newmat
+opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
+```
+The estimated value is very close.
+
+We can further improve our estimate by decreasing the tolerance parameter
+(`tol`) in the optimization function.
+
+```{r}
+opt_new1 <- optimizeFactorization(newmat, newu, newd, newsvd$v, tol = 1e-21)
+cat("\n # of updates:", opt_new1$error_pos,"\n")
+opt_new1$error
+opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
+```
+The reconstructed matrix is the same as the original matrix. Let us compare
+the $U$ and $V$ with that from the standard SVD.
+
+```{r}
+newmat_svd <- svd(newmat[[1]])
+```
+
+```{r}
+newmat_svd$u
+opt_new1$u[[1]]
+```
+```{r}
+newmat_svd$v
+opt_new1$v
+```
+The results agree!
 
 # Cross-species gene expression analysis using A-SBF
 
@@ -424,48 +773,12 @@ Once the $V$ and $\Delta_i$ are learned using the SBF factorization,
 we compute $U_i$ with orthonormal columns using proposition I.
 The estimated $V$ space captures inter-tissue gene expression correlation
 relationship.
-For gene-expression analysis, if we want the shared space to represent
+For gene expression analysis, if we want the shared space to represent
 inter-sample correlation relationship, we do not update/change $V$
 while optimizing the factorization error.
 In such cases, while reducing the factorization error
 we set `optimizeV = FALSE` in the `optimizeFactorization` function.
 
-
-## Proposition I
-
-Let $A \in \mathbb{R}^{m \times n}$ with rank $n$ and SVD of
-$A Q^T = X \Sigma Y^T$.
-Among all matrices $B \in \mathbb{R}^{m \times n}$ with orthonormal columns,
-the Forbenius norm $\|A - B Q\|^2_F$ is minimized when $B = X Y^T$.
-
-
-$$
-\begin{aligned}
-  \min \|A - B Q\|^2_F &= \tr\left( A - BQ \right)^T (A - BQ) \\
-  &= \tr(A^T A) + \tr(Q^T Q) - 2 \tr(A Q^T B^T).  
-\end{aligned}
-$$
-
-This is equivalent to maximizing $\tr(A Q^T B^T)$.
-Let SVD of  $AQ^T = X \Sigma Y^T$, where $X \in R^{m \times m}$
-is left singular matrix, 
-$\Sigma \in R^{m \times n} = \begin{bmatrix}
-           \Sigma_n \\
-            0
-            \end{bmatrix} \mbox{ with }
- \Sigma_n = \mbox{diag}(\sigma_1, \ldots, \sigma_n)$, and 
- $V \in R^{m \times n}$ is the right singular matrix.
-Let $Z = Y^T B^T X$. Now $Z$ is a rectangular matrix with 
-orthonormal rows ($Z Z^T = I$) as $B^T B = I$.
-Now we have,
-$$
-\begin{aligned}
-  \tr(A Q^T B^T) &= \tr(X \Sigma Y^T B^T)  =  \tr(Y^T B^T X \Sigma)
-  = \tr(Z\Sigma) \\
-  &= \sum_{i=1}^{n} z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i.
-  \end{aligned}
-$$
-The upper bound is obtained when $Z=I$ and thus $B=X Y^T$.
 
 
 ## Usage examples
