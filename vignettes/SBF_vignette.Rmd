@@ -523,7 +523,7 @@ The number of iterations taken to optimize = `r myopt_gef$error_pos`.
 identical(asbf_cor$v, myopt_gef$v)
 ```
 
-Check estimated Ui's have orthonormal columns.
+Check whether estimated $U_i$'s have orthonormal columns.
 
 ```{r}
 zapsmall(t(as.matrix(myopt_gef$u[[names(myopt_gef$u)[1]]])) %*%
