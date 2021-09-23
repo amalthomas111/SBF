@@ -20,7 +20,7 @@ calcNearestOrthoMatrix <- function(mat_list) {
   mat_sum <- matrix(0L, nrow =  nrow(mat_list[[matrix_names[1]]]),
                     ncol = nrow(mat_list[[matrix_names[1]]]))
   for (i in matrix_names) {
-    mat_sum <- mat_sum + mat_list[[i]]
+    mat_sum <- mat_sum + as.matrix(mat_list[[i]])
   }
   mysvd <- svd(mat_sum)
   return(mysvd$u %*% t(mysvd$v))
