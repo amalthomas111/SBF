@@ -141,9 +141,9 @@ $\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
 library(SBF)
 ```
 
-Let's create some random matrices using `createRandomMatrices` function from
-SBF package. We will create four matrices, each with three columns with rows
-varying from 4 to 6.
+Let us create some random matrices using the `createRandomMatrices` function
+from SBF package. We will create four matrices, each with three columns with
+rows varying from 4 to 6.
 
 ```{r}
 set.seed(1231)
@@ -157,8 +157,7 @@ sapply(mymat, function(x) {
   })
 ```
 
-
-Let's compute SBF using different approaches.
+Let us compute SBF using different approaches.
 
 - Estimate $V$ using sum of $D_i^T D_i / N$
 - Estimate $V$ using sum of $D_i^T D_i / N$ with inverse variance weighting
@@ -172,10 +171,12 @@ sbf_cor <- SBF(matrix_list = mymat, transform_matrix = TRUE)
 When $D_i$'s are transformed to compute inter-sample correlation, we do not need
 to scale it using inverse-variance weighting anymore. We recommend using inverse
 variance weights, giving a more robust estimate of $V$ when noisy datasets are
-present. We usually estimate $V$ using inter-sample correlation when dealing
+present. We estimate $V$ using inter-sample correlation when dealing
 with gene expression data sets.
 
-Let's inspect the outputs of `sbf`.
+
+`?SBF` help function shows all arguments for the SBF function.
+Let us inspect the output of the `SBF` call.
 
 ```{r}
 names(sbf)
@@ -191,7 +192,7 @@ where $k$ is the number of columns in $D_i$.
 sbf$v
 ```
 
-The delta values for each matrix for the three cases is shown below.
+The delta values for each matrix for the three cases are shown below.
 
 ```{r}
 printDelta <- function(l) {
@@ -218,12 +219,12 @@ qr(sbf$v)$rank
 ```
 
 The $U_i$ matrices estimated in the SBF do not have orthonormal columns.
-Let's explore that. 
+Let us explore that. 
 
 ```{r}
 sapply(sbf$u, dim)
 ```
-Let's take the first matrix $U_i \in R^{m_i \times k}$ to check this.
+Let us take the first matrix $U_i \in R^{m_i \times k}$ to check this.
 For this matrix, $U_i^T U_i$ will be $k \times k$ matrix where $k = 3$.
 
 ```{r}
@@ -256,8 +257,8 @@ same range.
 sapply(mymat, function(x) sum(diag(cov(x))))
 ```
 
-Now, let us create two new matrix list containing our mymat matrix list.
-We will add a dataset with similar variance to the first list and
+Now, let us create two new matrix lists containing our mymat matrix list.
+We will add a dataset with a similar variance to the first list and
 a high variance to the second.
 
 ```{r}
@@ -274,7 +275,7 @@ mymat_new_noisy[["mat5"]] <- mat5_highvar
 sapply(mymat_new_noisy, function(x) sum(diag(cov(x))))
 ```
 
-Let's compute SBF with the new datasets
+Let us compute SBF with the new datasets.
 
 ```{r}
 sbf_new <- SBF(matrix_list = mymat_new)
@@ -285,7 +286,7 @@ sbf_new_noisy <- SBF(matrix_list = mymat_new_noisy)
 sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy, weighted = TRUE)
 ```
 
-Let's take the newly estimated values $U_i$, $\Delta_i$, and $V$ for the four
+Let us take the newly estimated values $U_i$, $\Delta_i$, and $V$ for the four
 initial matrices in mymat. 
 We will then compare the decomposition error for the two cases with and without
 inverse variance weighting.
@@ -304,7 +305,7 @@ e4 <- calcDecompError(mymat, sbf_inv_new_noisy$u[1:4],
                       sbf_inv_new_noisy$delta[1:4], sbf_inv_new_noisy$v)
 e4 / e3
 ```
-With inverse variance weighting, the deviation is less.
+With inverse variance weighting, the deviation is smaller.
 
 
 ## A-SBF examples
@@ -315,7 +316,7 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 ```
 
-Now let's compute Approximate-SBF for the same datasets.
+Now Let us compute Approximate-SBF for the same datasets.
 
 - A-SBF
 - A-SBF with inverse variance weighting
@@ -331,6 +332,7 @@ asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE
 ```{r}
 names(asbf)
 ```
+
 A-SBF is not an exact factorization. A-SBF output has two additional values.
 `asbf$u_ortho` is the left basis matrix with orthonormal columns and
 `asbf$error` gives the decomposition error.
@@ -340,14 +342,16 @@ asbf$error
 asbf_inv$error
 asbf_cor$error
 ```
-The same error can also be computed using `calcDecompError` function.
+
+The same error can also be computed using the `calcDecompError` function.
 
 ```{r}
 calcDecompError(mymat, asbf$u_ortho, asbf$delta, asbf$v)
 calcDecompError(mymat, asbf_inv$u_ortho, asbf_inv$delta, asbf_inv$v)
 calcDecompError(mymat, asbf_cor$u_ortho, asbf_cor$delta, asbf_cor$v)
 ```
-In A-SBF factorization, $U_i$ has orthonormal columns and $V$ is orthogonal.
+
+In A-SBF factorization, $U_i$ has orthonormal columns, and $V$ is orthogonal.
 
 ```{r}
 zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
@@ -357,10 +361,11 @@ zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
 ```{r}
 zapsmall(t(asbf$v) %*% asbf$v)
 ```
+
 # Reduce A-SBF factorization error
 
 Let us optimize the factorization error using the `optimizeFactorization`
-function, for the three cases of A-SBF computation shown before.
+function for the three cases of A-SBF computation shown before.
 Depending upon the mymat and initial values, optimization could take some time.
 
 ```{r}
@@ -415,11 +420,11 @@ species as $M$, where $M$ is defined as
 The shared right basis matrix $V$ capturing the inter-tissue gene expression
 correlation is determined from the eigenvalue
 decomposition of $M$, where $M=V \Theta V^T$.
-Once the $V$ and $\Delta_i$ is learned using the SBF factorization,
-we compute $U_i$ with orthonormal columns using the proposition I.
+Once the $V$ and $\Delta_i$ are learned using the SBF factorization,
+we compute $U_i$ with orthonormal columns using proposition I.
 The estimated $V$ space captures inter-tissue gene expression correlation
 relationship.
-For gene-expression analysis, we do not update/change $V$ while optimizing the
+For gene expression analysis, we do not update/change $V$ while optimizing the
 factorization error as we may not be able to interpret the new $V$ space.
 So in the `optimizeFactorization` function, we set `optimizeV = FALSE` while
 reducing the factorization error.
@@ -465,7 +470,7 @@ The upper bound is obtained when $Z=I$ and thus $B=X Y^T$.
 ## Usage examples
 
 Let us load the SBF package's in-built gene expression dataset.
-The dataset contains average gene expression profile of five similar tissues
+The dataset contains the average gene expression profile of five similar tissues
 in three species.
 
 ```{r}
@@ -488,7 +493,7 @@ different species.
 sapply(avg_counts, dim)
 ```
 
-Lets compute A-SBF with inter-tissue correlation
+Let us compute A-SBF with inter-tissue correlation.
 
 ```{r}
 # A-SBF call using correlation matrix
@@ -518,7 +523,7 @@ The number of iterations taken to optimize = `r myopt_gef$error_pos`.
 identical(asbf_cor$v, myopt_gef$v)
 ```
 
-Check estimated Ui's have orthonormal columns
+Check estimated Ui's have orthonormal columns.
 
 ```{r}
 zapsmall(t(as.matrix(myopt_gef$u[[names(myopt_gef$u)[1]]])) %*%

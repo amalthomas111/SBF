@@ -42,7 +42,7 @@ if there is any trouble with installation.
 
 ### Quick demo
 
-###  load SBF package
+###  Load SBF package
 
 ```{r}
 # load SBF package
@@ -243,7 +243,7 @@ asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
 asbf_gem_opt$error
 ```
 
-### Contacts ###
+### Contacts
 
 ***Amal Thomas*** *amalthom@usc.edu*
 
@@ -252,7 +252,7 @@ asbf_gem_opt$error
 Contact us via e-mail or submit
 a [GitHub issue](https://github.com/amalthomas111/SBF/issues)
 
-### Copyright ###
+### Copyright
 
 Copyright (C) 2018-2021  Amal Thomas and Andrew D. Smith
 

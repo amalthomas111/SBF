@@ -34,7 +34,7 @@ trouble with installation.
 
 ### Quick demo
 
-### load SBF package
+### Load SBF package
 
 ``` r
 # load SBF package
