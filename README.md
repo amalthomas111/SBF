@@ -254,7 +254,7 @@ names(avg_counts[["Homo_sapiens"]])
 ```
 
 SBF computation based on inter-sample correlation. *V* is estimated
-using *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
+using the mean *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
 
 ``` r
 # SBF call using correlation matrix
@@ -272,12 +272,14 @@ asbf_gem$error
 #> [1] 65865.92
 ```
 
-For gene-expression analysis, we do not update/change *V* while
-optimizing the factorization error as we may not be able to interpret
-the new *V* space. So in the `optimizeFactorization` function, we set
-`optimizeV = FALSE` while reducing the factorization error.
+For gene-expression analysis, if we want the shared space to represent
+inter-sample correlation relationship, we do not update/change *V* while
+optimizing the factorization error. In such cases, while reducing the
+factorization error we set `optimizeV = FALSE` in the
+`optimizeFactorization` function.
 
 ``` r
+# optimize by keeping the V capturing R_i relationship
 asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
                                       asbf_gem$delta, asbf_gem$v,
                                       optimizeV = FALSE)
