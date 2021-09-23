@@ -193,11 +193,12 @@ cat("For asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
 cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
     myopt_cor$error)
 ```
+After optimization, for all three A-SBF factorizations, the final error is 
 ```{r, echo = FALSE}
 if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
-  cat("After optimization, for all three A-SBF factorizations, the final error")
-  cat("is the same (up to 2 decimals).")
-  cat("The final error is", round(myopt$error,2))  
+  cat("same (up to 2 decimals). The final error is", round(myopt$error,2))  
+} else {
+  cat("not exactly the same")  
 }
 ```
 

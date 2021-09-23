@@ -228,7 +228,10 @@ cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
 #> For asbf cor, # iteration = 196 final error = 1411.555
 ```
 
-    #> After optimization, for all three A-SBF factorizations, the final erroris the same (up to 2 decimals).The final error is 1411.56
+After optimization, for all three A-SBF factorizations, the final error
+is
+
+    #> same (up to 2 decimals). The final error is 1411.56
 
 ### Analysis using a test gene expression dataset
 
