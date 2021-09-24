@@ -201,6 +201,29 @@ newopt$error_pos
 newopt$error
 
 ## -----------------------------------------------------------------------------
+set.seed(111)
+newv <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)[[1]]
+k <- 2392
+newu <- newd <- list()
+for(i in names(mymat)){
+  myrow <- nrow(mymat[[i]])
+  mycol <- ncol(mymat[[i]])
+  set.seed(k)
+  newu[[i]] <- createRandomMatrices(n = 1, ncols = mycol, nrows = myrow)[[1]]
+  set.seed(k*2)
+  newd[[i]] <- sample(1:1000, size = mycol)
+  newmat <- newu[[i]] %*% diag(newd[[i]]) %*% t(newv)
+  if (!qr(newmat)$rank == mycol)
+    cat("\nDi not full column rank")
+  k = k+1
+}
+error <- calcDecompError(mymat, newu, newd, newv)
+cat("\nInitial error = ", error,"\n")
+newopt <- optimizeFactorization(mymat, newu, newd, newv)
+newopt$error_pos
+newopt$error
+
+## -----------------------------------------------------------------------------
 set.seed(171)
 newmat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
 newmat
