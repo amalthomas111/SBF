@@ -578,7 +578,7 @@ set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 ```
 
-Let us initialize the `optimizeFactorization` function with a random
+1. Let us initialize the `optimizeFactorization` function with a random
 orthogonal matrix and check the final optimization error. The $V$ matrix
 estimated from the `mymat` matrix has a dimension of $3 \times 3$.
 First we will create a random $3 \times 3$ matrix and obtain
@@ -630,7 +630,7 @@ We achieve the same factorization error (```r newopt$error```) after the
 `optimizeFactorization` function call.
 
 
-Now instead of the right basis matrix from the SVD, we will
+2. Now instead of the right basis matrix from the SVD, we will
 set $V$ as the left basis matrix.
 
 ```{r}
@@ -657,33 +657,47 @@ newopt$error
 
 Again we get the same decomposition error after optimizing.
 
-Instead of initial value being an orthogonal matrix, we will initialize with 
-a random matrix that does not guarantee any orthogonal property.
+3. Instead of initial value being an orthogonal matrix, we will initialize
+$U_i$'s, $\Delta_i$, and $V$ with random matrices such that it 
+does not guarantee
+- orthogonal property for $V$ and
+- orthonormal columns for $U_i$'s.
 
 ```{r}
 set.seed(111)
+# new random v
 newv <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)[[1]]
+# seed value
 k <- 2392
 newu <- newd <- list()
 for(i in names(mymat)){
   myrow <- nrow(mymat[[i]])
   mycol <- ncol(mymat[[i]])
   set.seed(k)
+  # new random u_i
   newu[[i]] <- createRandomMatrices(n = 1, ncols = mycol, nrows = myrow)[[1]]
   set.seed(k*2)
+  # new random d_i
   newd[[i]] <- sample(1:1000, size = mycol)
   newmat <- newu[[i]] %*% diag(newd[[i]]) %*% t(newv)
   if (!qr(newmat)$rank == mycol)
-    cat("\nDi not full column rank")
+    cat("\nNew matrix does not have full column rank")
   k = k+1
 }
 error <- calcDecompError(mymat, newu, newd, newv)
 cat("\nInitial error = ", error,"\n")
+```
+
+We see a very high factorization error because of the random initialization.
+
+```{r}
 newopt <- optimizeFactorization(mymat, newu, newd, newv)
 newopt$error_pos
 newopt$error
 ```
-Again, we get the same factorization error after optimizing.
+
+Again, we get the same factorization error after optimizing. Try changing
+the seed value and compare the results.
 
 This shows that the iterative update procedure converges and achieves the
 same decomposition error regardless of the initial values.
