@@ -25,7 +25,7 @@ Inside an R console
 
 ``` r
 library(devtools)
-devtools::install_github("amalthomas111/SBF")
+devtools::install_github("amalthomas111/SBF", build_vignettes = TRUE)
 ```
 
 Please contact us via e-mail or submit a [GitHub

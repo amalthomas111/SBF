@@ -2,19 +2,16 @@
 title: "SBF vignette"
 author: "Amal Thomas"
 output:
+  knitr:::html_vignette:
+    toc: yes
   pdf_document:
     toc: yes
     number_section: yes
-  knitr:::html_vignette:
-    toc: yes
-  html_document:
-    toc: yes
-    df_print: paged
 bibliography: references.bib
 vignette: >
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteIndexEntry{SBF_vignette}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 <style>
