@@ -2,11 +2,11 @@
 title: "SBF vignette"
 author: "Amal Thomas"
 output:
-  knitr:::html_vignette:
-    toc: yes
   pdf_document:
     toc: yes
     number_section: yes
+  knitr:::html_vignette:
+    toc: yes
 bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{SBF_vignette}
@@ -125,7 +125,7 @@ $\Delta_i \in \mathbb{R}^{k \times k}$ is a diagonal matrix with positive
 values $\Delta_{ik}$ and $V$ is a non singular square matrix.
 The right basis matrix $V$ is identical in all the $N$ matrix factorizations
 and defines the common space shared by all species. 
-We learn the factorization such that the learned $V$ is closest to that in
+We estimate the factorization such that the estimated $V$ is closest to that in
 the exact decomposition and by minimizing the total decomposition error 
 $\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
 
@@ -787,7 +787,7 @@ The results agree!
 
 # Cross-species gene expression analysis using A-SBF
 
-For cross-species gene expression datasets, we learn the common space $V$ based
+For cross-species gene expression datasets, we estimate the common space $V$ based
 on correlation ($R_i$) between column phenotypes
 (such as tissues, cell types, etc.) within a species.
 In our study, we have shown that the inter-tissue gene expression correlation
@@ -811,7 +811,7 @@ species as $M$, where $M$ is defined as
 The shared right basis matrix $V$ capturing the inter-tissue gene expression
 correlation is determined from the eigenvalue
 decomposition of $M$, where $M=V \Theta V^T$.
-Once the $V$ and $\Delta_i$ are learned using the SBF factorization,
+Once the $V$ and $\Delta_i$ are estimated using the SBF factorization,
 we compute $U_i$ with orthonormal columns using proposition I.
 The estimated $V$ space captures inter-tissue gene expression correlation
 relationship.
