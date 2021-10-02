@@ -2,11 +2,11 @@
 title: "SBF vignette"
 author: "Amal Thomas"
 output:
+  knitr:::html_vignette:
+    toc: yes
   pdf_document:
     toc: yes
     number_section: yes
-  knitr:::html_vignette:
-    toc: yes
 bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{SBF_vignette}
@@ -521,6 +521,35 @@ $\epsilon^{k+1,k+1,k+1}$\
 &nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k+1} < \epsilon^{k+1,k+1,k}$: \
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$V \leftarrow V^{k+1}$
 7. Repeat steps 4-6 until convergence.
+
+Our iterative approach is a block-coordinate descent algorithm.
+In gradient descent, we have the general
+update:
+$$
+\theta_{t+1} = \theta_t - \eta \nabla \mathcal{F}(\theta_t),
+$$
+where $t$ is the iteration counter, $\eta$ is the learning rate 
+and $\nabla \mathcal{F} (\theta)$ is the gradient of the cost function.
+In A-SBF, the gradient of the cost function with respect to $U$ is
+$-2 D V \Delta$. So we have
+
+$$
+  U_{t+1} = U_t + \eta D V \Delta.
+$$
+By setting $\eta  = I - U_t (D V \Delta)^{-1}$, we have $U_{t+1} = D V \Delta$.
+Since we require orthonormal columns, we find the closest orthogonal matrix to
+$D V \Delta$, and set the final value of $U_{t+1} = Z Y^T$, where SVD of
+$DV\Delta = Z \Sigma Y^T$.
+This approach employs orthogonal Procrustes solution along with the
+gradient descent algorithm.
+We can also achieve this by directly setting
+$\eta = \frac{Z Y^T - U_t}{D V \Delta}$, so that 
+$U_{t+1}$ has all the properties we need.
+The learning rate determines the size of the steps. If the value of $U_t$ is very different
+from $Z Y^T$, $\eta$ will be high, and we take larger steps.
+As it becomes closer, the learning rate also decreases.
+We have a similar case for updating $V$ and $\Delta$.
+
 
 ## Examples
 

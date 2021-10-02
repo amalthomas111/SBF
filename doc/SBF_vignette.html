@@ -535,6 +535,12 @@ text-align: justify}
       <span class="math inline">\(V \leftarrow V^{k+1}\)</span></li>
 <li>Repeat steps 4-6 until convergence.</li>
 </ol>
+<p>Our iterative approach is a block-coordinate descent algorithm. In gradient descent, we have the general update: <span class="math display">\[
+\theta_{t+1} = \theta_t - \eta \nabla \mathcal{F}(\theta_t),
+\]</span> where <span class="math inline">\(t\)</span> is the iteration counter, <span class="math inline">\(\eta\)</span> is the learning rate and <span class="math inline">\(\nabla \mathcal{F} (\theta)\)</span> is the gradient of the cost function. In A-SBF, the gradient of the cost function with respect to <span class="math inline">\(U\)</span> is <span class="math inline">\(-2 D V \Delta\)</span>. So we have</p>
+<p><span class="math display">\[
+  U_{t+1} = U_t + \eta D V \Delta.
+\]</span> By setting <span class="math inline">\(\eta = I - U_t (D V \Delta)^{-1}\)</span>, we have <span class="math inline">\(U_{t+1} = D V \Delta\)</span>. Since we require orthonormal columns, we find the closest orthogonal matrix to <span class="math inline">\(D V \Delta\)</span>, and set the final value of <span class="math inline">\(U_{t+1} = Z Y^T\)</span>, where SVD of <span class="math inline">\(DV\Delta = Z \Sigma Y^T\)</span>. This approach employs orthogonal Procrustes solution along with the gradient descent algorithm. We can also achieve this by directly setting <span class="math inline">\(\eta = \frac{Z Y^T - U_t}{D V \Delta}\)</span>, so that <span class="math inline">\(U_{t+1}\)</span> has all the properties we need. The learning rate determines the size of the steps. If the value of <span class="math inline">\(U_t\)</span> is very different from <span class="math inline">\(Z Y^T\)</span>, <span class="math inline">\(\eta\)</span> will be high, and we take larger steps. As it becomes closer, the learning rate also decreases. We have a similar case for updating <span class="math inline">\(V\)</span> and <span class="math inline">\(\Delta\)</span>.</p>
 </div>
 <div id="examples" class="section level2">
 <h2>Examples</h2>
