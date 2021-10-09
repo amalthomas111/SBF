@@ -2,11 +2,11 @@
 title: "SBF vignette"
 author: "Amal Thomas"
 output:
-  knitr:::html_vignette:
-    toc: yes
   pdf_document:
     toc: yes
     number_section: yes
+  knitr:::html_vignette:
+    toc: yes
 bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{SBF_vignette}
@@ -29,6 +29,7 @@ knitr::opts_chunk$set(
 
 \newcommand{\diag}{\mathrm{diag}}
 \newcommand{\tr}{\mathrm{tr}}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 
 # Background
 
@@ -360,139 +361,205 @@ zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
 zapsmall(t(asbf$v) %*% asbf$v)
 ```
 
-# Reduce A-SBF factorization error
-
-We will use the following propositions to develop an iterative approach to
-minimize the factorization error.
-
-## Proposition I
-
-Let $A \in \mathbb{R}^{m \times n}$ with rank $n$ and SVD of
-$A Q^T = X \Sigma Y^T$.
-Among all matrices $B \in \mathbb{R}^{m \times n}$ with orthonormal columns,
-the Forbenius norm $\|A - B Q\|^2_F$ is minimized when $B = X Y^T$.
+# Minimizing A-SBF factorization error
 
 
+Here we provide details on minimizing the decomposition error of
+the A-SBF method.
+In A-SBF, we want to solve the following optimization problem:
 $$
-\begin{aligned}
-  \min \|A - B Q\|^2_F &= \tr\left( A - BQ \right)^T (A - BQ) \\
-  &= \tr(A^T A) + \tr(Q^T Q) - 2 \tr(A Q^T B^T).  
-\end{aligned}
-$$
-
-This is equivalent to maximizing $\tr(A Q^T B^T)$.
-Let SVD of  $AQ^T = X \Sigma Y^T$, where $X \in R^{m \times m}$
-is left singular matrix, 
-$\Sigma \in R^{m \times n} = \begin{bmatrix}
-           \Sigma_n \\
-            0
-            \end{bmatrix} \mbox{ with }
- \Sigma_n = \mbox{diag}(\sigma_1, \ldots, \sigma_n)$, and 
- $V \in R^{m \times n}$ is the right singular matrix.
-Let $Z = Y^T B^T X$. Now $Z$ is a rectangular matrix with 
-orthonormal rows ($Z Z^T = I$) as $B^T B = I$.
-Now we have,
-
-$$
-\begin{aligned}
-  \tr(A Q^T B^T) &= \tr(X \Sigma Y^T B^T)  =  \tr(Y^T B^T X \Sigma)
-  = \tr(Z\Sigma) \\
-  &= \sum_{i=1}^{n} z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i.
-  \end{aligned}
-$$
-The upper bound is obtained when $Z=I$ and thus $B=X Y^T$.
-
-## Proposition II
-
-Let $A \in \mathbb{R}^{m \times n}$ with rank $n$ and SVD of
-$A^T B = X \Sigma Y^T$. Among all orthogonal matrices $Q$, the Forbenius norm
-$\|A - B Q^T\|^2_F$ is minimized when $Q = X Y^T$.
-
-$$
-\begin{aligned}
-  \min \|A - B Q^T \|^2_F &= \tr\left( A - BQ^T \right)^T (A - B Q^T) \\
-  &= \tr(A^T A) + \tr(B^T B) - 2 \tr(A^T B Q^T).  
-\end{aligned}
-$$
-This is equivalent to maximizing $\tr(A^T B Q^T)$. Let SVD of 
-$A^T B = X \Sigma Y^T$, where
-$\Sigma = \mbox{diag}(\sigma_1, \ldots, \sigma_n)$.
-We define an orthogonal matrix $Z = Y^T Q X $. Now we have,
-
-$$
-\begin{aligned}
-  \tr(A^T B Q^T) &= \tr(X \Sigma Y^T Q^T)  =  \tr(Y^T Q^T X \Sigma)
-  = \tr(Z\Sigma)\\
-  &= \sum_{i=1}^{n} z_{ii}\sigma_i \leq \sum_{i=1}^{p} \sigma_i.
-\end{aligned}
-$$
-The upper bound is obtained when $Z=I$ and thus $Q = X Y^T$.
-
-## Proposition III
-
-For a set of $n$ matrices $A_1,A_2, \ldots, A_n$, where
-$A_i \in \mathbb{R}^{k \times k}$, the  orthogonal matrix
-$Q \in \mathbb{R}^{k \times k}$ minimizing the Forbenius norm 
-$\sum_{i=1}^n \|A_i- Q \|^2_F$ is given by
-$Q = X Y^T$, where SVD of $\sum_{i=1}^n A_i = X \Sigma Y^T$.
-  
-Let us first consider $i = 1$ case. We want to minimize the objective function:
-$$
- \mathcal{F}(Q) = \|A_1- Q \|^2_F \mbox{ subject to } Q^T Q = I.
+\begin{array}{rl}
+  \mbox{minimize:} & \sum^{n}_{i=1} \|D_i - U_i\Delta_iV^T\|^2_F,\\[0.5em]
+  \mbox{subject to:} & U_i^TU_i = I, \mbox{ for } 1\leq i \leq n,\\
+  & V^TV = VV^T = I,\\
+  & \Delta_i = \diag(\delta_{i,1},\ldots,\delta_{i,k}),\\
+  & \delta_{i,j} \geq 0, \mbox{ for } 1\leq i\leq n.
+  \end{array}
 $$
 
 The objective function can be reformulated as
+$$
+\textstyle
+\sum_{i=1}^n
+\tr(D_i^TD_i)
+- 2\tr\big(D_i^TU_i\Delta_iV^T\big)
++ \tr(\Delta_i^2)
+$$
+Let $\Phi$, $\Psi_i$, and $\Theta_i$ be matrices with Lagrange
+multipliers for constraints $V^TV - I = 0$, $U_i^TU_i - I = 0$ and
+$\delta_{i,j} \geq 0$. The Lagrange $\mathcal{L}$ is
 
 $$
- \mathcal{F}(Q) =  \|A_1 - Q\|^2_{F} =  \tr\left(A_1^T A_1 - 2 A_1^T Q + Q^T Q \right).
+\mathcal{L}(U, \Delta, V) = \sum_{i=1}^n \tr(D_i^T D_i - 2 D_i^T U_i \Delta_i V^T + \Delta_i^2) +
+\tr (\Phi(V^T V - I)) + \tr (\Psi_i(U_i^T U_i - I)) + \tr(\Theta_i \Delta_i).
 $$
 
-Let $\Phi$ be a matrix with Lagrange multipliers for constraint $Q^T Q - I = 0$.
-The Lagrange $\mathcal{L}$ is
-
-$$
- \mathcal{L}(Q) = \tr\left(A_1^T A_1 - 2 A_1^T Q + Q^T Q \right) +
- \tr \left( \Phi(Q^T Q - I) \right).
-$$
-
-The partial derivative of $\mathcal{L}$ with respect to $Q$ gives
-$$
-\begin{aligned}
-    \frac{\partial \mathcal{L}}{\partial Q} &= -2 A_1 + Q ( \Phi^T + \Phi) \\
-    A_1 &= Q \left( \frac{\Phi^T + \Phi}{2} \right) \\
-    Q &= A_1 \left(\frac{\Phi^T + \Phi}{2} \right)^{-1}.
-\end{aligned}
-$$
-
-Given that the $Q$ is orthogonal, we have
+Solving for an individual $U_i$ using the partial derivative of
+$\mathcal{L}$ with respect to $U_i$ gives
 
 $$
 \begin{aligned}
-    A_1^T A_1 &= \left(\frac{\Phi^T + \Phi}{2} \right)^2 \\
-    \left(\frac{\Phi^T + \Phi}{2} \right) &= (A_1^T A_1)^{1/2}.
+  \frac{\partial}{\partial U_i} \mathcal{L}(U, \Delta, V) &= -2D_iV\Delta_i + U_i(\Psi_i^T + \Psi_i)\\
+  U_i &= D_iV\Delta_i((D_iV\Delta_i)^T(D_iV\Delta_i))^{-1/2}. \label{eqU}
 \end{aligned}
 $$
 
-Thus for $i = 1$, $Q = A_1 (A_1^T A_1)^{-1/2}$. Now for $i = 2$, we have
+
+Solving $V$ using the partial derivative of $\mathcal{L}$ with respect
+to $V$ gives
 
 $$
 \begin{aligned}
-    \frac{\partial \mathcal{L}}{\partial Q} &= -2 A_1 - 2 A_2 + Q ( \Phi^T + \Phi) \\
-    A_1 + A_2 &= Q \left(\frac{\Phi^T + \Phi}{2} \right) \\
-    Q &= (A_1 + A_2) \left(\frac{\Phi^T + \Phi}{2} \right)^{-1} \\
-      &= (A_1 + A_2) \left( (A_1 + A_2)^T (A_1 + A_2) \right)^{-1/2}.
+  \frac{\partial}{\partial V} \mathcal{L}(U, \Delta, V)
+  &= \sum_{i=1}^n -2D_i^TU_i\Delta_i + V(\Phi^T + \Phi) \\
+  V &= \sum_{i=1}^n D_i^TU_i\Delta_i ( (\sum_{i=1}^n D_i^TU_i\Delta_i)^T (\sum_{i=1}^n D_i^TU_i\Delta_i))^{-1/2}. \label{eqV}
 \end{aligned}
 $$
 
-Now for $i = n$, we have
+Solving for an individual $\Delta_i$ using the partial derivative of $\mathcal{L}$ with
+respect to $\Delta_i$ gives
 
 $$
 \begin{aligned}
-  Q &= M ( M^T M)^{-1/2} \mbox{ where } M = \sum_{i=1}^n A_i = X \Sigma Y^T \\
-    &=  X \Sigma Y^T ( Y \Sigma^2 Y^T)^{-1/2} \\
-    &= X Y^T.
+\frac{\partial}{\partial \Delta_i} \mathcal{L}(U, \Delta, V) &= -2 U_i^T D_iV + 2\Delta_i  + \Theta_i \\
+  \Delta_i &= U_i^T D_i V. \label{eqDelta}
 \end{aligned}
 $$
+
+In practice, we do not compute the square root inverse to update $U_i$ and $V$.
+Now we show that we make the optimal update of our matrix
+in each iteration based on the singular value decomposition (SVD)
+of other matrices.
+The first two results below show that, given one matrix factor,
+we can obtain the other as required in our algorithm.
+
+## Proposition I
+
+  Consider matrices $A \in \mathbb{R}^{m \times n}$ with rank $n$ and
+  $Q\in \mathbb{R}^{n\times n}$. If $X\Sigma Y^T$ is the SVD of
+  $AQ^T$, then among matrices $B\in\mathbb{R}^{m\times n}$ with
+  orthonormal columns, $\|A - BQ\|_F$ is minimized when $B=XY^T$.
+
+
+
+  The norm and its square have the same minimum value, so we consider
+  the minimum of
+$$
+\|A - B Q\|^2_F = \tr(A^T A) + \tr(Q^T Q) - 2 \tr(A Q^T B^T),
+$$
+
+  which coincides with the maximum value of $\tr(A Q^T B^T)$. With $X
+  \Sigma Y^T$ the SVD of $AQ^T$, define $Z = Y^TB^TX$. Since $B^TB=I$,
+  we have $Z Z^T = I$. We can bound the maximum value of $\tr(A Q^T B^T)$
+  as follows:
+
+$$
+\tr(AQ^TB^T) = \tr(X\Sigma Y^TB^T)
+    = \tr(Z\Sigma) =
+    \sum_{i=1}^{n} Z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i,
+$$
+and this bound is attained when $Z=I$, and thus $B=XY^T$.
+
+In proposition \ref{orthoU} we substitute $A = D_i, B = U_i,$
+and $Q = \Delta_i V^T$. Now we have
+$AQ^T = D_i V \Delta_i  = X \Sigma Y^T$. The $U_i$ with orthonormal columns
+is given by $XY^T$. The same can also be obtained by substituting 
+$D_i V \Delta_i  = X \Sigma Y^T$ in equation 1.
+
+$$
+\begin{aligned}
+    U_i &= D_iV\Delta_i((D_iV\Delta_i)^T(D_iV\Delta_i))^{-1/2} \\
+    U_i &= X \Sigma Y^T((X \Sigma Y^T)^T(X \Sigma Y^T))^{-1/2} = X Y^T.
+\end{aligned}
+$$
+
+## Proposition II
+
+  Consider matrices $A \in \mathbb{R}^{m \times n}$ with rank $n$ and
+  $B\in \mathbb{R}^{m\times n}$. If $X\Sigma Y^T$ is the SVD of
+  $A^TB$, then among orthogonal matrices $Q\in\mathbb{R}^{n\times n}$,
+  $\|A - BQ^T\|_F$ is minimized when $Q=XY^T$.
+
+
+  The norm and its square have the same minimum value, so we consider
+  the minimum of
+$$
+\|A - BQ^T\|^2_F = \tr(A^TA) + \tr(B^TB) - 2\tr(A^TBQ^T),
+$$
+which coincides with the maximum value of $\tr(A^TBQ^T)$. With $X\Sigma Y^T$
+  the SVD of $A^TB$, define orthogonal matrix $Z = Y^TQ^TX$. We bound the
+  maximum of $\tr(A^TBQ^T)$ as
+
+$$
+\tr(A^TBQ^T) = \tr(X\Sigma Y^TQ^T)
+    = \tr(Z\Sigma)
+    = \sum_{i=1}^{n} Z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i,
+$$
+and this bound is attained when $Z=I$ and thus $Q=XY^T$.
+
+
+In proposition II, we substitute
+$A = D_i, B = U_i \Delta_i,$ and $Q = V_i$. Now we have
+$A^TB = D_i^T U_i \Delta_i  = X \Sigma Y^T$ and orthogonal $V_i$
+is given by $XY^T$. In A-SBF, $V$ is shared across the $n$ factorizations.
+To find the shared $V$, we can use the following proposition.
+
+
+## Proposition III
+
+  For a set of $n$ matrices $A_1,A_2, \ldots, A_n$, where $A_i \in
+  \mathbb{R}^{k \times k}$, the orthogonal matrix $Q \in
+  \mathbb{R}^{k\times k}$ minimizing $\sum_{i=1}^n\|A_i- Q\|^2_F$ is
+  given by $Q = X Y^T$, where SVD of $\sum_{i=1}^nA_i=X\Sigma Y^T$.
+  
+We seek to minimize
+$$
+ \sum_{i=1}^n\|A_i - Q\|^2_F ~~\mbox{subject to}~~ Q^TQ=I.
+$$
+
+  Defining $A = \sum_{i=1}^n A_i$, this objective function can be
+  rewritten
+
+$$
+\tr(\sum_{i=1}^nA_i^TA_i) - 2\tr(A^TQ) + n\tr(Q^TQ).
+$$
+
+  Let $\Phi$ be a matrix of Lagrange multipliers for $Q^TQ-I=0$. The
+  Lagrangian $\mathcal{L}$ is then
+$$
+  \mathcal{L}(Q,\Phi) = \tr(\sum_{i=1}^nA_i^TA_i) - 2\tr(A^TQ) + \tr(Q^TQ) + \tr(\Phi(Q^TQ-I)).
+$$
+
+Since $Q$ is orthogonal, the partial derivatives of
+  $\mathcal{L}(Q,\Phi)$ with respect to $Q$ are as follows:
+$$
+\frac{\partial \mathcal{L}(Q,\Phi)}{\partial Q} = -2A + Q(\Phi^T + \Phi).
+$$
+
+  Setting this equation to $0$ yields:
+
+
+$$
+  Q = A\left(\frac{\Phi^T + \Phi}{2}\right)^{-1} ~~\mbox{and}~~ A = Q\left(\frac{\Phi^T + \Phi}{2}\right).
+$$
+
+Again because $Q$ is orthogonal,
+
+$$
+A^TA = \left(\frac{\Phi^T + \Phi}{2} \right)^2 ~~\mbox{and}~~
+    \left(\frac{\Phi^T + \Phi}{2}\right) = (A^TA)^{1/2},
+$$
+  which implies $Q = A(A^TA)^{-1/2}$. Since $X\Sigma Y^T$ is the SVD
+  of $A$ we conclude
+
+$$
+Q = X\Sigma Y^T(Y\Sigma^2 Y^T)^{-1/2} = XY^T.
+$$
+In proposition \ref{orthoVsum}, we substitute
+$A_i = V_i = D_i^T U_i \Delta_i$ and $Q = V$.
+Now we have $\sum_{i=1}^n A_i = \sum_{i=1}^n D_i^T U_i \Delta_i = X \Sigma Y^T$
+and the shared basis in A-SBF is given by $V = X Y^T$.
+
 
 ## Iterative update
 
@@ -745,7 +812,71 @@ newmat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
 newmat
 ```
 
-We will estimate the SVD of `newmat` using our iterative update function from
+1. We will estimate the SVD of `newmat` using our iterative update function by
+setting the initial values to be identity matrix
+
+```{r}
+newu <- newd <- list()
+newu[["mat1"]]  <- diag(3)
+newd[["mat1"]] <- diag(newu[["mat1"]])
+newu
+newd
+```
+The factorization error when initializing using identity matrix:
+
+```{r}
+calcDecompError(newmat, newu, newd, diag(3))
+```
+
+Let us optimize.
+
+```{r}
+opt_new <- optimizeFactorization(newmat, newu, newd, diag(3))
+cat("\n # of updates:", opt_new$error_pos,"\n")
+opt_new$error
+```
+Error is close to zero. Let us compare the original matrix with the
+reconstructed matrix based on the estimated $u$, $d$ and $v$ using
+the `optimizeFactorization` function.
+
+```{r}
+newmat
+opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
+```
+```{r}
+opt_new1 <- optimizeFactorization(newmat, newu, newd, diag(3), tol = 1e-21)
+cat("\n # of updates:", opt_new1$error_pos,"\n")
+opt_new1$error
+```
+```{r}
+newmat
+opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
+```
+The reconstructed matrix is the same as the original matrix. Let us compare
+the $U$ and $V$ with that from the standard SVD.
+
+
+```{r}
+newmat_svd <- svd(newmat[[1]])
+```
+
+```{r}
+newmat_svd$d
+opt_new1$d
+```
+
+
+```{r}
+newmat_svd$u
+opt_new1$u[[1]]
+```
+```{r}
+newmat_svd$v
+opt_new1$v
+```
+The results agree except for the sign and ordering of columns.
+
+2. Now we will estimate the SVD of `newmat` using our iterative update function from
 another random matrix with the same dimension.
 
 ```{r}
