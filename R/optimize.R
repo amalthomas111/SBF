@@ -217,7 +217,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
     d <- updateDelta(mat_list, u, v)
     error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
-    if (error < min_error) {
+    if (error <= min_error) {
       u_opt <- u
       v_opt <- v
       d_opt <- d
@@ -232,7 +232,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
       v <- updateV(mat_list, u, d)
       error <- calcDecompError(mat_list, u, d, v)
       error_vec <- c(error_vec, error)
-      if (error < min_error) {
+      if (error <= min_error) {
         u_opt <- u
         v_opt <- v
         d_opt <- d
@@ -247,7 +247,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
     u <- updateU(mat_list, d, v)
     error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
-    if (error < min_error) {
+    if (error <= min_error) {
       u_opt <- u
       v_opt <- v
       d_opt <- d
