@@ -357,78 +357,155 @@ In A-SBF factorization, *U*<sub>*i*</sub> has orthonormal columns, and
     #> [2,]    0    1    0
     #> [3,]    0    0    1
 
-Reduce A-SBF factorization error
-================================
+Minimizing A-SBF factorization error
+====================================
 
-We will use the following propositions to develop an iterative approach
-to minimize the factorization error.
+Here we provide details on minimizing the decomposition error of the
+A-SBF method. In A-SBF, we want to solve the following optimization
+problem:
+$$
+\\begin{array}{rl}
+  \\mbox{minimize:} & \\sum^{n}\_{i=1} \\|D\_i - U\_i\\Delta\_iV^T\\|^2\_F,\\\\\[0.5em\]
+  \\mbox{subject to:} & U\_i^TU\_i = I, \\mbox{ for } 1\\leq i \\leq n,\\\\
+  & V^TV = VV^T = I,\\\\
+  & \\Delta\_i = \\mathrm{diag}(\\delta\_{i,1},\\ldots,\\delta\_{i,k}),\\\\
+  & \\delta\_{i,j} \\geq 0, \\mbox{ for } 1\\leq i\\leq n.
+  \\end{array}
+$$
+
+The objective function can be reformulated as
+$$
+\\textstyle
+\\sum\_{i=1}^n
+\\mathrm{tr}(D\_i^TD\_i)
+- 2\\mathrm{tr}\\big(D\_i^TU\_i\\Delta\_iV^T\\big)
++ \\mathrm{tr}(\\Delta\_i^2)
+$$
+Let *Φ*, *Ψ*<sub>*i*</sub>, and *Θ*<sub>*i*</sub> be matrices with
+Lagrange multipliers for constraints *V*<sup>*T*</sup>*V* − *I* = 0,
+*U*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub> − *I* = 0 and
+*δ*<sub>*i*, *j*</sub> ≥ 0. The Lagrange ℒ is
+
+$$
+\\mathcal{L}(U, \\Delta, V) = \\sum\_{i=1}^n \\mathrm{tr}(D\_i^T D\_i - 2 D\_i^T U\_i \\Delta\_i V^T + \\Delta\_i^2) +
+\\mathrm{tr}(\\Phi(V^T V - I)) + \\mathrm{tr}(\\Psi\_i(U\_i^T U\_i - I)) + \\mathrm{tr}(\\Theta\_i \\Delta\_i).
+$$
+
+Solving for an individual *U*<sub>*i*</sub> using the partial derivative
+of ℒ with respect to *U*<sub>*i*</sub> gives
+
+$$
+\\begin{aligned}
+  \\frac{\\partial}{\\partial U\_i} \\mathcal{L}(U, \\Delta, V) &= -2D\_iV\\Delta\_i + U\_i(\\Psi\_i^T + \\Psi\_i)\\\\
+  U\_i &= D\_iV\\Delta\_i((D\_iV\\Delta\_i)^T(D\_iV\\Delta\_i))^{-1/2}. \\label{eqU}
+\\end{aligned}
+$$
+
+Solving *V* using the partial derivative of ℒ with respect to *V* gives
+
+$$
+\\begin{aligned}
+  \\frac{\\partial}{\\partial V} \\mathcal{L}(U, \\Delta, V)
+  &= \\sum\_{i=1}^n -2D\_i^TU\_i\\Delta\_i + V(\\Phi^T + \\Phi) \\\\
+  V &= \\sum\_{i=1}^n D\_i^TU\_i\\Delta\_i ( (\\sum\_{i=1}^n D\_i^TU\_i\\Delta\_i)^T (\\sum\_{i=1}^n D\_i^TU\_i\\Delta\_i))^{-1/2}. \\label{eqV}
+\\end{aligned}
+$$
+
+Solving for an individual *Δ*<sub>*i*</sub> using the partial derivative
+of ℒ with respect to *Δ*<sub>*i*</sub> gives
+
+$$
+\\begin{aligned}
+\\frac{\\partial}{\\partial \\Delta\_i} \\mathcal{L}(U, \\Delta, V) &= -2 U\_i^T D\_iV + 2\\Delta\_i  + \\Theta\_i \\\\
+  \\Delta\_i &= U\_i^T D\_i V. \\label{eqDelta}
+\\end{aligned}
+$$
+
+In practice, we do not compute the square root inverse to update
+*U*<sub>*i*</sub> and *V*. Now we show that we make the optimal update
+of our matrix in each iteration based on the singular value
+decomposition (SVD) of other matrices. The first two results below show
+that, given one matrix factor, we can obtain the other as required in
+our algorithm.
 
 Proposition I
 -------------
 
-Let *A* ∈ ℝ<sup>*m* × *n*</sup> with rank *n* and SVD of
-*A**Q*<sup>*T*</sup> = *X**Σ**Y*<sup>*T*</sup>. Among all matrices
-*B* ∈ ℝ<sup>*m* × *n*</sup> with orthonormal columns, the Forbenius norm
-∥*A* − *B**Q*∥<sub>*F*</sub><sup>2</sup> is minimized when
+Consider matrices *A* ∈ ℝ<sup>*m* × *n*</sup> with rank *n* and
+*Q* ∈ ℝ<sup>*n* × *n*</sup>. If *X**Σ**Y*<sup>*T*</sup> is the SVD of
+*A**Q*<sup>*T*</sup>, then among matrices *B* ∈ ℝ<sup>*m* × *n*</sup>
+with orthonormal columns, ∥*A* − *B**Q*∥<sub>*F*</sub> is minimized when
 *B* = *X**Y*<sup>*T*</sup>.
+
+The norm and its square have the same minimum value, so we consider the
+minimum of
+∥*A* − *B**Q*∥<sub>*F*</sub><sup>2</sup> = *t**r*(*A*<sup>*T*</sup>*A*) + *t**r*(*Q*<sup>*T*</sup>*Q*) − 2*t**r*(*A**Q*<sup>*T*</sup>*B*<sup>*T*</sup>),
+
+which coincides with the maximum value of
+*t**r*(*A**Q*<sup>*T*</sup>*B*<sup>*T*</sup>). With
+*X**Σ**Y*<sup>*T*</sup> the SVD of *A**Q*<sup>*T*</sup>, define
+*Z* = *Y*<sup>*T*</sup>*B*<sup>*T*</sup>*X*. Since
+*B*<sup>*T*</sup>*B* = *I*, we have *Z**Z*<sup>*T*</sup> = *I*. We can
+bound the maximum value of *t**r*(*A**Q*<sup>*T*</sup>*B*<sup>*T*</sup>)
+as follows:
+
+$$
+\\mathrm{tr}(AQ^TB^T) = \\mathrm{tr}(X\\Sigma Y^TB^T)
+    = \\mathrm{tr}(Z\\Sigma) =
+    \\sum\_{i=1}^{n} Z\_{ii}\\sigma\_i \\leq \\sum\_{i=1}^{n} \\sigma\_i,
+$$
+and this bound is attained when *Z* = *I*, and thus
+*B* = *X**Y*<sup>*T*</sup>.
+
+In proposition we substitute
+*A* = *D*<sub>*i*</sub>, *B* = *U*<sub>*i*</sub>, and
+*Q* = *Δ*<sub>*i*</sub>*V*<sup>*T*</sup>. Now we have
+*A**Q*<sup>*T*</sup> = *D*<sub>*i*</sub>*V**Δ*<sub>*i*</sub> = *X**Σ**Y*<sup>*T*</sup>.
+The *U*<sub>*i*</sub> with orthonormal columns is given by
+*X**Y*<sup>*T*</sup>. The same can also be obtained by substituting
+*D*<sub>*i*</sub>*V**Δ*<sub>*i*</sub> = *X**Σ**Y*<sup>*T*</sup> in
+equation 1.
 
 $$
 \\begin{aligned}
-  \\min \\|A - B Q\\|^2\_F &= \\mathrm{tr}\\left( A - BQ \\right)^T (A - BQ) \\\\
-  &= \\mathrm{tr}(A^T A) + \\mathrm{tr}(Q^T Q) - 2 \\mathrm{tr}(A Q^T B^T).  
+    U\_i &= D\_iV\\Delta\_i((D\_iV\\Delta\_i)^T(D\_iV\\Delta\_i))^{-1/2} \\\\
+    U\_i &= X \\Sigma Y^T((X \\Sigma Y^T)^T(X \\Sigma Y^T))^{-1/2} = X Y^T.
 \\end{aligned}
 $$
-
-This is equivalent to maximizing
-*t**r*(*A**Q*<sup>*T*</sup>*B*<sup>*T*</sup>). Let SVD of
-*A**Q*<sup>*T*</sup> = *X**Σ**Y*<sup>*T*</sup>, where
-*X* ∈ *R*<sup>*m* × *m*</sup> is left singular matrix,
-$\\Sigma \\in R^{m \\times n} = \\begin{bmatrix}  \\Sigma\_n \\\\  0  \\end{bmatrix} \\mbox{ with }  \\Sigma\_n = \\mbox{diag}(\\sigma\_1, \\ldots, \\sigma\_n)$,
-and *V* ∈ *R*<sup>*m* × *n*</sup> is the right singular matrix. Let
-*Z* = *Y*<sup>*T*</sup>*B*<sup>*T*</sup>*X*. Now *Z* is a rectangular
-matrix with orthonormal rows (*Z**Z*<sup>*T*</sup> = *I*) as
-*B*<sup>*T*</sup>*B* = *I*. Now we have,
-
-$$
-\\begin{aligned}
-  \\mathrm{tr}(A Q^T B^T) &= \\mathrm{tr}(X \\Sigma Y^T B^T)  =  \\mathrm{tr}(Y^T B^T X \\Sigma)
-  = \\mathrm{tr}(Z\\Sigma) \\\\
-  &= \\sum\_{i=1}^{n} z\_{ii}\\sigma\_i \\leq \\sum\_{i=1}^{n} \\sigma\_i.
-  \\end{aligned}
-$$
-The upper bound is obtained when *Z* = *I* and thus
-*B* = *X**Y*<sup>*T*</sup>.
 
 Proposition II
 --------------
 
-Let *A* ∈ ℝ<sup>*m* × *n*</sup> with rank *n* and SVD of
-*A*<sup>*T*</sup>*B* = *X**Σ**Y*<sup>*T*</sup>. Among all orthogonal
-matrices *Q*, the Forbenius norm
-∥*A* − *B**Q*<sup>*T*</sup>∥<sub>*F*</sub><sup>2</sup> is minimized when
-*Q* = *X**Y*<sup>*T*</sup>.
+Consider matrices *A* ∈ ℝ<sup>*m* × *n*</sup> with rank *n* and
+*B* ∈ ℝ<sup>*m* × *n*</sup>. If *X**Σ**Y*<sup>*T*</sup> is the SVD of
+*A*<sup>*T*</sup>*B*, then among orthogonal matrices
+*Q* ∈ ℝ<sup>*n* × *n*</sup>, ∥*A* − *B**Q*<sup>*T*</sup>∥<sub>*F*</sub>
+is minimized when *Q* = *X**Y*<sup>*T*</sup>.
+
+The norm and its square have the same minimum value, so we consider the
+minimum of
+∥*A* − *B**Q*<sup>*T*</sup>∥<sub>*F*</sub><sup>2</sup> = *t**r*(*A*<sup>*T*</sup>*A*) + *t**r*(*B*<sup>*T*</sup>*B*) − 2*t**r*(*A*<sup>*T*</sup>*B**Q*<sup>*T*</sup>),
+which coincides with the maximum value of
+*t**r*(*A*<sup>*T*</sup>*B**Q*<sup>*T*</sup>). With
+*X**Σ**Y*<sup>*T*</sup> the SVD of *A*<sup>*T*</sup>*B*, define
+orthogonal matrix *Z* = *Y*<sup>*T*</sup>*Q*<sup>*T*</sup>*X*. We bound
+the maximum of *t**r*(*A*<sup>*T*</sup>*B**Q*<sup>*T*</sup>) as
 
 $$
-\\begin{aligned}
-  \\min \\|A - B Q^T \\|^2\_F &= \\mathrm{tr}\\left( A - BQ^T \\right)^T (A - B Q^T) \\\\
-  &= \\mathrm{tr}(A^T A) + \\mathrm{tr}(B^T B) - 2 \\mathrm{tr}(A^T B Q^T).  
-\\end{aligned}
+\\mathrm{tr}(A^TBQ^T) = \\mathrm{tr}(X\\Sigma Y^TQ^T)
+    = \\mathrm{tr}(Z\\Sigma)
+    = \\sum\_{i=1}^{n} Z\_{ii}\\sigma\_i \\leq \\sum\_{i=1}^{n} \\sigma\_i,
 $$
-This is equivalent to maximizing
-*t**r*(*A*<sup>*T*</sup>*B**Q*<sup>*T*</sup>). Let SVD of
-*A*<sup>*T*</sup>*B* = *X**Σ**Y*<sup>*T*</sup>, where
-*Σ* = diag(*σ*<sub>1</sub>, …, *σ*<sub>*n*</sub>). We define an
-orthogonal matrix $Z = Y^T Q X $. Now we have,
-
-$$
-\\begin{aligned}
-  \\mathrm{tr}(A^T B Q^T) &= \\mathrm{tr}(X \\Sigma Y^T Q^T)  =  \\mathrm{tr}(Y^T Q^T X \\Sigma)
-  = \\mathrm{tr}(Z\\Sigma)\\\\
-  &= \\sum\_{i=1}^{n} z\_{ii}\\sigma\_i \\leq \\sum\_{i=1}^{p} \\sigma\_i.
-\\end{aligned}
-$$
-The upper bound is obtained when *Z* = *I* and thus
+and this bound is attained when *Z* = *I* and thus
 *Q* = *X**Y*<sup>*T*</sup>.
+
+In proposition II, we substitute
+*A* = *D*<sub>*i*</sub>, *B* = *U*<sub>*i*</sub>*Δ*<sub>*i*</sub>, and
+*Q* = *V*<sub>*i*</sub>. Now we have
+*A*<sup>*T*</sup>*B* = *D*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub>*Δ*<sub>*i*</sub> = *X**Σ**Y*<sup>*T*</sup>
+and orthogonal *V*<sub>*i*</sub> is given by *X**Y*<sup>*T*</sup>. In
+A-SBF, *V* is shared across the *n* factorizations. To find the shared
+*V*, we can use the following proposition.
 
 Proposition III
 ---------------
@@ -436,64 +513,56 @@ Proposition III
 For a set of *n* matrices
 *A*<sub>1</sub>, *A*<sub>2</sub>, …, *A*<sub>*n*</sub>, where
 *A*<sub>*i*</sub> ∈ ℝ<sup>*k* × *k*</sup>, the orthogonal matrix
-*Q* ∈ ℝ<sup>*k* × *k*</sup> minimizing the Forbenius norm
-$\\sum\_{i=1}^n \\|A\_i- Q \\|^2\_F$ is given by
+*Q* ∈ ℝ<sup>*k* × *k*</sup> minimizing
+$\\sum\_{i=1}^n\\|A\_i- Q\\|^2\_F$ is given by
 *Q* = *X**Y*<sup>*T*</sup>, where SVD of
-$\\sum\_{i=1}^n A\_i = X \\Sigma Y^T$.
+$\\sum\_{i=1}^nA\_i=X\\Sigma Y^T$.
 
-Let us first consider *i* = 1 case. We want to minimize the objective
-function:
-ℱ(*Q*) = ∥*A*<sub>1</sub> − *Q*∥<sub>*F*</sub><sup>2</sup> subject to *Q*<sup>*T*</sup>*Q* = *I*.
-
-The objective function can be reformulated as
-
-ℱ(*Q*) = ∥*A*<sub>1</sub> − *Q*∥<sub>*F*</sub><sup>2</sup> = *t**r*(*A*<sub>1</sub><sup>*T*</sup>*A*<sub>1</sub>−2*A*<sub>1</sub><sup>*T*</sup>*Q*+*Q*<sup>*T*</sup>*Q*).
-
-Let *Φ* be a matrix with Lagrange multipliers for constraint
-*Q*<sup>*T*</sup>*Q* − *I* = 0. The Lagrange ℒ is
-
-ℒ(*Q*) = *t**r*(*A*<sub>1</sub><sup>*T*</sup>*A*<sub>1</sub>−2*A*<sub>1</sub><sup>*T*</sup>*Q*+*Q*<sup>*T*</sup>*Q*) + *t**r*(*Φ*(*Q*<sup>*T*</sup>*Q*−*I*)).
-
-The partial derivative of ℒ with respect to *Q* gives
+We seek to minimize
 $$
-\\begin{aligned}
-    \\frac{\\partial \\mathcal{L}}{\\partial Q} &= -2 A\_1 + Q ( \\Phi^T + \\Phi) \\\\
-    A\_1 &= Q \\left( \\frac{\\Phi^T + \\Phi}{2} \\right) \\\\
-    Q &= A\_1 \\left(\\frac{\\Phi^T + \\Phi}{2} \\right)^{-1}.
-\\end{aligned}
+ \\sum\_{i=1}^n\\|A\_i - Q\\|^2\_F ~~\\mbox{subject to}~~ Q^TQ=I.
 $$
 
-Given that the *Q* is orthogonal, we have
+Defining $A = \\sum\_{i=1}^n A\_i$, this objective function can be
+rewritten
 
 $$
-\\begin{aligned}
-    A\_1^T A\_1 &= \\left(\\frac{\\Phi^T + \\Phi}{2} \\right)^2 \\\\
-    \\left(\\frac{\\Phi^T + \\Phi}{2} \\right) &= (A\_1^T A\_1)^{1/2}.
-\\end{aligned}
+\\mathrm{tr}(\\sum\_{i=1}^nA\_i^TA\_i) - 2\\mathrm{tr}(A^TQ) + n\\mathrm{tr}(Q^TQ).
 $$
 
-Thus for *i* = 1,
-*Q* = *A*<sub>1</sub>(*A*<sub>1</sub><sup>*T*</sup>*A*<sub>1</sub>)<sup> − 1/2</sup>.
-Now for *i* = 2, we have
-
+Let *Φ* be a matrix of Lagrange multipliers for
+*Q*<sup>*T*</sup>*Q* − *I* = 0. The Lagrangian ℒ is then
 $$
-\\begin{aligned}
-    \\frac{\\partial \\mathcal{L}}{\\partial Q} &= -2 A\_1 - 2 A\_2 + Q ( \\Phi^T + \\Phi) \\\\
-    A\_1 + A\_2 &= Q \\left(\\frac{\\Phi^T + \\Phi}{2} \\right) \\\\
-    Q &= (A\_1 + A\_2) \\left(\\frac{\\Phi^T + \\Phi}{2} \\right)^{-1} \\\\
-      &= (A\_1 + A\_2) \\left( (A\_1 + A\_2)^T (A\_1 + A\_2) \\right)^{-1/2}.
-\\end{aligned}
+  \\mathcal{L}(Q,\\Phi) = \\mathrm{tr}(\\sum\_{i=1}^nA\_i^TA\_i) - 2\\mathrm{tr}(A^TQ) + \\mathrm{tr}(Q^TQ) + \\mathrm{tr}(\\Phi(Q^TQ-I)).
 $$
 
-Now for *i* = *n*, we have
+Since *Q* is orthogonal, the partial derivatives of ℒ(*Q*, *Φ*) with
+respect to *Q* are as follows:
+$$
+\\frac{\\partial \\mathcal{L}(Q,\\Phi)}{\\partial Q} = -2A + Q(\\Phi^T + \\Phi).
+$$
+
+Setting this equation to 0 yields:
 
 $$
-\\begin{aligned}
-  Q &= M ( M^T M)^{-1/2} \\mbox{ where } M = \\sum\_{i=1}^n A\_i = X \\Sigma Y^T \\\\
-    &=  X \\Sigma Y^T ( Y \\Sigma^2 Y^T)^{-1/2} \\\\
-    &= X Y^T.
-\\end{aligned}
+  Q = A\\left(\\frac{\\Phi^T + \\Phi}{2}\\right)^{-1} ~~\\mbox{and}~~ A = Q\\left(\\frac{\\Phi^T + \\Phi}{2}\\right).
 $$
+
+Again because *Q* is orthogonal,
+
+$$
+A^TA = \\left(\\frac{\\Phi^T + \\Phi}{2} \\right)^2 ~~\\mbox{and}~~
+    \\left(\\frac{\\Phi^T + \\Phi}{2}\\right) = (A^TA)^{1/2},
+$$
+which implies *Q* = *A*(*A*<sup>*T*</sup>*A*)<sup> − 1/2</sup>. Since
+*X**Σ**Y*<sup>*T*</sup> is the SVD of *A* we conclude
+
+*Q* = *X**Σ**Y*<sup>*T*</sup>(*Y**Σ*<sup>2</sup>*Y*<sup>*T*</sup>)<sup> − 1/2</sup> = *X**Y*<sup>*T*</sup>.
+In proposition , we substitute
+*A*<sub>*i*</sub> = *V*<sub>*i*</sub> = *D*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub>*Δ*<sub>*i*</sub>
+and *Q* = *V*. Now we have
+$\\sum\_{i=1}^n A\_i = \\sum\_{i=1}^n D\_i^T U\_i \\Delta\_i = X \\Sigma Y^T$
+and the shared basis in A-SBF is given by *V* = *X**Y*<sup>*T*</sup>.
 
 Iterative update
 ----------------
@@ -750,8 +819,112 @@ generate one example matrix say `newmat`.
     #> [2,]   64   85    8
     #> [3,]   82   87   57
 
-We will estimate the SVD of `newmat` using our iterative update function
-from another random matrix with the same dimension.
+1.  We will estimate the SVD of `newmat` using our iterative update
+    function by setting the initial values to be identity matrix
+
+<!-- -->
+
+    newu <- newd <- list()
+    newu[["mat1"]]  <- diag(3)
+    newd[["mat1"]] <- diag(newu[["mat1"]])
+    newu
+    #> $mat1
+    #>      [,1] [,2] [,3]
+    #> [1,]    1    0    0
+    #> [2,]    0    1    0
+    #> [3,]    0    0    1
+    newd
+    #> $mat1
+    #> [1] 1 1 1
+
+The factorization error when initializing using identity matrix:
+
+    calcDecompError(newmat, newu, newd, diag(3))
+    #> [1] 30381
+
+Let us optimize.
+
+    opt_new <- optimizeFactorization(newmat, newu, newd, diag(3))
+    cat("\n # of updates:", opt_new$error_pos,"\n")
+    #> 
+    #>  # of updates: 163
+    opt_new$error
+    #> [1] 0.0005937236
+
+Error is close to zero. Let us compare the original matrix with the
+reconstructed matrix based on the estimated *u*, *d* and *v* using the
+`optimizeFactorization` function.
+
+    newmat
+    #> $mat1
+    #>      [,1] [,2] [,3]
+    #> [1,]   41   10    6
+    #> [2,]   64   85    8
+    #> [3,]   82   87   57
+    opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
+    #>          [,1]     [,2]      [,3]
+    #> [1,] 40.99568 10.00850  5.989020
+    #> [2,] 64.01161 84.99197  7.993729
+    #> [3,] 81.99198 87.00407 57.007920
+
+    opt_new1 <- optimizeFactorization(newmat, newu, newd, diag(3), tol = 1e-21)
+    cat("\n # of updates:", opt_new1$error_pos,"\n")
+    #> 
+    #>  # of updates: 559
+    opt_new1$error
+    #> [1] 7.402498e-13
+
+    newmat
+    #> $mat1
+    #>      [,1] [,2] [,3]
+    #> [1,]   41   10    6
+    #> [2,]   64   85    8
+    #> [3,]   82   87   57
+    opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
+    #>      [,1] [,2] [,3]
+    #> [1,]   41   10    6
+    #> [2,]   64   85    8
+    #> [3,]   82   87   57
+
+The reconstructed matrix is the same as the original matrix. Let us
+compare the *U* and *V* with that from the standard SVD.
+
+    newmat_svd <- svd(newmat[[1]])
+
+    newmat_svd$d
+    #> [1] 170.70126  31.96746  24.14876
+    opt_new1$d
+    #> $mat1
+    #> [1]  24.14876 170.70126  31.96746
+
+    newmat_svd$u
+    #>            [,1]       [,2]        [,3]
+    #> [1,] -0.2067092  0.1766241 -0.96232802
+    #> [2,] -0.6071027 -0.7944740 -0.01541011
+    #> [3,] -0.7672664  0.5810465  0.27145407
+    opt_new1$u[[1]]
+    #>             [,1]      [,2]       [,3]
+    #> [1,]  0.96232803 0.2067092  0.1766241
+    #> [2,]  0.01541005 0.6071027 -0.7944740
+    #> [3,] -0.27145402 0.7672664  0.5810465
+
+    newmat_svd$v
+    #>            [,1]       [,2]       [,3]
+    #> [1,] -0.6458388  0.1264120 -0.7529358
+    #> [2,] -0.7054605 -0.4758901  0.5252181
+    #> [3,] -0.2919209  0.8703727  0.3965270
+    opt_new1$v
+    #>            [,1]      [,2]       [,3]
+    #> [1,]  0.7529358 0.6458388  0.1264119
+    #> [2,] -0.5252182 0.7054605 -0.4758901
+    #> [3,] -0.3965269 0.2919209  0.8703727
+
+The results agree except for the sign and ordering of columns.
+
+1.  Now we will estimate the SVD of `newmat` using our iterative update
+    function from another random matrix with the same dimension.
+
+<!-- -->
 
     set.seed(253)
     randmat_new <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
