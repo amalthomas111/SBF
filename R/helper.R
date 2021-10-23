@@ -87,15 +87,15 @@ createRandomMatrices <- function(n = 3, ncols = 3, nrows = 3:6,
     }
     i <- k <- 0
     matrix_list <- list()
+    nc <- ncols
     while (i <= n) {
-        nc <- ncols
+        nr <- NULL
         if (length(nrows) > 1)
             nr <- sample(nrows, size = 1)
         else
             nr <- nrows
-        if (nr * nc <= 100)
-            max_size <- 100
-        else
+        max_size <- 100
+        if (nr * nc > 100)
             max_size <- 10 * nr * nc
         mat1 <- matrix(sample(1:max_size, size = nr * nc), nrow = nr, ncol = nc)
         if (qr(mat1)$rank == ncols) {
