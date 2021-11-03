@@ -145,6 +145,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 } else {
                   cat("\nDim of delta:", dim(as.matrix(diag(delta[[mat]]))))
                 }
+                cat("\n")
             }
             if (approximate) {
                 if (length(delta[[mat]]) == 1) {
