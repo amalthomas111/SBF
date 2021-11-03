@@ -205,8 +205,10 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
                                   initial_exact = FALSE,
                                   max_iter = 1e4, tol = 1e-10) {
   min_error <- calcDecompError(mat_list, u, d, v)
-  if (initial_exact == TRUE)
+  if (initial_exact == TRUE) {
+    u <- updateU(mat_list, d, v)
     min_error <- Inf
+  }
   if (min_error < tol) {
     stop(paste("\nInitial factorization error is already < tol.",
                 "Try setting initial_exact = TRUE"))
