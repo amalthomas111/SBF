@@ -1,17 +1,18 @@
 ---
-title: "SBF vignette"
+title: "SBF Math vignette"
 author: "Amal Thomas"
 output:
+  html_document:
+    toc: yes
+    df_print: paged
+  knitr:::html_vignette:
+    toc: yes
   pdf_document:
     toc: yes
     number_section: yes
-  knitr:::html_vignette:
-    toc: yes
 bibliography: references.bib
-vignette: >
-  %\VignetteIndexEntry{SBF_vignette}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
+vignette: |
+  %\VignetteIndexEntry{SBF_vignette} %\VignetteEncoding{UTF-8} %\VignetteEngine{knitr::rmarkdown}
 ---
 
 <style>
@@ -945,42 +946,7 @@ opt_new1$v
 ```
 The results agree!
 
-# Cross-species gene expression analysis using A-SBF
-
-For cross-species gene expression datasets, we estimate the common space $V$ based
-on correlation ($R_i$) between column phenotypes
-(such as tissues, cell types, etc.) within a species.
-In our study, we have shown that the inter-tissue gene expression correlation
-is similar across species.
-Let $X_i \in \mathbb{R}^{m_i \times k}$ be a standardized gene expression
-matrix where $X_i = C_i D_i {S_i}^{-1}$.
-Here $C_i = I_{m_i} - {m_i}^{-1} 1_{m_i} {1_{m_i}}^T$ is a centering matrix and
-$S_i = \mbox{diag}(s_1,\ldots,s_k)$ is a diagonal scaling matrix,
-where $s_p$ is the standard deviation of $p$-th column of $D_i$.
-The matrix $X_i$ is a matrix with columns of $D_i$ mean-centered and scaled
-by the standard deviation.
-The correlation between expression profiles of $k$ tissue types in species $i$
-is given by $R_i = X_i^T X_i/m_i$.
-We then define an expected correlation matrix ($\mathbb{E}(R_i)$) across $N$
-species as $M$, where $M$ is defined as
-
-\[
-  M = \frac{\sum_{i=1}^{N} R_i}{N}.
-\]
-
-The shared right basis matrix $V$ capturing the inter-tissue gene expression
-correlation is determined from the eigenvalue
-decomposition of $M$, where $M=V \Theta V^T$.
-Once the $V$ and $\Delta_i$ are estimated using the SBF factorization,
-we compute $U_i$ with orthonormal columns using proposition I.
-The estimated $V$ space captures inter-tissue gene expression correlation
-relationship.
-For gene expression analysis, if we want the shared space to represent
-inter-sample correlation relationship, we do not update/change $V$
-while optimizing the factorization error.
-In such cases, while reducing the factorization error
-we set `optimizeV = FALSE` in the `optimizeFactorization` function.
-
+# Example cross-species gene expression decomposition using A-SBF
 
 
 ## Usage examples

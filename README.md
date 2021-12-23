@@ -233,7 +233,10 @@ is
 
     #> same (up to 2 decimals). The final error is 1411.56
 
-### Analysis using a test gene expression dataset
+Detailed explanation of the math and examples case of factorization can
+be found in the vignettes/docs directory.
+
+### Factorization for an example gene expression dataset
 
 -   SBF package has a sample gene expression data with the mean
     expression of nine tissues in five species. Now we will use this
@@ -272,20 +275,25 @@ asbf_gem$error
 #> [1] 65865.92
 ```
 
-For gene-expression analysis, if we want the shared space to represent
-inter-sample correlation relationship, we do not update/change *V* while
-optimizing the factorization error. In such cases, while reducing the
-factorization error we set `optimizeV = FALSE` in the
-`optimizeFactorization` function.
+<!-- For gene-expression analysis, if we want the shared space to represent -->
+<!-- inter-sample correlation relationship, we do not update/change $V$ -->
+<!-- while optimizing the factorization error. -->
+<!-- In such cases, while reducing the factorization error -->
+<!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
+
+We now optimize the factorization error to find the closest space.
 
 ``` r
-# optimize by keeping the V capturing R_i relationship
+# finding the closest space
 asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
                                       asbf_gem$delta, asbf_gem$v,
                                       optimizeV = FALSE)
 asbf_gem_opt$error
 #> [1] 63540.08
 ```
+
+Different cross-species analysis examples using A-SBF can be found in
+the vignettes/docs directory.
 
 ### Contacts
 

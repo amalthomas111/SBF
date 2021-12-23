@@ -201,8 +201,10 @@ if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) 
   cat("not exactly the same")  
 }
 ```
+Detailed explanation of the math and examples case of factorization can be found
+in the vignettes/docs directory.
 
-### Analysis using a test gene expression dataset
+### Factorization for an example gene expression dataset
 
 - SBF package has a sample gene expression data with the mean expression of
 nine tissues in five species. Now we will use this data as our $D_i$ matrices.
@@ -233,19 +235,23 @@ asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
 asbf_gem$error
 ```
 
-For gene-expression analysis, if we want the shared space to represent
-inter-sample correlation relationship, we do not update/change $V$
-while optimizing the factorization error.
-In such cases, while reducing the factorization error
-we set `optimizeV = FALSE` in the `optimizeFactorization` function.
+<!-- For gene-expression analysis, if we want the shared space to represent -->
+<!-- inter-sample correlation relationship, we do not update/change $V$ -->
+<!-- while optimizing the factorization error. -->
+<!-- In such cases, while reducing the factorization error -->
+<!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
+We now optimize the factorization error to find the closest space.
 
 ```{r}
-# optimize by keeping the V capturing R_i relationship
+# finding the closest space
 asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
                                       asbf_gem$delta, asbf_gem$v,
                                       optimizeV = FALSE)
 asbf_gem_opt$error
 ```
+
+Different cross-species analysis examples using A-SBF can be found
+in the vignettes/docs directory.
 
 ### Contacts
 
