@@ -12,7 +12,9 @@ output:
     number_section: yes
 bibliography: references.bib
 vignette: |
-  %\VignetteIndexEntry{SBF_vignette} %\VignetteEncoding{UTF-8} %\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{SBF_vignette}
+%\VignetteEncoding{UTF-8}
+%\VignetteEngine{knitr::rmarkdown}
 ---
 
 <style>
@@ -27,111 +29,107 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 \newcommand{\diag}{\mathrm{diag}}
 \newcommand{\tr}{\mathrm{tr}}
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 
 # Background
 
-Joint matrix factorization facilitates the comparison of
-expression profiles from different species without using gene mapping.
-Transforming gene expression profiles into reduced eigengene space using
-singular value decomposition (SVD) has been shown to capture meaningful
-biological information [@alter2000singular].
-@tamayo2007metagene used a non-negative matrix factorization
-approach to learn a low-dimensional approximation of the
-microarray expression datasets and used the reduced space for comparisons.
-Matrix factorization-based methods are commonly used for gene expression
-analysis [@alter2000singular; @tamayo2007metagene].
-An orthology independent matrix factorization framework based on generalized
-singular value decomposition [GSVD; @van1976generalizing] was used
-by @alter2003generalized to compare gene-expression
-profiles from two species.
-This framework was later extended to develop higher-order generalized singular
-value decomposition (HO GSVD) to analyze data from more than two species 
-[@ponnapalli2011higher].
+Joint matrix factorization facilitates the comparison of expression
+profiles from different species without using gene mapping.
+Transforming gene expression profiles into reduced eigengene space
+using singular value decomposition (SVD) has been shown to capture
+meaningful biological information [@alter2000singular].
+@tamayo2007metagene used a non-negative matrix factorization approach
+to learn a low-dimensional approximation of the microarray expression
+datasets and used the reduced space for comparisons.  Matrix
+factorization-based methods are commonly used for gene expression
+analysis [@alter2000singular; @tamayo2007metagene].  An orthology
+independent matrix factorization framework based on generalized
+singular value decomposition [GSVD; @van1976generalizing] was used by
+@alter2003generalized to compare gene-expression profiles from two
+species.  This framework was later extended to develop higher-order
+generalized singular value decomposition (HO GSVD) to analyze data
+from more than two species [@ponnapalli2011higher].
 
 This study developed a joint diagonalization approach called
-approximate shared basis factorization (A-SBF)
-for cross-species expression comparisons.
-This approach extends the exact factorization approach we
-developed called shared basis factorization (SBF). We discuss
-the details of the two methods in the following sections.
-
+approximate shared basis factorization (A-SBF) for cross-species
+expression comparisons.  This approach extends the exact factorization
+approach we developed called shared basis factorization (SBF). We
+discuss the details of the two methods in the following sections.
 
 # Shared basis factorization
 
 Consider a set of real matrices $D_i \in \mathbb{R}^{m_i \times k}$
-($i={1,\ldots ,N}$) with full column rank. We define 
-shared basis factorization (SBF) as
-
+($i={1,\ldots ,N}$) with full column rank. We define shared basis
+factorization (SBF) as
+%
 \begin{align*}
   D_1 &= U_1\Delta_1V^T, \\
   D_2 &= U_2\Delta_2V^T, \\
       & \vdots \\
   D_N &= U_N\Delta_NV^T.
 \end{align*}
-
+%
 Here each $U_i \in \mathbb{R}^{m_i \times k}$ is a dataset-specific
 left basis matrix, each $\Delta_i \in \mathbb{R}^{k \times k}$ is a
-diagonal matrix with positive values $\delta_{ik}$, and $V$ is
-a square invertible matrix.
+diagonal matrix with positive values $\delta_{ik}$, and $V$ is a
+square invertible matrix.
 
 ## Estimating the shared right basis matrix
 
-Let $M$ be the scaled sum of the $D_i^T D_i$.
-We define $M$ is defined as
+Let $M$ be the scaled sum of the $D_i^T D_i$.  We define $M$ is
+defined as
 \[
  M = \frac{\sum_{i=1}^{N} D_i^T D_i/w_i}{\alpha}.
 \]
-
 The scaling factor $w_i$ is the total variance explained by the column
-vectors of $D_i$, and $\alpha$ is the inverse sum of the total variance of
-$D_i$, for $i = 1 \cdots N$. The weights $w_i$ and $\alpha$ are defined as
-
+vectors of $D_i$, and $\alpha$ is the inverse sum of the total
+variance of $D_i$, for $i = 1 \cdots N$. The weights $w_i$ and
+$\alpha$ are defined as
+%
 \begin{align*}
     w_i &= \sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)} \mbox{ and}\\
     \alpha &= \sum_{i=1}^{N} \frac{1}{\sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)}}.
 \end{align*}
-
-Here $\sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)} = \tr(D_i^T D_i) = \tr(A_i)$.
-Using the $w_i$ and $\alpha$, individual $D_i^T D_i$ are standardized.
-If all the variances are equal, $M$ becomes the arithmetic mean of the sum of
-$D_i^T D_i$.
-The shared right basis matrix  $V$ is then determined from the eigenvalue
-decomposition of $M$, where $M=V \Theta V^T$.
-The shared right basis matrix $V$ is an orthogonal matrix as $M$ is symmetric.
-Given $V$, we compute $U_i$ and $\Delta_i$ by solving the linear system
-$D_i V = U_i \Delta_i = L_i$.
-By normalizing the columns of $L_i$, we have
-$\delta_{ik} = \|l_{ik}\|$ and
-$\Delta_i = \mbox{diag}(\delta_{i1},\ldots,\delta_{ik})$.
+%
+Here $\sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)} = \tr(D_i^T D_i) =
+\tr(A_i)$.  Using the $w_i$ and $\alpha$, individual $D_i^T D_i$ are
+standardized.  If all the variances are equal, $M$ becomes the
+arithmetic mean of the sum of $D_i^T D_i$.  The shared right basis
+matrix $V$ is then determined from the eigenvalue decomposition of
+$M$, where $M=V \Theta V^T$.  The shared right basis matrix $V$ is an
+orthogonal matrix as $M$ is symmetric.  Given $V$, we compute $U_i$
+and $\Delta_i$ by solving the linear system $D_i V = U_i \Delta_i =
+L_i$.  By normalizing the columns of $L_i$, we have $\delta_{ik} =
+\|l_{ik}\|$ and $\Delta_i =
+\mbox{diag}(\delta_{i1},\ldots,\delta_{ik})$.
 
 # Approximate shared basis factorization
 
-Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times k}$
-($i= 1,\ldots,N$), each with full column rank. We define
-approximate shared basis factorization (A-SBF) as
-
+Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times k}$ ($i=
+1,\ldots,N$), each with full column rank. We define approximate shared
+basis factorization (A-SBF) as
+%
 \begin{align*}
   D_1 &= U_1\Delta_1V^T + \epsilon_1, \\
   D_2 &= U_2\Delta_2V^T + \epsilon_2, \\
       & \vdots \\
   D_N &= U_N\Delta_NV^T + \epsilon_N.
 \end{align*}
+%
+Each $U_i \in \mathbb{R}^{m_i \times k}$ is a species-specific left
+basis matrix with **orthonormal** columns (eigengenes), $\Delta_i \in
+\mathbb{R}^{k \times k}$ is a diagonal matrix with positive values
+$\Delta_{ik}$ and $V$ is a non singular square matrix.  The right
+basis matrix $V$ is identical in all the $N$ matrix factorizations and
+defines the common space shared by all species.  We estimate the
+factorization such that the estimated $V$ is closest to that in the
+exact decomposition and by minimizing the total decomposition error
+$\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i -
+U_i\Delta_iV^T\|^2}_F$.
 
-Each $U_i \in \mathbb{R}^{m_i \times k}$ is a species-specific left basis
-matrix with **orthonormal** columns (eigengenes),
-$\Delta_i \in \mathbb{R}^{k \times k}$ is a diagonal matrix with positive
-values $\Delta_{ik}$ and $V$ is a non singular square matrix.
-The right basis matrix $V$ is identical in all the $N$ matrix factorizations
-and defines the common space shared by all species. 
-We estimate the factorization such that the estimated $V$ is closest to that in
-the exact decomposition and by minimizing the total decomposition error 
-$\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
-
-# Usage cases
+# Use cases
 
 ## SBF examples
 
@@ -139,25 +137,22 @@ $\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
 # load SBF package
 library(SBF)
 ```
-
-Let us create some random matrices using the `createRandomMatrices` function
-from the SBF package. We will create four matrices, each with three columns with
-rows varying from 4 to 6.
-
+Let us create some random matrices using the `createRandomMatrices`
+function from the SBF package. We will create four matrices, each with
+three columns with rows varying from 4 to 6.
 ```{r}
 set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 ```
-Rank of each of this matrices
+The rank of each of these matrices:
 ```{r}
 sapply(mymat, function(x) {
   qr(x)$rank
   })
 ```
 
-Let us compute SBF using different approaches.
-
+Let us compute SBF using different approaches:
 - Estimate $V$ using sum of $D_i^T D_i / N$
 - Estimate $V$ using sum of $D_i^T D_i / N$ with inverse variance weighting
 - Estimate $V$ using inter-sample correlation
@@ -167,14 +162,14 @@ sbf_inv <- SBF(matrix_list = mymat, weighted = TRUE)
 sbf_cor <- SBF(matrix_list = mymat, transform_matrix = TRUE)
 ```
 
-When $D_i$'s are transformed to compute inter-sample correlation, we do not need
-to scale it using inverse-variance weighting anymore. We recommend using inverse
-variance weights, giving a more robust estimate of $V$ when noisy datasets are
-present. We estimate $V$ using inter-sample correlation when dealing
-with gene expression data sets.
+When the $D_i$ matrices are transformed to compute inter-sample
+correlation, we do not need to scale it using inverse-variance
+weighting anymore. We recommend using inverse variance weights, giving
+a more robust estimate of $V$ when noisy datasets are present. We
+estimate $V$ using inter-sample correlation when dealing with gene
+expression data sets.
 
-
-`?SBF` help function shows all arguments for the SBF function.
+The `?SBF` help function shows all arguments for the SBF function.
 Let us inspect the output of the `SBF` call.
 
 ```{r}
@@ -218,7 +213,7 @@ qr(sbf$v)$rank
 ```
 
 The $U_i$ matrices estimated in the SBF do not have orthonormal columns.
-Let us explore that. 
+Let us explore that.
 
 ```{r}
 sapply(sbf$u, dim)
@@ -238,7 +233,7 @@ eigenvalues in the eigenvalue decomposition ($M=V \Theta V^T$).
 sbf$lambda
 ```
 
-SBF is an exact factorization. Let compute the factorization error for the 
+SBF is an exact factorization. Let compute the factorization error for the
 three cases using `calcDecompError` function.
 ```{r}
 calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
@@ -286,7 +281,7 @@ sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy, weighted = TRUE)
 ```
 
 Let us take the newly estimated values $U_i$, $\Delta_i$, and $V$ for the four
-initial matrices in `mymat`. 
+initial matrices in `mymat`.
 We will then compare the decomposition error for the two cases with and without
 inverse variance weighting.
 
@@ -464,7 +459,7 @@ and this bound is attained when $Z=I$, and thus $B=XY^T$.
 In proposition \ref{orthoU} we substitute $A = D_i, B = U_i,$
 and $Q = \Delta_i V^T$. Now we have
 $AQ^T = D_i V \Delta_i  = X \Sigma Y^T$. The $U_i$ with orthonormal columns
-is given by $XY^T$. The same can also be obtained by substituting 
+is given by $XY^T$. The same can also be obtained by substituting
 $D_i V \Delta_i  = X \Sigma Y^T$ in equation 1.
 
 $$
@@ -512,7 +507,7 @@ To find the shared $V$, we can use the following proposition.
   \mathbb{R}^{k \times k}$, the orthogonal matrix $Q \in
   \mathbb{R}^{k\times k}$ minimizing $\sum_{i=1}^n\|A_i- Q\|^2_F$ is
   given by $Q = X Y^T$, where SVD of $\sum_{i=1}^nA_i=X\Sigma Y^T$.
-  
+
 We seek to minimize
 $$
  \sum_{i=1}^n\|A_i - Q\|^2_F ~~\mbox{subject to}~~ Q^TQ=I.
@@ -596,7 +591,7 @@ update:
 $$
 \theta_{t+1} = \theta_t - \eta \nabla \mathcal{F}(\theta_t),
 $$
-where $t$ is the iteration counter, $\eta$ is the learning rate 
+where $t$ is the iteration counter, $\eta$ is the learning rate
 and $\nabla \mathcal{F} (\theta)$ is the gradient of the cost function.
 In A-SBF, the gradient of the cost function with respect to $U$ is
 $-2 D V \Delta$. So we have
@@ -611,7 +606,7 @@ $DV\Delta = Z \Sigma Y^T$.
 This approach employs orthogonal Procrustes solution along with the
 gradient descent algorithm.
 We can also achieve this by directly setting
-$\eta = \frac{Z Y^T - U_t}{D V \Delta}$, so that 
+$\eta = \frac{Z Y^T - U_t}{D V \Delta}$, so that
 $U_{t+1}$ has all the properties we need.
 The learning rate determines the size of the steps. If the value of $U_t$ is very different
 from $Z Y^T$, $\eta$ will be high, and we take larger steps.
@@ -661,7 +656,7 @@ cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
 if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
   cat("After optimization, for all three A-SBF factorizations, the final error")
   cat("\nis the same (up to 2 decimals).")
-  cat("\nThe final error is", round(myopt$error,2))  
+  cat("\nThe final error is", round(myopt$error,2))
 }
 ```
 
@@ -684,7 +679,7 @@ rand_mat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
 cat("\nRank is:", qr(rand_mat[[1]])$rank,"\n")
 dim(rand_mat[[1]])
 ```
-Get an orthogonal $V$ matrix using SVD. We will set $V$ as the right basis 
+Get an orthogonal $V$ matrix using SVD. We will set $V$ as the right basis
 matrix from the SVD.
 
 ```{r}
@@ -752,7 +747,7 @@ newopt$error
 Again we get the same decomposition error after optimizing.
 
 3. Instead of initial value being an orthogonal matrix, we will initialize
-$U_i$'s, $\Delta_i$, and $V$ with random matrices such that it 
+$U_i$'s, $\Delta_i$, and $V$ with random matrices such that it
 does not guarantee
 - orthogonal property for $V$ and
 - orthonormal columns for $U_i$'s.
@@ -801,7 +796,7 @@ same decomposition error regardless of the initial values.
 We will further demonstrate the case for $N=1$ when we have just one matrix.
 The `optimizeFactorization` function gives $U_i$'s with orthonormal column,
 $\Delta_i$ a diagonal matrix, and an orthogonal $V$. If the function converges,
-the results should be identical to a standard SVD, except for the sign 
+the results should be identical to a standard SVD, except for the sign
 changes corresponding to $U$ and $V$ columns.
 So we will compare the results from the `optimizeFactorization`
 function with the standard SVD output.
