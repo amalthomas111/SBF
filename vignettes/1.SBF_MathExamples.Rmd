@@ -12,9 +12,9 @@ output:
     number_section: yes
 bibliography: references.bib
 vignette: |
-%\VignetteIndexEntry{SBF_vignette}
-%\VignetteEncoding{UTF-8}
-%\VignetteEngine{knitr::rmarkdown}
+ %\VignetteIndexEntry{SBF_vignette}
+ %\VignetteEncoding{UTF-8}
+ %\VignetteEngine{knitr::rmarkdown}
 ---
 
 <style>
