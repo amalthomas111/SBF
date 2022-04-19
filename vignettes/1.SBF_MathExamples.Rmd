@@ -55,8 +55,9 @@ from more than two species [@ponnapalli2011higher].
 This study developed a joint diagonalization approach called
 approximate shared basis factorization (A-SBF) for cross-species
 expression comparisons.  This approach extends the exact factorization
-approach we developed called shared basis factorization (SBF). We
-discuss the details of the two methods in the following sections.
+approach we developed called shared basis factorization (SBF).
+We implement both algorithm in the SBF package. The details 
+and example cases of the two methods are shown in the following sections.
 
 # Shared basis factorization
 

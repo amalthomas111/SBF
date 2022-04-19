@@ -3,10 +3,9 @@
 
 ## SBF: A R package for Shared Basis Factorization
 
-Shared Basis Factorization (SBF) is a joint matrix diagonalization
-approach we developed for cross-species gene expression analysis.
-Approximate Shared Basis Factorization (A-SBF) is an extension of the
-SBF approach.
+Approximate Shared Basis Factorization (A-SBF) is a joint matrix
+diagonalization approach we developed for cross-species gene expression
+analysis.
 
 ### Installation
 
@@ -43,7 +42,7 @@ library(SBF)
 
 ### Analysis for a test dataset
 
--   We will first create a test dataset. SBF package has the function
+-   We will first create a test dataset. `SBF` package has the function
     `createRandomMatrices` to create matrices with full column rank and
     different number of rows. All the matrices will have the same number
     of columns.
@@ -65,70 +64,11 @@ sapply(mymat, function(x) {qr(x)$rank})
 
 We will use the test dataset as our *D*<sub>*i*</sub> matrices.
 
-### SBF computation
+### A-SBF examples
 
-Estimating *V* using the sum of
-*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>.
-
-``` r
-# SBF call. Estimate V using the sum of Di^TDi
-sbf <- SBF(matrix_list = mymat)
-```
-
-`?SBF` help function shows all arguments for the SBF call.
-
-``` r
-names(sbf)
-#> [1] "v"      "lambda" "u"      "delta"  "m"
-```
-
-Check whether the estimated *V* is orthogonal.
-
-``` r
-zapsmall(sbf$v %*% t(sbf$v))
-#>      [,1] [,2] [,3]
-#> [1,]    1    0    0
-#> [2,]    0    1    0
-#> [3,]    0    0    1
-```
-
-Let us check the factorization error.
-
-``` r
-# calculate decomposition error
-decomperror <- calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
-decomperror
-#> [1] 1.851693e-26
-```
-
-Estimating *V* using sum of inverse-variance weighted
-*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub>.
-
-``` r
-# SBF call. Estimate V using inverse-variance weighted Di^TDi
-sbf <- SBF(matrix_list = mymat, weighted = TRUE)
-# calculate decomposition error
-decomperror <- calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
-decomperror
-#> [1] 1.894292e-26
-```
-
-SBF computation based on inter-sample correlation. *V* is estimated
-using sum of *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
-
-``` r
-# SBF call using correlation matrix
-sbf_cor <- SBF(matrix_list = mymat, transform_matrix = TRUE)
-decomperror <- calcDecompError(mymat, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
-decomperror
-#> [1] 2.835482e-26
-```
-
-### Approximate-SBF (A-SBF)
-
-Estimating *V* using the sum of
-*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
-*U*<sub>*i*</sub>’s such that columns are orthonormal.
+The A-SBF’s shared orthogonal *V*, *U*<sub>*i*</sub>’s with orthonormal
+columns and diagonal matrices *Δ*<sub>*i*</sub>’s can be estimated using
+`SBF` function with argument `approximate = TRUE`.
 
 ``` r
 # A-SBF call
@@ -148,7 +88,8 @@ names(asbf)
 For A-SBF, the factorization error is optimized by default
 (`minimizeError=TRUE`) and the `optimizeFactorization` function is
 invoked. Depending upon the data matrix (`mymat`) and initial values,
-optimization could take some time.
+optimization could take some time. `?SBF` help function shows all
+arguments for the SBF call.
 
 In A-SBF, *V* is orthogonal and columns of *U*<sub>*i*</sub>’s are
 orthonormal (*U*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub> = *I*).
@@ -240,8 +181,10 @@ the computing time.
 <!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
 <!-- We now optimize the factorization error to find the closest space. -->
 
-Different cross-species analysis examples using A-SBF can be found in
-the vignettes/docs directory.
+When calling `SBF`, `approximate = FALSE` compute the SBF factorization
+which is an exact join matrix factorization we developed. In SBF, the
+estimated *U*<sub>*i*</sub>’s are not orthonormal. More details and
+examples can be found in the vignettes/docs directory.
 
 ### Contacts
 
