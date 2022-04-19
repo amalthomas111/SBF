@@ -67,12 +67,12 @@ factorization (SBF) as
   D_1 &= U_1\Delta_1V^T, \\
   D_2 &= U_2\Delta_2V^T, \\
       & \vdots \\
-  D_k &= U_N\Delta_NV^T.
+  D_k &= U_N\Delta_kV^T.
 \end{align*}
 Here each $U_i \in \mathbb{R}^{m_i \times n}$ is a dataset-specific
 left basis matrix, each $\Delta_i \in \mathbb{R}^{n \times n}$ is a
 diagonal matrix with positive values $\delta_{ij}$, and $V$ is a
-square invertible matrix.
+a shared orthogonal matrix.
 
 ## Estimating the shared right basis matrix
 
@@ -113,9 +113,9 @@ basis factorization (A-SBF) as
      & \vdots \\
     D_k &= U_k\Delta_kV^T + \epsilon_k.
 \end{align*}
-%%
+
 Each $U_i \in \mathbb{R}^{m_i \times n}$ is a $D_i$ specific left basis
-matrix with orthonormal columns ($U_i^T U_i= I)$ and
+matrix with **orthonormal columns** ($U_i^T U_i= I)$ and
 $\Delta_i \in \mathbb{R}^{n \times n}$ is a diagonal matrix with positive values.
 The right basis matrix $V \in \mathbb{R}^{n \times n}$ is an orthogonal matrix
 and identical in all the $k$ matrix factorizations.
@@ -316,7 +316,7 @@ three cases.
 - A-SBF with inverse variance weighting
 - A-SBF with inter-sample correlation
 
-Here the A-SBF call is made without minimizing the factorization error (`minimizeError=FALSE`).
+Here the A-SBF is invoked without minimizing the factorization error (`minimizeError=FALSE`).
 ```{r}
 asbf <- SBF(matrix_list = mymat, approximate = TRUE,
             minimizeError = FALSE)
@@ -329,7 +329,7 @@ asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE
 ```{r}
 names(asbf)
 ```
-A-SBF is not an exact factorization.
+A-SBF is not an exact factorization and has decomposition error.
 
 ```{r}
 # decomposition error
@@ -338,10 +338,9 @@ asbf_inv$error
 asbf_cor$error
 ```
 
-- 'asbf$u_ortho` is the closest matrix to exact U in SBF with orthonormal columns
-
-
-`asbf$u_ortho` has orthonormal columns, and `asbf$v` is orthogonal.
+- `asbf$u_ortho` is the matrix with orthonormal columns that is closet to the
+exact $U$ in SBF 
+- `asbf$v` is orthogonal.
 
 ```{r}
 zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
@@ -396,8 +395,9 @@ asbf$error_start
 asbf_inv$error_start
 asbf_cor$error_start
 ```
-This is the same error (no A-SBF optimization) we showed previously in A-SBF
-examples. Now let us check the final decomposition error after optimization.
+This is the same error (A-SBF with no optimization) we showed previously in the
+A-SBF examples section.
+Now let us check the final decomposition error after optimization.
 
 ```{r}
 # final decomposition error
@@ -417,14 +417,15 @@ if ((round(asbf$error,2) == round(asbf_inv$error,2)) && (round(asbf$error,2) == 
 Independent of the initial values, if the optimization converges, we achieve
 the same decomposition error.
 
-We can also compute the same by calling the `optimizeFactorization`. For 
-example,
+We can also compute the same optimization by independently calling the
+`optimizeFactorization`. For example,
 
 ```{r}
 myopt <- optimizeFactorization(mymat, asbf$u_ortho_start, asbf$delta_start,
                                asbf$v_start)
 names(myopt)
 ```
+
 ```{r}
 myopt$error
 ```
@@ -434,9 +435,9 @@ The number of iteration taken for optimizing and new factorization error:
 
 ```{r}
 cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
-cat("\nFor asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
+cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
     asbf_inv$error)
-cat("\nFor asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
+cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
     asbf_cor$error)
 ```
 
@@ -723,71 +724,5 @@ opt_new1$v
 ```
 The results agree!
 
-
-# Example cross-species gene expression decomposition using A-SBF
-
-
-## Usage examples
-
-Let us load the SBF package's in-built gene expression dataset.
-The dataset contains the average gene expression profile of five similar tissues
-in three species.
-
-```{r}
-# load dataset
-avg_counts <- SBF::TissueExprSpecies
-# check the names of species
-names(avg_counts)
-```
-
-```{r}
-# head for first species
-avg_counts[[names(avg_counts)[1]]][1:3, 1:3]
-```
-
-The number of genes annotated in different species is different. As a result,
-the number of rows (genes) in the expression data will be different for
-different species.
-
-```{r}
-sapply(avg_counts, dim)
-```
-
-Let us compute A-SBF with inter-tissue correlation.
-
-```{r}
-# A-SBF call using correlation matrix
-asbf_cor <- SBF(matrix_list = avg_counts, check_col_matching = TRUE,
-                col_index = 2, approximate = TRUE, transform_matrix = TRUE)
-# decomposition error
-asbf_cor$error
-```
-
-Optimize factorization to reduce decomposition error but by not updating $V$.
-```{r}
-myopt_gef <- optimizeFactorization(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
-                                   asbf_cor$v, optimizeV = FALSE)
-names(myopt_gef)
-```
-
-```{r}
-# new error
-myopt_gef$error
-# number of iterations
-myopt_gef$error_pos
-```
-
-The number of iterations taken to optimize = `r myopt_gef$error_pos`.
-
-```{r}
-identical(asbf_cor$v, myopt_gef$v)
-```
-
-Check whether estimated $U_i$'s have orthonormal columns.
-
-```{r}
-zapsmall(t(as.matrix(myopt_gef$u[[names(myopt_gef$u)[1]]])) %*%
-           as.matrix(myopt_gef$u[[names(myopt_gef$u)[1]]]))
-```
 
 # References
