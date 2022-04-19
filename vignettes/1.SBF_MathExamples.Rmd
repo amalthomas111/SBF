@@ -2,14 +2,14 @@
 title: "SBF Math vignette"
 author: "Amal Thomas"
 output:
-  html_document:
-    toc: yes
-    df_print: paged
-  knitr:::html_vignette:
-    toc: yes
   pdf_document:
     toc: yes
     number_section: yes
+  knitr:::html_vignette:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
 bibliography: references.bib
 vignette: |
  %\VignetteIndexEntry{SBF_vignette}
@@ -60,20 +60,18 @@ discuss the details of the two methods in the following sections.
 
 # Shared basis factorization
 
-Consider a set of real matrices $D_i \in \mathbb{R}^{m_i \times k}$
-($i={1,\ldots ,N}$) with full column rank. We define shared basis
+Consider a set of real matrices $D_i \in \mathbb{R}^{m_i \times n}$
+($i={1,\ldots ,k}$) with full column rank. We define shared basis
 factorization (SBF) as
-%
 \begin{align*}
   D_1 &= U_1\Delta_1V^T, \\
   D_2 &= U_2\Delta_2V^T, \\
       & \vdots \\
-  D_N &= U_N\Delta_NV^T.
+  D_k &= U_N\Delta_NV^T.
 \end{align*}
-%
-Here each $U_i \in \mathbb{R}^{m_i \times k}$ is a dataset-specific
-left basis matrix, each $\Delta_i \in \mathbb{R}^{k \times k}$ is a
-diagonal matrix with positive values $\delta_{ik}$, and $V$ is a
+Here each $U_i \in \mathbb{R}^{m_i \times n}$ is a dataset-specific
+left basis matrix, each $\Delta_i \in \mathbb{R}^{n \times n}$ is a
+diagonal matrix with positive values $\delta_{ij}$, and $V$ is a
 square invertible matrix.
 
 ## Estimating the shared right basis matrix
@@ -81,53 +79,49 @@ square invertible matrix.
 Let $M$ be the scaled sum of the $D_i^T D_i$.  We define $M$ is
 defined as
 \[
- M = \frac{\sum_{i=1}^{N} D_i^T D_i/w_i}{\alpha}.
+ M = \frac{\sum_{i=1}^{k} D_i^T D_i/w_i}{\alpha}.
 \]
 The scaling factor $w_i$ is the total variance explained by the column
 vectors of $D_i$, and $\alpha$ is the inverse sum of the total
-variance of $D_i$, for $i = 1 \cdots N$. The weights $w_i$ and
+variance of $D_i$, for $i = 1, \ldots, k$. The weights $w_i$ and
 $\alpha$ are defined as
-%
 \begin{align*}
-    w_i &= \sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)} \mbox{ and}\\
-    \alpha &= \sum_{i=1}^{N} \frac{1}{\sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)}}.
+    w_i &= \sum_{j=1}^{n} \sigma_{jj}^{2\mbox{ }(i)} \mbox{ and}\\
+    \alpha &= \sum_{i=1}^{k} \frac{1}{\sum_{j=1}^{n} \sigma_{jj}^{2\mbox{ }(i)}}.
 \end{align*}
-%
-Here $\sum_{j=1}^{k} \sigma_{jj}^{2\mbox{ }(i)} = \tr(D_i^T D_i) =
-\tr(A_i)$.  Using the $w_i$ and $\alpha$, individual $D_i^T D_i$ are
+Here $\sum_{j=1}^{n} \sigma_{jj}^{2\mbox{ }(i)} = \tr(D_i^T D_i)$.
+Using the $w_i$ and $\alpha$, individual $D_i^T D_i$ are
 standardized.  If all the variances are equal, $M$ becomes the
 arithmetic mean of the sum of $D_i^T D_i$.  The shared right basis
 matrix $V$ is then determined from the eigenvalue decomposition of
 $M$, where $M=V \Theta V^T$.  The shared right basis matrix $V$ is an
 orthogonal matrix as $M$ is symmetric.  Given $V$, we compute $U_i$
 and $\Delta_i$ by solving the linear system $D_i V = U_i \Delta_i =
-L_i$.  By normalizing the columns of $L_i$, we have $\delta_{ik} =
-\|l_{ik}\|$ and $\Delta_i =
-\mbox{diag}(\delta_{i1},\ldots,\delta_{ik})$.
+L_i$.  By normalizing the columns of $L_i$, we have $\delta_{ij} =
+\|l_{ij}\|$ and $\Delta_i =
+\mbox{diag}(\delta_{i1},\ldots,\delta_{in})$.
 
 # Approximate shared basis factorization
 
-Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times k}$ ($i=
-1,\ldots,N$), each with full column rank. We define approximate shared
+Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times n}$ ($i=
+1,\ldots,k$), each with full column rank. We define approximate shared
 basis factorization (A-SBF) as
-%
+
 \begin{align*}
-  D_1 &= U_1\Delta_1V^T + \epsilon_1, \\
-  D_2 &= U_2\Delta_2V^T + \epsilon_2, \\
-      & \vdots \\
-  D_N &= U_N\Delta_NV^T + \epsilon_N.
+    D_1 &= U_1\Delta_1V^T + \epsilon_1, \\
+    D_2 &= U_2\Delta_2V^T + \epsilon_2, \\
+     & \vdots \\
+    D_k &= U_k\Delta_kV^T + \epsilon_k.
 \end{align*}
-%
-Each $U_i \in \mathbb{R}^{m_i \times k}$ is a species-specific left
-basis matrix with **orthonormal** columns (eigengenes), $\Delta_i \in
-\mathbb{R}^{k \times k}$ is a diagonal matrix with positive values
-$\Delta_{ik}$ and $V$ is a non singular square matrix.  The right
-basis matrix $V$ is identical in all the $N$ matrix factorizations and
-defines the common space shared by all species.  We estimate the
-factorization such that the estimated $V$ is closest to that in the
-exact decomposition and by minimizing the total decomposition error
-$\sum^{N}_{i=1}\epsilon_i = {\sum^{N}_{i=1}\|D_i -
-U_i\Delta_iV^T\|^2}_F$.
+%%
+Each $U_i \in \mathbb{R}^{m_i \times n}$ is a $D_i$ specific left basis
+matrix with orthonormal columns ($U_i^T U_i= I)$ and
+$\Delta_i \in \mathbb{R}^{n \times n}$ is a diagonal matrix with positive values.
+The right basis matrix $V \in \mathbb{R}^{n \times n}$ is an orthogonal matrix
+and identical in all the $k$ matrix factorizations.
+We use an alternate least square algorithm to minimize the total factorization
+error:
+$\sum^{k}_{i=1} {\| \epsilon_i \|^2}_F = {\sum^{k}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$
 
 # Use cases
 
@@ -153,9 +147,13 @@ sapply(mymat, function(x) {
 ```
 
 Let us compute SBF using different approaches:
-- Estimate $V$ using sum of $D_i^T D_i / N$
-- Estimate $V$ using sum of $D_i^T D_i / N$ with inverse variance weighting
+
+- Estimate $V$ using sum of $D_i^T D_i / k$
+
+- Estimate $V$ using sum of $D_i^T D_i / k$ with inverse variance weighting
+
 - Estimate $V$ using inter-sample correlation
+
 ```{r}
 sbf <- SBF(matrix_list = mymat)
 sbf_inv <- SBF(matrix_list = mymat, weighted = TRUE)
@@ -179,8 +177,8 @@ names(sbf)
 matrix, shared right basis matrix, and diagonal matrices.
 
 
-The estimated $V \in R^{k \times k}$ has a dimension of $k \times k$,
-where $k$ is the number of columns in $D_i$.
+The estimated $V$ has a dimension of $n \times n$,
+where $n$ is the number of columns in $D_i$.
 
 ```{r}
 sbf$v
@@ -199,7 +197,7 @@ cat("sbf_inv\n");printDelta(sbf_inv)
 cat("sbf_cor\n");printDelta(sbf_cor)
 ```
 
-The $V \in R^{k \times k}$ estimated in SBF is orthogonal.
+The $V \in R^{n \times n}$ estimated in SBF is orthogonal.
 So $V^T V = V V^T = I$.
 
 ```{r}
@@ -218,8 +216,8 @@ Let us explore that.
 ```{r}
 sapply(sbf$u, dim)
 ```
-Let us take the first matrix $U_i \in R^{m_i \times k}$ to check this.
-For this matrix, $U_i^T U_i$ will be $k \times k$ matrix where $k = 3$.
+Let us take the first matrix $U_i \in R^{m_i \times n}$ to check this.
+For this matrix, $U_i^T U_i$ will be $n \times n$ matrix where $n = 3$.
 
 ```{r}
 t(sbf$u[[names(sbf$u)[1]]]) %*% sbf$u[[names(sbf$u)[1]]]
@@ -311,42 +309,39 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 ```
 
-Now let us compute Approximate-SBF for the same datasets.
+Now let us compute Approximate-SBF for the same datasets for the following
+three cases.
 
 - A-SBF
 - A-SBF with inverse variance weighting
 - A-SBF with inter-sample correlation
 
+Here the A-SBF call is made without minimizing the factorization error (`minimizeError=FALSE`).
 ```{r}
-asbf <- SBF(matrix_list = mymat, approximate = TRUE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
+asbf <- SBF(matrix_list = mymat, approximate = TRUE,
+            minimizeError = FALSE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE,
+                minimizeError = FALSE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE, 
+                minimizeError = FALSE)
 ```
-
 
 ```{r}
 names(asbf)
 ```
-
-A-SBF is not an exact factorization. A-SBF output has two additional values.
-`asbf$u_ortho` is the left basis matrix with orthonormal columns and
-`asbf$error` gives the decomposition error.
+A-SBF is not an exact factorization.
 
 ```{r}
+# decomposition error
 asbf$error
 asbf_inv$error
 asbf_cor$error
 ```
 
-The same error can also be computed using the `calcDecompError` function.
+- 'asbf$u_ortho` is the closest matrix to exact U in SBF with orthonormal columns
 
-```{r}
-calcDecompError(mymat, asbf$u_ortho, asbf$delta, asbf$v)
-calcDecompError(mymat, asbf_inv$u_ortho, asbf_inv$delta, asbf_inv$v)
-calcDecompError(mymat, asbf_cor$u_ortho, asbf_cor$delta, asbf_cor$v)
-```
 
-In A-SBF factorization, $U_i$ has orthonormal columns, and $V$ is orthogonal.
+`asbf$u_ortho` has orthonormal columns, and `asbf$v` is orthogonal.
 
 ```{r}
 zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
@@ -359,259 +354,12 @@ zapsmall(t(asbf$v) %*% asbf$v)
 
 # Minimizing A-SBF factorization error
 
-
-Here we provide details on minimizing the decomposition error of
-the A-SBF method.
-In A-SBF, we want to solve the following optimization problem:
-$$
-\begin{array}{rl}
-  \mbox{minimize:} & \sum^{n}_{i=1} \|D_i - U_i\Delta_iV^T\|^2_F,\\[0.5em]
-  \mbox{subject to:} & U_i^TU_i = I, \mbox{ for } 1\leq i \leq n,\\
-  & V^TV = VV^T = I,\\
-  & \Delta_i = \diag(\delta_{i,1},\ldots,\delta_{i,k}),\\
-  & \delta_{i,j} \geq 0, \mbox{ for } 1\leq i\leq n.
-  \end{array}
-$$
-
-The objective function can be reformulated as
-$$
-\textstyle
-\sum_{i=1}^n
-\tr(D_i^TD_i)
-- 2\tr\big(D_i^TU_i\Delta_iV^T\big)
-+ \tr(\Delta_i^2)
-$$
-Let $\Phi$, $\Psi_i$, and $\Theta_i$ be matrices with Lagrange
-multipliers for constraints $V^TV - I = 0$, $U_i^TU_i - I = 0$ and
-$\delta_{i,j} \geq 0$. The Lagrange $\mathcal{L}$ is
-
-$$
-\mathcal{L}(U, \Delta, V) = \sum_{i=1}^n \tr(D_i^T D_i - 2 D_i^T U_i \Delta_i V^T + \Delta_i^2) +
-\tr (\Phi(V^T V - I)) + \tr (\Psi_i(U_i^T U_i - I)) + \tr(\Theta_i \Delta_i).
-$$
-
-Solving for an individual $U_i$ using the partial derivative of
-$\mathcal{L}$ with respect to $U_i$ gives
-
-$$
-\begin{aligned}
-  \frac{\partial}{\partial U_i} \mathcal{L}(U, \Delta, V) &= -2D_iV\Delta_i + U_i(\Psi_i^T + \Psi_i)\\
-  U_i &= D_iV\Delta_i((D_iV\Delta_i)^T(D_iV\Delta_i))^{-1/2}. \label{eqU}
-\end{aligned}
-$$
-
-
-Solving $V$ using the partial derivative of $\mathcal{L}$ with respect
-to $V$ gives
-
-$$
-\begin{aligned}
-  \frac{\partial}{\partial V} \mathcal{L}(U, \Delta, V)
-  &= \sum_{i=1}^n -2D_i^TU_i\Delta_i + V(\Phi^T + \Phi) \\
-  V &= \sum_{i=1}^n D_i^TU_i\Delta_i ( (\sum_{i=1}^n D_i^TU_i\Delta_i)^T (\sum_{i=1}^n D_i^TU_i\Delta_i))^{-1/2}. \label{eqV}
-\end{aligned}
-$$
-
-Solving for an individual $\Delta_i$ using the partial derivative of $\mathcal{L}$ with
-respect to $\Delta_i$ gives
-
-$$
-\begin{aligned}
-\frac{\partial}{\partial \Delta_i} \mathcal{L}(U, \Delta, V) &= -2 U_i^T D_iV + 2\Delta_i  + \Theta_i \\
-  \Delta_i &= U_i^T D_i V. \label{eqDelta}
-\end{aligned}
-$$
-
-In practice, we do not compute the square root inverse to update $U_i$ and $V$.
-Now we show that we make the optimal update of our matrix
-in each iteration based on the singular value decomposition (SVD)
-of other matrices.
-The first two results below show that, given one matrix factor,
-we can obtain the other as required in our algorithm.
-
-## Proposition I
-
-  Consider matrices $A \in \mathbb{R}^{m \times n}$ with rank $n$ and
-  $Q\in \mathbb{R}^{n\times n}$. If $X\Sigma Y^T$ is the SVD of
-  $AQ^T$, then among matrices $B\in\mathbb{R}^{m\times n}$ with
-  orthonormal columns, $\|A - BQ\|_F$ is minimized when $B=XY^T$.
-
-
-
-  The norm and its square have the same minimum value, so we consider
-  the minimum of
-$$
-\|A - B Q\|^2_F = \tr(A^T A) + \tr(Q^T Q) - 2 \tr(A Q^T B^T),
-$$
-
-  which coincides with the maximum value of $\tr(A Q^T B^T)$. With $X
-  \Sigma Y^T$ the SVD of $AQ^T$, define $Z = Y^TB^TX$. Since $B^TB=I$,
-  we have $Z Z^T = I$. We can bound the maximum value of $\tr(A Q^T B^T)$
-  as follows:
-
-$$
-\tr(AQ^TB^T) = \tr(X\Sigma Y^TB^T)
-    = \tr(Z\Sigma) =
-    \sum_{i=1}^{n} Z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i,
-$$
-and this bound is attained when $Z=I$, and thus $B=XY^T$.
-
-In proposition \ref{orthoU} we substitute $A = D_i, B = U_i,$
-and $Q = \Delta_i V^T$. Now we have
-$AQ^T = D_i V \Delta_i  = X \Sigma Y^T$. The $U_i$ with orthonormal columns
-is given by $XY^T$. The same can also be obtained by substituting
-$D_i V \Delta_i  = X \Sigma Y^T$ in equation 1.
-
-$$
-\begin{aligned}
-    U_i &= D_iV\Delta_i((D_iV\Delta_i)^T(D_iV\Delta_i))^{-1/2} \\
-    U_i &= X \Sigma Y^T((X \Sigma Y^T)^T(X \Sigma Y^T))^{-1/2} = X Y^T.
-\end{aligned}
-$$
-
-## Proposition II
-
-  Consider matrices $A \in \mathbb{R}^{m \times n}$ with rank $n$ and
-  $B\in \mathbb{R}^{m\times n}$. If $X\Sigma Y^T$ is the SVD of
-  $A^TB$, then among orthogonal matrices $Q\in\mathbb{R}^{n\times n}$,
-  $\|A - BQ^T\|_F$ is minimized when $Q=XY^T$.
-
-
-  The norm and its square have the same minimum value, so we consider
-  the minimum of
-$$
-\|A - BQ^T\|^2_F = \tr(A^TA) + \tr(B^TB) - 2\tr(A^TBQ^T),
-$$
-which coincides with the maximum value of $\tr(A^TBQ^T)$. With $X\Sigma Y^T$
-  the SVD of $A^TB$, define orthogonal matrix $Z = Y^TQ^TX$. We bound the
-  maximum of $\tr(A^TBQ^T)$ as
-
-$$
-\tr(A^TBQ^T) = \tr(X\Sigma Y^TQ^T)
-    = \tr(Z\Sigma)
-    = \sum_{i=1}^{n} Z_{ii}\sigma_i \leq \sum_{i=1}^{n} \sigma_i,
-$$
-and this bound is attained when $Z=I$ and thus $Q=XY^T$.
-
-
-In proposition II, we substitute
-$A = D_i, B = U_i \Delta_i,$ and $Q = V_i$. Now we have
-$A^TB = D_i^T U_i \Delta_i  = X \Sigma Y^T$ and orthogonal $V_i$
-is given by $XY^T$. In A-SBF, $V$ is shared across the $n$ factorizations.
-To find the shared $V$, we can use the following proposition.
-
-
-## Proposition III
-
-  For a set of $n$ matrices $A_1,A_2, \ldots, A_n$, where $A_i \in
-  \mathbb{R}^{k \times k}$, the orthogonal matrix $Q \in
-  \mathbb{R}^{k\times k}$ minimizing $\sum_{i=1}^n\|A_i- Q\|^2_F$ is
-  given by $Q = X Y^T$, where SVD of $\sum_{i=1}^nA_i=X\Sigma Y^T$.
-
-We seek to minimize
-$$
- \sum_{i=1}^n\|A_i - Q\|^2_F ~~\mbox{subject to}~~ Q^TQ=I.
-$$
-
-  Defining $A = \sum_{i=1}^n A_i$, this objective function can be
-  rewritten
-
-$$
-\tr(\sum_{i=1}^nA_i^TA_i) - 2\tr(A^TQ) + n\tr(Q^TQ).
-$$
-
-  Let $\Phi$ be a matrix of Lagrange multipliers for $Q^TQ-I=0$. The
-  Lagrangian $\mathcal{L}$ is then
-$$
-  \mathcal{L}(Q,\Phi) = \tr(\sum_{i=1}^nA_i^TA_i) - 2\tr(A^TQ) + \tr(Q^TQ) + \tr(\Phi(Q^TQ-I)).
-$$
-
-Since $Q$ is orthogonal, the partial derivatives of
-  $\mathcal{L}(Q,\Phi)$ with respect to $Q$ are as follows:
-$$
-\frac{\partial \mathcal{L}(Q,\Phi)}{\partial Q} = -2A + Q(\Phi^T + \Phi).
-$$
-
-  Setting this equation to $0$ yields:
-
-
-$$
-  Q = A\left(\frac{\Phi^T + \Phi}{2}\right)^{-1} ~~\mbox{and}~~ A = Q\left(\frac{\Phi^T + \Phi}{2}\right).
-$$
-
-Again because $Q$ is orthogonal,
-
-$$
-A^TA = \left(\frac{\Phi^T + \Phi}{2} \right)^2 ~~\mbox{and}~~
-    \left(\frac{\Phi^T + \Phi}{2}\right) = (A^TA)^{1/2},
-$$
-  which implies $Q = A(A^TA)^{-1/2}$. Since $X\Sigma Y^T$ is the SVD
-  of $A$ we conclude
-
-$$
-Q = X\Sigma Y^T(Y\Sigma^2 Y^T)^{-1/2} = XY^T.
-$$
-In proposition \ref{orthoVsum}, we substitute
-$A_i = V_i = D_i^T U_i \Delta_i$ and $Q = V$.
-Now we have $\sum_{i=1}^n A_i = \sum_{i=1}^n D_i^T U_i \Delta_i = X \Sigma Y^T$
-and the shared basis in A-SBF is given by $V = X Y^T$.
-
-
-## Iterative update
-
-Using these three propositions, we iteratively update $U_i$, $\Delta_i$, and
-$V$. The steps of the iterative algorithm are shown below.
-
-1. Input: $D_i, i={1 \ldots N}$
-2. Output: $U_i,\Delta_i$, and $V$, where $U_i^T U_i = I$ and $V^T V = V V^T = I$
-3. Initialize $U_i^{k}$, $\Delta_i^{k}$, and $V^{k}$.
-Compute $\epsilon^{k,k,k} = {\sum^{N}_{i=1}\|D_i - U_i^{k} \Delta_i^{k} {V^{k}}^{\!T}\|^{2}}_F$
-4. Update $\mathbf{U_i^{k+1}}$:\
-&nbsp;&nbsp;&nbsp;$U_i^{k+1} = Z Y^T$, where SVD of
-$D_i V^{k} \Delta_i^{k} = Z \Sigma Y^T$.
-Compute $\epsilon^{k+1,k,k}$ \
-&nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k,k} < \epsilon^{k,k,k}$: \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$U_i \leftarrow U_i^{k+1}$.
-5. Update $\mathbf{\Delta_i^{k+1}}$: \
-&nbsp;&nbsp;&nbsp;$\mathbf{\Delta_i^{k+1}} = \mbox{diag}( (U_i^{k+1})^T D_i V^k)$.
-Compute $\epsilon^{k+1,k+1,k}$ \
-&nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k} < \epsilon^{k+1,k,k}$: \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\Delta_i \leftarrow \Delta_i^{k+1}$
-6. Update $\mathbf{V^{k+1}}$: \
-&nbsp;&nbsp;&nbsp;$V^{k+1} =  M Q^T$, where SVD of
-$\sum_{i}^N D_i^T U_i^{k+1} \Delta_i^{k+1} = M \Phi Q^T$. Compute
-$\epsilon^{k+1,k+1,k+1}$\
-&nbsp;&nbsp;&nbsp;If $\epsilon^{k+1,k+1,k+1} < \epsilon^{k+1,k+1,k}$: \
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$V \leftarrow V^{k+1}$
-7. Repeat steps 4-6 until convergence.
-
-Our iterative approach is a block-coordinate descent algorithm.
-In gradient descent, we have the general
-update:
-$$
-\theta_{t+1} = \theta_t - \eta \nabla \mathcal{F}(\theta_t),
-$$
-where $t$ is the iteration counter, $\eta$ is the learning rate
-and $\nabla \mathcal{F} (\theta)$ is the gradient of the cost function.
-In A-SBF, the gradient of the cost function with respect to $U$ is
-$-2 D V \Delta$. So we have
-
-$$
-  U_{t+1} = U_t + \eta D V \Delta.
-$$
-By setting $\eta  = I - U_t (D V \Delta)^{-1}$, we have $U_{t+1} = D V \Delta$.
-Since we require orthonormal columns, we find the closest orthogonal matrix to
-$D V \Delta$, and set the final value of $U_{t+1} = Z Y^T$, where SVD of
-$DV\Delta = Z \Sigma Y^T$.
-This approach employs orthogonal Procrustes solution along with the
-gradient descent algorithm.
-We can also achieve this by directly setting
-$\eta = \frac{Z Y^T - U_t}{D V \Delta}$, so that
-$U_{t+1}$ has all the properties we need.
-The learning rate determines the size of the steps. If the value of $U_t$ is very different
-from $Z Y^T$, $\eta$ will be high, and we take larger steps.
-As it becomes closer, the learning rate also decreases.
-We have a similar case for updating $V$ and $\Delta$.
+We use an alternate least square algorithm to minimize the total factorization
+error:
+$\sum^{k}_{i=1} {\| \epsilon_i \|^2}_F = {\sum^{k}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
+Our algorithm determines the optimal learning rate in each update step
+and guarantees convergence to a stable function value (see additional file 2
+in manuscript).
 
 
 ## Examples
@@ -619,7 +367,11 @@ We have a similar case for updating $V$ and $\Delta$.
 ### Optimizing A-SBF error
 
 Let us optimize the factorization error using the `optimizeFactorization`
-function for the three cases of A-SBF computation.
+function for the three cases of A-SBF computation. The `optimizeFactorization`
+is called setting `approximate = TRUE` and `minimizeError = TRUE` in the SBF
+function. The argument `minimizeError` is set to be TRUE by default.
+Depending upon the data matrix and initial values of $U_i$, $\Delta_i$, and $V$,
+optimization could take some time.
 
 ```{r}
 set.seed(1231)
@@ -629,36 +381,65 @@ asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
 asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
 ```
 
+```{r}
+names(asbf)
+```
 
-Depending upon the data matrix and initial values of $U_i$, $\Delta_i$, and $V$,
-optimization could take some time.
+- `asbf$u` is the optimized left basis matrices with orthonormal columns
+- `asbf$v` is the optimized shared right basis matrix
+- `asbf$d` is the optimized delta matrices
+- `asbf$error` gives the final decomposition error
 
 ```{r}
-myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
-myopt_inv <- optimizeFactorization(mymat, asbf_inv$u_ortho, asbf_inv$delta,
-                                   asbf_inv$v)
-myopt_cor <- optimizeFactorization(mymat, asbf_cor$u_ortho, asbf_cor$delta,
-                                   asbf_cor$v)
+# initial decomposition error
+asbf$error_start
+asbf_inv$error_start
+asbf_cor$error_start
+```
+This is the same error (no A-SBF optimization) we showed previously in A-SBF
+examples. Now let us check the final decomposition error after optimization.
+
+```{r}
+# final decomposition error
+asbf$error
+asbf_inv$error
+asbf_cor$error
+```
+After optimization, for all three A-SBF factorizations, the final error is 
+```{r, echo = FALSE}
+if ((round(asbf$error,2) == round(asbf_inv$error,2)) && (round(asbf$error,2) == round(asbf_cor$error,2))) {
+  cat("same (up to 2 decimals). The final error is", round(asbf$error,2))  
+} else {
+  cat("not exactly the same")  
+}
+```
+
+Independent of the initial values, if the optimization converges, we achieve
+the same decomposition error.
+
+We can also compute the same by calling the `optimizeFactorization`. For 
+example,
+
+```{r}
+myopt <- optimizeFactorization(mymat, asbf$u_ortho_start, asbf$delta_start,
+                               asbf$v_start)
+names(myopt)
+```
+```{r}
+myopt$error
 ```
 
 
 The number of iteration taken for optimizing and new factorization error:
 
 ```{r}
-cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
-cat("\nFor asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
-    myopt_inv$error)
-cat("\nFor asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
-    myopt_cor$error)
+cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
+cat("\nFor asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
+    asbf_inv$error)
+cat("\nFor asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
+    asbf_cor$error)
 ```
 
-```{r, echo = FALSE}
-if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
-  cat("After optimization, for all three A-SBF factorizations, the final error")
-  cat("\nis the same (up to 2 decimals).")
-  cat("\nThe final error is", round(myopt$error,2))
-}
-```
 
 ### Using different initial values
 
@@ -679,6 +460,7 @@ rand_mat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
 cat("\nRank is:", qr(rand_mat[[1]])$rank,"\n")
 dim(rand_mat[[1]])
 ```
+
 Get an orthogonal $V$ matrix using SVD. We will set $V$ as the right basis
 matrix from the SVD.
 
@@ -793,7 +575,7 @@ same decomposition error regardless of the initial values.
 
 ### Estimating SVD
 
-We will further demonstrate the case for $N=1$ when we have just one matrix.
+We will further demonstrate the case for $k=1$ when we have just one matrix.
 The `optimizeFactorization` function gives $U_i$'s with orthonormal column,
 $\Delta_i$ a diagonal matrix, and an orthogonal $V$. If the function converges,
 the results should be identical to a standard SVD, except for the sign
@@ -940,6 +722,7 @@ newmat_svd$v
 opt_new1$v
 ```
 The results agree!
+
 
 # Example cross-species gene expression decomposition using A-SBF
 

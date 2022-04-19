@@ -171,7 +171,8 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
 #> [3,]    0    0    1
 ```
 
-A-SBF is not an exact factorization.
+A-SBF is not an exact factorization. The decomposition error is
+minimized and stored in `asbf$error`.
 
 ``` r
 # initial decomposition error
@@ -182,61 +183,12 @@ asbf$error
 #> [1] 1411.555
 ```
 
-This error is already computed and stored in `asbf$error`.
-
-A-SBF call with inverse variance weighting. Estimating *V* using the sum
-of inverse-variance weighted
-*D*<sub>*i*</sub><sup>*T*</sup>*D*<sub>*i*</sub> and estimating
-*U*<sub>*i*</sub>’s such that the columns are orthonormal.
-
-``` r
-# A-SBF call with inverse variance weighting
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-#> 
-#> A-SBF optimizing factorization error
-# initial decomposition error
-asbf_inv$error_start
-#> [1] 1651.901
-# final decomposition error
-asbf_inv$error
-#> [1] 1411.555
-```
-
-A-SBF computation based on inter-sample correlation. *V* is estimated
-using sum of *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
-
-``` r
-# A-SBF call using correlation matrix
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
-                transform_matrix = TRUE)
-#> 
-#> A-SBF optimizing factorization error
-# initial decomposition error
-asbf_cor$error_start
-#> [1] 14045.99
-# final decomposition error
-asbf_cor$error
-#> [1] 1411.555
-```
-
-The number of iteration taken for optimizing and new factorization
-error:
+The number of iteration taken for optimizing:
 
 ``` r
 cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
 #> For asbf, # iteration = 220 final error = 1411.555
-cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
-    asbf_inv$error)
-#> For asbf inv, # iteration = 202 final error = 1411.555
-cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
-    asbf_cor$error)
-#> For asbf cor, # iteration = 196 final error = 1411.555
 ```
-
-After optimization, for all three A-SBF factorizations, the final error
-is
-
-    #> same (up to 2 decimals). The final error is 1411.56
 
 Detailed explanation of the math and examples case of factorization can
 be found in the vignettes/docs directory.

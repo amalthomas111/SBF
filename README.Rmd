@@ -141,7 +141,8 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
            asbf$u[[names(asbf$u)[[1]]]])
 ```
 
-A-SBF is not an exact factorization.
+A-SBF is not an exact factorization. The decomposition error is minimized and
+stored in `asbf$error`.
 
 ```{r}
 # initial decomposition error
@@ -150,51 +151,12 @@ asbf$error_start
 asbf$error
 ```
 
-This error is already computed and stored in `asbf$error`.
 
-
-A-SBF call with inverse variance weighting. Estimating $V$ using the sum of
-inverse-variance weighted $D_i^T D_i$ and estimating $U_i$'s such that the
-columns are orthonormal.
-
-```{r}
-# A-SBF call with inverse variance weighting
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-# initial decomposition error
-asbf_inv$error_start
-# final decomposition error
-asbf_inv$error
-```
-
-A-SBF computation based on inter-sample correlation.
-$V$ is estimated using sum of $R_i^T R_i$.
-
-````{r}
-# A-SBF call using correlation matrix
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
-                transform_matrix = TRUE)
-# initial decomposition error
-asbf_cor$error_start
-# final decomposition error
-asbf_cor$error
-````
-The number of iteration taken for optimizing and new factorization error:
+The number of iteration taken for optimizing:
 ```{r}
 cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
-cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
-    asbf_inv$error)
-cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
-    asbf_cor$error)
 ```
 
-After optimization, for all three A-SBF factorizations, the final error is 
-```{r, echo = FALSE}
-if ((round(asbf$error,2) == round(asbf_inv$error,2)) && (round(asbf$error,2) == round(asbf_cor$error,2))) {
-  cat("same (up to 2 decimals). The final error is", round(asbf$error,2))  
-} else {
-  cat("not exactly the same")  
-}
-```
 Detailed explanation of the math and examples case of factorization can be found
 in the vignettes/docs directory.
 
