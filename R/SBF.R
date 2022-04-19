@@ -6,7 +6,7 @@
 #' @param matrix_list A list containing Di matrices for joint matrix
 #' factorization. Column names of each Di matrix may or may not have information
 #' about tissue or cell type.
-#' @param check_col_matching if the column names have information about tissue/
+#' @param check_col_matching if the column names have information about tissue or
 #' cell type and one-to-one correspondence of tissue types across species has to
 #' be checked, set this parameter to be TRUE. Default FALSE.
 #' @param col_sep separator in column names to separate different fields.
@@ -22,10 +22,25 @@
 #' @param weighted If TRUE each Di^TDi is scaled using inverse variance weights
 #' Default FALSE.
 #' @param approximate TRUE will compute A-SBF. Default FALSE.
-#' @param transform_matrix if TRUE, then Di will be transformed to compute
+#' @param transform_matrix If TRUE, then Di will be transformed to compute
 #' correlation matrix, and V is computed based on this instead of
 #' Di^TDi. An unbiased estimate of covariance (denominator n-1) is
 #' used for the computing correlation. Default FALSE.
+#' @param minimizeError  If true, the factorization error is minimized for the
+#'  A-SBF by invoking 'optimizeFactorization' function. Default TRUE.
+#' @param optimizeV Whether initial V should be update or not when minimizing
+#' A-SBF factorization error. Default TRUE. This is an argument for
+#' 'optimizeFactorization' function.
+#' @param initial_exact Whether the initial value of U, Delta,
+#' and V gives exact factorization. Default FALSE. This is an argument for
+#' 'optimizeFactorization' function.
+#' @param max_iter Maximum number of iterations. In each iteration u, d, and
+#' v are updated. Default 1e4. This is an argument for
+#' 'optimizeFactorization' function.
+#' @param tol Tolerance threshold During the iterations, if the difference between
+#' previous best and current best factorization error becomes less than tol,
+#' no more iteration is performed. Default tol = 1e-10. This is an argument for
+#' 'optimizeFactorization' function.
 #' @param verbose if TRUE print verbose lines. Default FALSE.
 #'
 #' @return a list containing u, delta, v, m, lambda (eigenvalues of m), and
@@ -56,13 +71,13 @@
 #' # A-SBF call for gene expression dataset using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
 #' asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
-#'                 transform_matrix = TRUE)
-#' # calculate decomposition error
-#' decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
-#'                                 asbf_cor$v)
+#'                 transform_matrix = TRUE, tol = 1e-2)
 SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 col_index = NULL, weighted = FALSE,
                 approximate = FALSE, transform_matrix = FALSE,
+                minimizeError = TRUE, optimizeV = TRUE,
+                initial_exact = FALSE,
+                max_iter = 1e4, tol = 1e-10,
                 verbose = FALSE) {
     if (length(matrix_list) >= 2 && !is.null(matrix_list)) {
         if (check_col_matching) {
@@ -162,10 +177,32 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
             if (verbose)
                 cat("\nA-SBF is computed\n")
             initial_error <- calcDecompError(matrix_list, U_ortho, delta, V)
-            out <- list(v = V, lambda = lambda,
-                        u = U, u_ortho = U_ortho,
-                        delta = delta, m = mat_list_trans_sum,
-                        error = initial_error)
+            myopt <- NULL
+            if (minimizeError) {
+                cat("\nA-SBF optimizing factorization error\n")
+                myopt <- SBF::optimizeFactorization(matrix_list, U_ortho, delta,
+                                                    V, optimizeV = optimizeV,
+                                                    initial_exact = initial_exact,
+                                                    max_iter = max_iter,
+                                                    tol = tol)
+                if (!is.null(myopt)) {
+                    out <- list(v = myopt$v, u = myopt$u, d = myopt$d,
+                                error = myopt$error, error_pos = myopt$error_pos,
+                                error_vec = myopt$error_vec,
+                                v_start = V, lambda_start = lambda,
+                                u_start = U, u_ortho_start = U_ortho,
+                                delta_start = delta, m = mat_list_trans_sum,
+                                error_start = initial_error)
+                }
+            }
+            if (is.null(myopt) || minimizeError == FALSE) {
+                cat("\nA-SBF with no optimization\n")
+                out <- list(v = V, lambda = lambda,
+                            u = U, u_ortho = U_ortho,
+                            delta = delta, m = mat_list_trans_sum,
+                            error = initial_error)
+            }
+
         } else {
             out <- list(v = V, lambda = lambda, u = U, delta = delta,
                         m = mat_list_trans_sum)

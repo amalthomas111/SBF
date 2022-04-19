@@ -13,6 +13,11 @@ SBF(
   weighted = FALSE,
   approximate = FALSE,
   transform_matrix = FALSE,
+  minimizeError = TRUE,
+  optimizeV = TRUE,
+  initial_exact = FALSE,
+  max_iter = 10000,
+  tol = 1e-10,
   verbose = FALSE
 )
 }
@@ -21,7 +26,7 @@ SBF(
 factorization. Column names of each Di matrix may or may not have information
 about tissue or cell type.}
 
-\item{check_col_matching}{if the column names have information about tissue/
+\item{check_col_matching}{if the column names have information about tissue or
 cell type and one-to-one correspondence of tissue types across species has to
 be checked, set this parameter to be TRUE. Default FALSE.}
 
@@ -42,10 +47,30 @@ Default FALSE.}
 
 \item{approximate}{TRUE will compute A-SBF. Default FALSE.}
 
-\item{transform_matrix}{if TRUE, then Di will be transformed to compute
+\item{transform_matrix}{If TRUE, then Di will be transformed to compute
 correlation matrix, and V is computed based on this instead of
 Di^TDi. An unbiased estimate of covariance (denominator n-1) is
 used for the computing correlation. Default FALSE.}
+
+\item{minimizeError}{If true, the factorization error is minimized for the
+A-SBF by invoking 'optimizeFactorization' function. Default TRUE.}
+
+\item{optimizeV}{Whether initial V should be update or not when minimizing
+A-SBF factorization error. Default TRUE. This is an argument for
+'optimizeFactorization' function.}
+
+\item{initial_exact}{Whether the initial value of U, Delta,
+and V gives exact factorization. Default FALSE. This is an argument for
+'optimizeFactorization' function.}
+
+\item{max_iter}{Maximum number of iterations. In each iteration u, d, and
+v are updated. Default 1e4. This is an argument for
+'optimizeFactorization' function.}
+
+\item{tol}{Tolerance threshold During the iterations, if the difference between
+previous best and current best factorization error becomes less than tol,
+no more iteration is performed. Default tol = 1e-10. This is an argument for
+'optimizeFactorization' function.}
 
 \item{verbose}{if TRUE print verbose lines. Default FALSE.}
 }
@@ -81,8 +106,5 @@ sbf_cor <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
 # A-SBF call for gene expression dataset using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
 asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
-                transform_matrix = TRUE)
-# calculate decomposition error
-decomperror <- calcDecompError(avg_counts, asbf_cor$u_ortho, asbf_cor$delta,
-                                asbf_cor$v)
+                transform_matrix = TRUE, tol = 1e-2)
 }
