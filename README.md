@@ -133,12 +133,22 @@ Estimating *V* using the sum of
 ``` r
 # A-SBF call
 asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+#> 
+#> A-SBF optimizing factorization error
 ```
 
 ``` r
 names(asbf)
-#> [1] "v"       "lambda"  "u"       "u_ortho" "delta"   "m"       "error"
+#>  [1] "v"             "u"             "d"             "error"        
+#>  [5] "error_pos"     "error_vec"     "v_start"       "lambda_start" 
+#>  [9] "u_start"       "u_ortho_start" "delta_start"   "m"            
+#> [13] "error_start"
 ```
+
+For A-SBF, the factorization error is optimized by default
+(`minimizeError=TRUE`) and the `optimizeFactorization` function is
+invoked. Depending upon the data matrix (`mymat`) and initial values,
+optimization could take some time.
 
 In A-SBF, *V* is orthogonal and columns of *U*<sub>*i*</sub>’s are
 orthonormal (*U*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub> = *I*).
@@ -153,8 +163,8 @@ zapsmall(t(asbf$v) %*% asbf$v)
 
 ``` r
 # check the columns of first matrix of U_ortho
-zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[[1]]]]) %*%
-           asbf$u_ortho[[names(asbf$u_ortho)[[1]]]])
+zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
+           asbf$u[[names(asbf$u)[[1]]]])
 #>      [,1] [,2] [,3]
 #> [1,]    1    0    0
 #> [2,]    0    1    0
@@ -164,10 +174,12 @@ zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[[1]]]]) %*%
 A-SBF is not an exact factorization.
 
 ``` r
-# calculate decomposition error
-decomperror <- calcDecompError(mymat, asbf$u_ortho, asbf$delta, asbf$v)
-decomperror
+# initial decomposition error
+asbf$error_start
 #> [1] 2329.73
+# final decomposition error
+asbf$error
+#> [1] 1411.555
 ```
 
 This error is already computed and stored in `asbf$error`.
@@ -180,10 +192,14 @@ of inverse-variance weighted
 ``` r
 # A-SBF call with inverse variance weighting
 asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-# calculate decomposition error
-decomperror_inv <- asbf_inv$error
-decomperror_inv
+#> 
+#> A-SBF optimizing factorization error
+# initial decomposition error
+asbf_inv$error_start
 #> [1] 1651.901
+# final decomposition error
+asbf_inv$error
+#> [1] 1411.555
 ```
 
 A-SBF computation based on inter-sample correlation. *V* is estimated
@@ -193,38 +209,27 @@ using sum of *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
 # A-SBF call using correlation matrix
 asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
                 transform_matrix = TRUE)
-# calculate decomposition error
-decomperror_cor <- asbf_cor$error
-decomperror_cor
+#> 
+#> A-SBF optimizing factorization error
+# initial decomposition error
+asbf_cor$error_start
 #> [1] 14045.99
-```
-
-### Reduce A-SBF factorization error
-
-Let us optimize the factorization error using the
-`optimizeFactorization` function, for the three cases of A-SBF
-computation shown before. Depending upon the mymat and initial values,
-optimization could take some time.
-
-``` r
-myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
-myopt_inv <- optimizeFactorization(mymat, asbf_inv$u_ortho, asbf_inv$delta,
-                                   asbf_inv$v)
-myopt_cor <- optimizeFactorization(mymat, asbf_cor$u_ortho, asbf_cor$delta,
-                                   asbf_cor$v)
+# final decomposition error
+asbf_cor$error
+#> [1] 1411.555
 ```
 
 The number of iteration taken for optimizing and new factorization
 error:
 
 ``` r
-cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
+cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
 #> For asbf, # iteration = 220 final error = 1411.555
-cat("For asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
-    myopt_inv$error)
+cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
+    asbf_inv$error)
 #> For asbf inv, # iteration = 202 final error = 1411.555
-cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
-    myopt_cor$error)
+cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
+    asbf_cor$error)
 #> For asbf cor, # iteration = 196 final error = 1411.555
 ```
 
@@ -256,41 +261,32 @@ names(avg_counts[["Homo_sapiens"]])
 #> [5] "hsapiens_testis"
 ```
 
-SBF computation based on inter-sample correlation. *V* is estimated
+A-SBF computation based on inter-sample correlation. *V* is estimated
 using the mean *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
-
-``` r
-# SBF call using correlation matrix
-sbf_gem <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
-decomperror <- calcDecompError(avg_counts, sbf_gem$u, sbf_gem$delta, sbf_gem$v)
-decomperror
-#> [1] 9.938196e-25
-```
 
 ``` r
 # A-SBF call using correlation matrix
 asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
-                transform_matrix = TRUE)
-asbf_gem$error
+                transform_matrix = TRUE, tol = 1e-4)
+#> 
+#> A-SBF optimizing factorization error
+# initial decomposition error
+asbf_gem$error_start
 #> [1] 65865.92
+# final decomposition error
+asbf_gem$error
+#> [1] 7088.058
 ```
 
+Note: For high-dimensional datasets, vary the tolerance threshold
+(`tol`) or maximum number of iteration parameter (`max_iter`) to reduce
+the computing time.
 <!-- For gene-expression analysis, if we want the shared space to represent -->
 <!-- inter-sample correlation relationship, we do not update/change $V$ -->
 <!-- while optimizing the factorization error. -->
 <!-- In such cases, while reducing the factorization error -->
 <!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
-
-We now optimize the factorization error to find the closest space.
-
-``` r
-# finding the closest space
-asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
-                                      asbf_gem$delta, asbf_gem$v,
-                                      optimizeV = FALSE)
-asbf_gem_opt$error
-#> [1] 63540.08
-```
+<!-- We now optimize the factorization error to find the closest space. -->
 
 Different cross-species analysis examples using A-SBF can be found in
 the vignettes/docs directory.

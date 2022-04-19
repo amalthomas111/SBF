@@ -123,6 +123,10 @@ asbf <- SBF(matrix_list = mymat, approximate = TRUE)
 ```{r}
 names(asbf)
 ```
+For A-SBF, the factorization error is optimized by default (`minimizeError=TRUE`)
+and the `optimizeFactorization` function is invoked. 
+Depending upon the data matrix (`mymat`) and initial values, optimization could
+take some time. 
 
 In A-SBF, $V$ is orthogonal and columns of $U_i$'s are orthonormal
 ($U_i^T U_i = I$).
@@ -133,16 +137,17 @@ zapsmall(t(asbf$v) %*% asbf$v)
 
 ```{r}
 # check the columns of first matrix of U_ortho
-zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[[1]]]]) %*%
-           asbf$u_ortho[[names(asbf$u_ortho)[[1]]]])
+zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
+           asbf$u[[names(asbf$u)[[1]]]])
 ```
 
 A-SBF is not an exact factorization.
 
 ```{r}
-# calculate decomposition error
-decomperror <- calcDecompError(mymat, asbf$u_ortho, asbf$delta, asbf$v)
-decomperror
+# initial decomposition error
+asbf$error_start
+# final decomposition error
+asbf$error
 ```
 
 This error is already computed and stored in `asbf$error`.
@@ -155,9 +160,10 @@ columns are orthonormal.
 ```{r}
 # A-SBF call with inverse variance weighting
 asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-# calculate decomposition error
-decomperror_inv <- asbf_inv$error
-decomperror_inv
+# initial decomposition error
+asbf_inv$error_start
+# final decomposition error
+asbf_inv$error
 ```
 
 A-SBF computation based on inter-sample correlation.
@@ -167,36 +173,24 @@ $V$ is estimated using sum of $R_i^T R_i$.
 # A-SBF call using correlation matrix
 asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
                 transform_matrix = TRUE)
-# calculate decomposition error
-decomperror_cor <- asbf_cor$error
-decomperror_cor
+# initial decomposition error
+asbf_cor$error_start
+# final decomposition error
+asbf_cor$error
 ````
-### Reduce A-SBF factorization error
-
-Let us optimize the factorization error using the `optimizeFactorization`
-function, for the three cases of A-SBF computation shown before.
-Depending upon the mymat and initial values, optimization could take some time.
-
-```{r}
-myopt <- optimizeFactorization(mymat, asbf$u_ortho, asbf$delta, asbf$v)
-myopt_inv <- optimizeFactorization(mymat, asbf_inv$u_ortho, asbf_inv$delta,
-                                   asbf_inv$v)
-myopt_cor <- optimizeFactorization(mymat, asbf_cor$u_ortho, asbf_cor$delta,
-                                   asbf_cor$v)
-```
-
 The number of iteration taken for optimizing and new factorization error:
 ```{r}
-cat("For asbf, # iteration =", myopt$error_pos, "final error =", myopt$error)
-cat("For asbf inv, # iteration =", myopt_inv$error_pos, "final error =",
-    myopt_inv$error)
-cat("For asbf cor, # iteration =", myopt_cor$error_pos, "final error =",
-    myopt_cor$error)
+cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
+cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
+    asbf_inv$error)
+cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
+    asbf_cor$error)
 ```
+
 After optimization, for all three A-SBF factorizations, the final error is 
 ```{r, echo = FALSE}
-if ((round(myopt$error,2) == round(myopt_inv$error,2)) && (round(myopt$error,2) == round(myopt_cor$error,2))) {
-  cat("same (up to 2 decimals). The final error is", round(myopt$error,2))  
+if ((round(asbf$error,2) == round(asbf_inv$error,2)) && (round(asbf$error,2) == round(asbf_cor$error,2))) {
+  cat("same (up to 2 decimals). The final error is", round(asbf$error,2))  
 } else {
   cat("not exactly the same")  
 }
@@ -218,37 +212,27 @@ sapply(avg_counts, dim)
 names(avg_counts[["Homo_sapiens"]])
 ```
 
-SBF computation based on inter-sample correlation. 
+A-SBF computation based on inter-sample correlation. 
 $V$ is estimated using the mean $R_i^T R_i$.
-
-```{r}
-# SBF call using correlation matrix
-sbf_gem <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
-decomperror <- calcDecompError(avg_counts, sbf_gem$u, sbf_gem$delta, sbf_gem$v)
-decomperror
-```
 
 ```{r}
 # A-SBF call using correlation matrix
 asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
-                transform_matrix = TRUE)
+                transform_matrix = TRUE, tol = 1e-4)
+# initial decomposition error
+asbf_gem$error_start
+# final decomposition error
 asbf_gem$error
 ```
-
+Note: For high-dimensional datasets, vary the tolerance threshold (`tol`) or
+maximum number of iteration parameter (`max_iter`) to reduce the computing time.
 <!-- For gene-expression analysis, if we want the shared space to represent -->
 <!-- inter-sample correlation relationship, we do not update/change $V$ -->
 <!-- while optimizing the factorization error. -->
 <!-- In such cases, while reducing the factorization error -->
 <!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
-We now optimize the factorization error to find the closest space.
+<!-- We now optimize the factorization error to find the closest space. -->
 
-```{r}
-# finding the closest space
-asbf_gem_opt <- optimizeFactorization(avg_counts, asbf_gem$u_ortho,
-                                      asbf_gem$delta, asbf_gem$v,
-                                      optimizeV = FALSE)
-asbf_gem_opt$error
-```
 
 Different cross-species analysis examples using A-SBF can be found
 in the vignettes/docs directory.
