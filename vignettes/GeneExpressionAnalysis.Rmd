@@ -87,3 +87,199 @@ the factorization error are computed
 # load SBF package
 library(SBF)
 ```
+
+Additional package required for the vignette
+```{r}
+pkgs <- c("data.table", "dplyr", "matrixStats")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+suppressPackageStartupMessages({
+  library(data.table)
+  library(dplyr)
+  library(matrixStats)
+})
+```
+
+Download the processed counts file from:
+Read RNA-Seq counts data
+```{r}
+species <- c("Homo_sapiens", "Pan_troglodytes", "Macaca_mulatta",
+             "Mus_musculus", "Rattus_norvegicus", "Bos_taurus",
+             "Sus_scrofa","Gallus_gallus")
+# common tissues present in all 8 species
+tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
+counts_path <- "/home/master/Dropbox/0.Analysis/0.paper/counts/"
+```
+
+
+# read gene expression profiles
+
+```{r}
+counts_list <- metadata_list <- list()
+for (sp in species) {
+  counts <- fread(paste0(counts_path, sp, "_logTPM.tsv"), sep = "\t",
+                  header = T, data.table = FALSE, nThread = 4)
+  row.names(counts) <- counts$V1
+  counts$V1 <- NULL
+  col_fields <- tstrsplit(colnames(counts),"_")
+  metadata <- data.frame(
+      project = col_fields[[1]],
+      species = col_fields[[2]],
+      tissue = col_fields[[3]],
+      gsm = col_fields[[4]],
+      name = colnames(counts),
+      stringsAsFactors = F)
+  metadata_sel <- metadata[metadata$tissue %in% tissues, , drop = F]
+  counts_sel <- counts[ , colnames(counts) %in% metadata_sel$name, drop = F]
+  metadata_sel$ref <- seq_len(nrow(metadata_sel))
+  metadata_sel$key <- paste0(metadata_sel$species, "_", metadata_sel$tissue)
+
+  counts_list[[sp]] <- counts_sel
+  metadata_list[[sp]] <- metadata_sel
+
+}
+```
+
+Dimensions and number of profiles for different species
+
+```{r}
+sapply(counts_list, dim)
+```
+
+Now, for each species, let us compute average expression profile for each tissue.
+
+```{r}
+#function to calcuate mean expression values for each tissue/group
+calcAvgCounts <- function(counts, metadata, ndecimal = 4) {
+   require(dplyr)
+   counts.avg <- list()
+   if ("key" %in% colnames(metadata)) {
+     for (species.organ in sort(unique(metadata$key))) {
+        no.of.libs <- length(colnames(counts)[grepl(species.organ,
+                                                    colnames(counts))])
+        if (no.of.libs > 1)
+           counts.avg[[species.organ]] <- round(rowMeans(counts[, colnames(counts)[
+                                   grepl(species.organ, colnames(counts))]],
+                                   dim=1), ndecimal)
+        else if (no.of.libs == 1)
+           counts.avg[[species.organ]] <- round(counts[, colnames(counts)[grepl(
+                              species.organ, colnames(counts))], drop = T], ndecimal)
+     }
+     avg.counts <- as.data.frame(counts.avg %>% bind_cols())
+     row.names(avg.counts) <- row.names(counts)
+     return(avg.counts)
+   }else {
+     stop("'key' column not found in the metadata!Exiting!")
+   }
+}
+
+avg_counts <- list()
+for(sp in species) {
+    avg_counts[[sp]] <- calcAvgCounts(counts_list[[sp]],
+                                      metadata_list[[sp]])
+}
+# check tissue columns are matching in each species
+c_tissues <- as.data.frame(sapply(avg_counts, function(x) {
+            tstrsplit(colnames(x),"_")[[2]]
+  }))
+if( !all(apply(c_tissues,1,function(x) all(x == x[1])))) {
+        stop("Error! tissues not matching")
+}
+```
+
+The dimension of mean expression profiles
+```{r}
+sapply(avg_counts,dim)
+```
+Remove genes not expressed
+
+```{r}
+removeZeros <- function(df) {
+    return(df[rowSums(df) > 0,])
+}
+
+avg_counts <- lapply(avg_counts, removeZeros)
+sapply(avg_counts, dim)
+# update counts_list
+counts_list_sub <- list()
+for(sp in names(avg_counts)){
+  counts_list_sub[[sp]] = counts_list[[sp]][row.names(avg_counts[[sp]]), ,
+                                                 drop = F]
+}
+```
+
+
+# A-SBF
+
+We will perform A-SBF in two ways.
+
+1. Keeping initial estimate of $V$ same, while updating $U_i$ and $\Delta_i$ to
+minimize the factorization error. By keeping the $V$ same, the initial $V$
+estimated based inter-sample correlation is maintained.
+2. Update $V$, $U_i$ and $\Delta_i$ to minimize the factorization error.
+
+```{r}
+cat("\n=======================================================")
+cat("\nASBF with optimizing V = FALSE started\n")
+cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+t1 <- proc.time()
+sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
+                     optimizeV = FALSE, tol = 1e-3)
+t2 <- proc.time()
+cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+cat("ASBF with optimizing V = FALSE finished\n")
+cat("Time taken:\n")
+t2 - t1
+```
+
+
+```{r}
+cat("\n=======================================================")
+cat("\nASBF with optimizing V=TRUE started\n")
+cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+t1 <- proc.time()
+sbf <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
+                     optimizeV = TRUE, tol = 1e-3)
+t2 <- proc.time()
+cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+cat("ASBF with optimizing V=TRUE finished\n")
+cat("Time taken:\n")
+t2 - t1
+```
+Note reduce the tolerance threshold (e.g 1e-10) to further minimize the
+factorization error.
+
+The final factorization error and number of updates taken:
+```{r}
+cat("\n", sprintf("%-25s:","Final error [No V update]"), sprintf("%16.2f",
+                                                        sbf_noVupdate$error))
+cat("\n", sprintf("%-25s:","Final error"), sprintf("%16.2f",sbf$error))
+cat("\n", sprintf("%-25s:","# of update [No V update]"), sprintf("%16d",
+                                                      sbf_noVupdate$error_pos))
+cat("\n", sprintf("%-25s:","# of update"), sprintf("%16d",sbf$error_pos))
+```
+
+
+
+Calculate tissue specificity ($\Tau$) and scaled avg expression profile
+
+```{r}
+calc_tissue_specificity <- function(a) {
+    a <- as.matrix(a)
+    b <- a/rowMaxs(a)
+    #b[is.na(b)]=0
+    return(rowSums(1-b) / (ncol(b) - 1))
+}
+    
+Tau <- lapply(avg_counts, function(x) { calc_tissue_specificity(x)} )
+avg_counts_scaled <- lapply(avg_counts,function(x) { t(scale(t(x))) })
+
+combine_expr <- list()
+for(sp in names(avg_counts_scaled)) {
+  x <- as.data.frame(avg_counts_scaled[[sp]])
+  x[["Tau"]] <- Tau[[sp]]
+  combine_expr[[sp]] <- x
+}
+```
+
