@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 ## SBF: A R package for Shared Basis Factorization
 
 Approximate Shared Basis Factorization (A-SBF) is a joint matrix diagonalization
-approach we developed for cross-species gene expression analysis.
+algorithm we developed for cross-species gene expression analysis.
 
 ### Installation
 - Clone from Github
@@ -47,7 +47,7 @@ if there is any trouble with installation.
 library(SBF)
 ```
 
-### Analysis for a test dataset
+### Create a test dataset
 
 - We will first create a test dataset. `SBF` package has the function 
   `createRandomMatrices` to create matrices with full column rank and
@@ -68,8 +68,8 @@ We will use the test dataset as our $D_i$ matrices.
 
 ### A-SBF examples
 
-The A-SBF's shared orthogonal $V$, $U_i$'s with orthonormal columns and
-diagonal matrices $\Delta_i$'s can be estimated using `SBF` function with
+The A-SBF's shared orthogonal $V$, $U_i$'s with orthonormal columns, and
+diagonal matrices $\Delta_i$'s can be estimated using the `SBF` function with
 argument `approximate = TRUE`.
 
 ```{r}
@@ -82,10 +82,10 @@ asbf <- SBF(matrix_list = mymat, approximate = TRUE)
 names(asbf)
 ```
 
-For A-SBF, the factorization error is optimized by default (`minimizeError=TRUE`)
-and the `optimizeFactorization` function is invoked. 
-Depending upon the data matrix (`mymat`) and initial values, optimization could
-take some time. 
+For A-SBF, the factorization error is optimized by default
+(`minimizeError=TRUE`), and the `optimizeFactorization` function is invoked. 
+Optimization could take some time depending on the data matrix (`mymat`) and
+initial values.  
 `?SBF` help function shows all arguments for the SBF call.
 
 In A-SBF, $V$ is orthogonal and columns of $U_i$'s are orthonormal
@@ -117,8 +117,8 @@ The number of iteration taken for optimizing:
 cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
 ```
 
-Detailed explanation of the math and examples case of factorization can be found
-in the vignettes/docs directory.
+A detailed explanation of the algorithm and example cases of factorization can be
+found in the vignettes/docs directory.
 
 ### Factorization for an example gene expression dataset
 
@@ -148,17 +148,11 @@ asbf_gem$error
 ```
 Note: For high-dimensional datasets, vary the tolerance threshold (`tol`) or
 maximum number of iteration parameter (`max_iter`) to reduce the computing time.
-<!-- For gene-expression analysis, if we want the shared space to represent -->
-<!-- inter-sample correlation relationship, we do not update/change $V$ -->
-<!-- while optimizing the factorization error. -->
-<!-- In such cases, while reducing the factorization error -->
-<!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
-<!-- We now optimize the factorization error to find the closest space. -->
 
 
-When calling `SBF`, `approximate = FALSE` compute the SBF factorization which
-is an exact join matrix factorization we developed. In SBF, the estimated
-$U_i$'s are not orthonormal. More details and examples can be found
+When calling `SBF`, `approximate = FALSE` computes the SBF factorization,
+an exact joint matrix factorization we developed. In SBF, the estimated
+columns of $U_i$ are not orthonormal. More details and examples can be found
 in the vignettes/docs directory.
 
 

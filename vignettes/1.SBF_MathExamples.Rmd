@@ -56,7 +56,7 @@ This study developed a joint diagonalization approach called
 approximate shared basis factorization (A-SBF) for cross-species
 expression comparisons.  This approach extends the exact factorization
 approach we developed called shared basis factorization (SBF).
-We implement both algorithm in the SBF package. The details 
+We implemented both algorithms in the SBF package. The details 
 and example cases of the two methods are shown in the following sections.
 
 # Shared basis factorization
@@ -149,11 +149,11 @@ sapply(mymat, function(x) {
 
 Let us compute SBF using different approaches:
 
-- Estimate $V$ using sum of $D_i^T D_i / k$
+- Estimate $V$ using the sum of $D_i^T D_i / k$
 
-- Estimate $V$ using sum of $D_i^T D_i / k$ with inverse variance weighting
+- Estimate $V$ using the sum of $D_i^T D_i / k$ with inverse variance weighting
 
-- Estimate $V$ using inter-sample correlation
+- Estimate $V$ using the inter-sample correlation
 
 ```{r}
 sbf <- SBF(matrix_list = mymat)
@@ -453,7 +453,7 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 1. Let us initialize the `optimizeFactorization` function with a random
 orthogonal matrix and check the final optimization error. The $V$ matrix
 estimated from the `mymat` matrix has a dimension of $3 \times 3$.
-First we will create a random $3 \times 3$ matrix and obtain
+First, we will create a random $3 \times 3$ matrix and obtain
 an orthogonal matrix based on this.
 
 ```{r}
@@ -503,7 +503,7 @@ We achieve the same factorization error (```r newopt$error```) after the
 `optimizeFactorization` function call.
 
 
-2. Now instead of the right basis matrix from the SVD, we will
+2. Now, instead of the right basis matrix from the SVD, we will
 set $V$ as the left basis matrix.
 
 ```{r}
@@ -530,7 +530,7 @@ newopt$error
 
 Again we get the same decomposition error after optimizing.
 
-3. Instead of initial value being an orthogonal matrix, we will initialize
+3. Instead of the initial value being an orthogonal matrix, we will initialize
 $U_i$'s, $\Delta_i$, and $V$ with random matrices such that it
 does not guarantee
 - orthogonal property for $V$ and
@@ -593,7 +593,7 @@ newmat
 ```
 
 1. We will estimate the SVD of `newmat` using our iterative update function by
-setting the initial values to be identity matrix
+setting the initial values to be an identity matrix.
 
 ```{r}
 newu <- newd <- list()
@@ -602,7 +602,7 @@ newd[["mat1"]] <- diag(newu[["mat1"]])
 newu
 newd
 ```
-The factorization error when initializing using identity matrix:
+The factorization error when initializing using an identity matrix:
 
 ```{r}
 calcDecompError(newmat, newu, newd, diag(3))
@@ -654,9 +654,9 @@ opt_new1$u[[1]]
 newmat_svd$v
 opt_new1$v
 ```
-The results agree except for the sign and ordering of columns.
+The results agree except for the sign and order of columns.
 
-2. Now we will estimate the SVD of `newmat` using our iterative update function from
+2. Now, we will estimate the SVD of `newmat` using our iterative update function from
 another random matrix with the same dimension.
 
 ```{r}
