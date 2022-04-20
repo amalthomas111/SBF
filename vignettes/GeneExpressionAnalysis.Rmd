@@ -1,0 +1,89 @@
+---
+title: "Gene expression analysis using A-SBF"
+author: "Amal Thomas"
+output:
+  pdf_document:
+    toc: yes
+    number_section: yes
+  knitr:::html_vignette:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
+bibliography: references.bib
+vignette: |
+  %\VignetteIndexEntry{GeneExpressionAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\E}{\mathrm{E}}
+
+# Introduction
+
+Consider a set of $k$ real matrices $D_i \in \mathbb{R}^{m_i \times n}$,
+each with full column rank.
+Each $D_i$ represents the mean expression of $n$ tissues (columns) in species
+$i$ with $m_i$ genes (rows) annotated for that species.
+The $p\mbox{-th}$ column of each $D_i$ matrix corresponds to the average
+gene-expression profile of a functionally equivalent tissue representing
+a similar phenotype across species.
+The number of rows is different for each $D_i$ matrix, but they all have the
+same number of columns.
+
+In A-SBF, we estimate an orthonormal basis $V$ for the common expression
+space based on the inter-tissue correlations within each species.
+Let $X_i \in \mathbb{R}^{m_i \times n}$ be the standardized gene
+expression matrix for species $i$. We can write
+\[
+X_i = C_iD_i{S_i}^{-1},
+\]
+where
+\[
+C_i = I_{m_i} - {m_i}^{-1} 1_{m_i} {1_{m_i}}^T
+\]
+is a centering matrix and $S_i = \diag(s_1,\ldots,s_n)$ is a diagonal
+scaling matrix, where $s_j$ is the standard deviation of $j$-th column
+of $D_i$. Within species $i$, the correlation between expression
+profiles for the $n$ tissues is
+\[
+R_i = X_i^TX_i/m_i.
+\]
+Each $R_i$ matrix has a dimension of $n \times n$ independent of the 
+number of genes annotated in the species.
+Since the corresponding column of each $D_i$ matrix represents a similar 
+phenotype, we can define an expected correlation matrix across the
+species:
+
+\[
+E = \E(R) = \textstyle\frac{1}{k}\sum_{i=1}^{k} R_i.
+\]
+
+The shared right basis matrix $V$ represents the common expression space
+and is determined from the eigenvalue decomposition of $E$,
+where $E=V \Lambda V^T$.
+The right basis matrix $V$ is identical in all the $k$ matrix factorizations,
+and the different dimensions of $V$ represent the correlation relationship
+between tissues independent of the fact to which species tissues belong.
+Once the $V$ is estimated, the species-specific left basis matrix with
+orthonormal columns $U_i$ (eigengenes) and the $\Delta_i$ that minimize
+the factorization error are computed 
+
+```{r setup}
+# load SBF package
+library(SBF)
+```
