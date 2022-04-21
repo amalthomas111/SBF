@@ -90,7 +90,7 @@ library(SBF)
 
 Additional package required for the vignette
 ```{r}
-pkgs <- c("data.table", "dplyr", "matrixStats")
+pkgs <- c("data.table", "dplyr", "matrixStats", "RColorBrewer","ggplot2")
 require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
 if (length(require_install))
   install.packages(require_install)
@@ -98,6 +98,8 @@ suppressPackageStartupMessages({
   library(data.table)
   library(dplyr)
   library(matrixStats)
+  library(RColorBrewer)
+  library(ggplot2)
 })
 ```
 
@@ -403,6 +405,56 @@ df_proj$species <- factor(meta1[[2]])
 df_proj <- df_proj %>% mutate(species = factor(species,
                             levels = species_short))
 
+```
+
+
+# 2D plots in common space
+
+```{r}
+customTheme <- function(base_size=10, base_family="helvetica"){
+   require(grid)
+   require(ggthemes)
+   (theme_foundation(base_size=base_size)
+   + theme(plot.title = element_text(face = "bold",
+                                   size = rel(1.2), hjust = 0.5),
+         text = element_text(),
+         panel.background = element_rect(colour = NA),
+         plot.background = element_rect(colour = NA),
+         panel.border = element_rect(colour = NA),
+         axis.title = element_text(size = rel(1)),
+         axis.title.y = element_text(angle=90,vjust =2),
+         axis.title.x = element_text(vjust = -0.2),
+         axis.text = element_text(),
+         axis.line = element_line(colour="black"),
+         axis.ticks = element_line(),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.key = element_rect(colour = NA),
+         legend.position = "top",
+         legend.direction = "horizontal",
+         legend.key.size= unit(0.2, "cm"),
+         legend.spacing = unit(0, "cm"),
+         legend.title = element_text(face="italic"),
+         plot.margin=unit(c(10,5,5,5),"mm"),
+         strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+         strip.text = element_text(face="bold")))
+}
+```
+
+
+```{r}
+sel_colors <- brewer.pal(8,"Dark2")[1:length(unique(df_proj$tissue))]
+i <- 1
+j <- 2
+ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[,i],
+                              y = df_proj_noVupdate[,j], col = tissue,
+                              shape = species, fill = tissue)) +  
+  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  geom_point(size=1.5) + scale_color_manual(values = sel_colors) + 
+  scale_shape_manual(values = c(21:25,3:7)) +
+  scale_fill_manual(values = sel_colors) + 
+  customTheme() + 
+  theme(legend.title = element_blank())
 ```
 
 Calculate tissue specificity ($\tau$) and scaled avg expression profile
