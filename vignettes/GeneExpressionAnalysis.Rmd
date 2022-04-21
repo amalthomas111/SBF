@@ -113,7 +113,26 @@ counts_path <- "/home/master/Dropbox/0.Analysis/0.paper/counts/"
 ```
 
 
-# read gene expression profiles
+```{r}
+getSpeciesShortName <- function(species_list) {
+    require(data.table)
+    shortname <- c()
+    for (sp in species_list) {
+       if (!grepl("_", sp)) {
+          cat("\nspecies:", sp,"\n")
+          stop("Invalid species full name")
+       }
+       shortname <- c(shortname,
+                       paste0(tolower(substr(tstrsplit(sp,"_")[[1]], 1, 1)),
+                       tstrsplit(sp,"_")[[2]]))
+    }
+    return(shortname)
+}
+species_short <- sapply(species, getSpeciesShortName)
+species_short
+```
+
+# Load gene expression profiles
 
 ```{r}
 counts_list <- metadata_list <- list()
@@ -247,7 +266,7 @@ cat("ASBF with optimizing V=TRUE finished\n")
 cat("Time taken:\n")
 t2 - t1
 ```
-Note reduce the tolerance threshold (e.g 1e-10) to further minimize the
+Note: reduce the tolerance threshold (e.g 1e-10) to further minimize the
 factorization error.
 
 The final factorization error and number of updates taken:
@@ -259,15 +278,139 @@ cat("\n", sprintf("%-25s:","# of update [No V update]"), sprintf("%16d",
                                                       sbf_noVupdate$error_pos))
 cat("\n", sprintf("%-25s:","# of update"), sprintf("%16d",sbf$error_pos))
 ```
+Percentage of information ($p_{ij}$) represented by a common space dimension is
+defined as
+$\textstyle{p_{ij} = \delta_{ij}^2 / \sum_{j=1}^6 \delta_{ij}^2 \times 100}$,
+$\mbox{ where } \textstyle{\Delta_i = \diag(\delta_{i1},\ldots, \delta_{i6})}$
+
+```{r}
+percentInfo_noVupdate <- lapply(sbf_noVupdate$d, function(x){round(x^2/sum(x^2) * 100,2)})
+cat("\nPercentage for each delta [No V update]:")
+for (i in names(sbf_noVupdate$d)) {
+  cat("\n", sprintf("%-25s:",i),sprintf("%8.2f", percentInfo_noVupdate[[i]]))
+}
+cat("\n-------------------------------------------------------------------------")
 
 
+percentInfo <- lapply(sbf$d, function(x) { round(x^2/sum(x^2) * 100, 2) })
+cat("\nPercentage for each delta:")
+for (i in names(sbf$d)) {
+  cat("\n", sprintf("%-25s:",i), sprintf("%8.2f", percentInfo[[i]]))
+}
+```
+The percentage of information represented by different dimensions 
+looks very similar for both the cases.
 
-Calculate tissue specificity ($\Tau$) and scaled avg expression profile
+# Project libraries to common space
+
+Let us first compute $\Delta^{-1}$
+
+```{r}
+d_inv_NoVupdate <- list()
+for (sp in names(avg_counts)) {                                             
+        if(length(sbf_noVupdate$d[[sp]]) == 1) {       
+                d_inv_NoVupdate[[sp]] <- as.matrix(diag(as.matrix(1/sbf_noVupdate$d[[sp]])))
+        } else {                                                         
+                d_inv_NoVupdate[[sp]] <- as.matrix(diag(1/sbf_noVupdate$d[[sp]]))           
+        }                                                              
+}
+d_inv <- list()
+for (sp in names(avg_counts)) {                                             
+        if(length(sbf$d[[sp]]) == 1) {       
+                d_inv[[sp]] <- as.matrix(diag(as.matrix(1/sbf$d[[sp]])))
+        } else {                                                         
+                d_inv[[sp]] <- as.matrix(diag(1/sbf$d[[sp]]))           
+        }                                                              
+}
+```
+
+
+```{r}
+# function to return scientific name
+species_scientific <- function(x) {
+  parts <- tstrsplit(x,"_")
+  return(paste0(substr(x, 1, 1), ".", parts[[2]]))
+}
+```
+
+Project individual profiles and average counts to common space by computing
+$D_i^T U_i \Delta^{-1}$
+
+```{r}
+# project using no V update estimates
+avgcounts_projected_noVupdate  <- counts_projected_noVupdate <- list()
+n_noVupdate <- n1_noVupdate <- c()
+for (sp in names(avg_counts)) {
+  avgcounts_projected_noVupdate[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
+    as.matrix(sbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
+  n_noVupdate <- c(n_noVupdate, row.names(avgcounts_projected_noVupdate[[sp]]))
+  
+  counts_projected_noVupdate[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
+    as.matrix(sbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
+  n1_noVupdate <- c(n1_noVupdate, row.names(counts_projected_noVupdate[[sp]]))
+}
+
+# combine projected profiles
+df_proj_avg_noVupdate <- as.data.frame(do.call(rbind, avgcounts_projected_noVupdate))
+rownames(df_proj_avg_noVupdate) <- n_noVupdate
+colnames(df_proj_avg_noVupdate) <- paste0("Dim",1:ncol(df_proj_avg_noVupdate))
+meta <- tstrsplit(row.names(df_proj_avg_noVupdate),"_")
+df_proj_avg_noVupdate$tissue <- factor(meta[[2]])
+df_proj_avg_noVupdate$species <- factor(meta[[1]])
+df_proj_avg_noVupdate <- df_proj_avg_noVupdate %>% mutate(species = factor(species,
+                            levels = species_short))
+
+
+df_proj_noVupdate <- as.data.frame(do.call(rbind, counts_projected_noVupdate))
+rownames(df_proj_noVupdate) <- n1_noVupdate
+colnames(df_proj_noVupdate) <- paste0("Dim", 1:ncol(df_proj_noVupdate))
+meta1 <- tstrsplit(row.names(df_proj_noVupdate), "_")
+df_proj_noVupdate$tissue <- factor(meta1[[3]])
+df_proj_noVupdate$species <- factor(meta1[[2]])
+df_proj_noVupdate <- df_proj_noVupdate %>% mutate(species = factor(species,
+                            levels = species_short))
+
+# project using V update estimates
+avgcounts_projected  <- counts_projected <- list()
+n <- n1 <- c()
+for (sp in names(avg_counts)) {
+  avgcounts_projected[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
+    as.matrix(sbf$u[[sp]]) %*% d_inv[[sp]]
+  n <- c(n, row.names(avgcounts_projected[[sp]]))
+  
+  counts_projected[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
+    as.matrix(sbf$u[[sp]]) %*% d_inv[[sp]]
+  n1 <- c(n1, row.names(counts_projected[[sp]]))
+}
+
+# combine projected profiles
+df_proj_avg <- as.data.frame(do.call(rbind, avgcounts_projected))
+rownames(df_proj_avg) <- n
+colnames(df_proj_avg) <- paste0("Dim",1:ncol(df_proj_avg))
+meta <- tstrsplit(row.names(df_proj_avg),"_")
+df_proj_avg$tissue <- factor(meta[[2]])
+df_proj_avg$species <- factor(meta[[1]])
+df_proj_avg <- df_proj_avg %>% mutate(species = factor(species,
+                            levels = species_short))
+
+
+df_proj <- as.data.frame(do.call(rbind, counts_projected))
+rownames(df_proj) <- n1
+colnames(df_proj) <- paste0("Dim", 1:ncol(df_proj))
+meta1 <- tstrsplit(row.names(df_proj), "_")
+df_proj$tissue <- factor(meta1[[3]])
+df_proj$species <- factor(meta1[[2]])
+df_proj <- df_proj %>% mutate(species = factor(species,
+                            levels = species_short))
+
+```
+
+Calculate tissue specificity ($\tau$) and scaled avg expression profile
 
 ```{r}
 calc_tissue_specificity <- function(a) {
     a <- as.matrix(a)
-    b <- a/rowMaxs(a)
+    b <- a / rowMaxs(a)
     #b[is.na(b)]=0
     return(rowSums(1-b) / (ncol(b) - 1))
 }
