@@ -90,7 +90,7 @@ library(SBF)
 
 Additional package required for the vignette
 ```{r}
-pkgs <- c("data.table", "dplyr", "matrixStats", "RColorBrewer","ggplot2")
+pkgs <- c("data.table", "dplyr", "matrixStats")
 require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
 if (length(require_install))
   install.packages(require_install)
@@ -98,24 +98,21 @@ suppressPackageStartupMessages({
   library(data.table)
   library(dplyr)
   library(matrixStats)
-  library(RColorBrewer)
-  library(ggplot2)
 })
 ```
 
 Download the processed counts file from:
 Read RNA-Seq counts data
+
+# Species and organs
+
+In this workflow, we will work with gene expression profile of six tissues 
+from eight species.
 ```{r}
 species <- c("Homo_sapiens", "Pan_troglodytes", "Macaca_mulatta",
              "Mus_musculus", "Rattus_norvegicus", "Bos_taurus",
              "Sus_scrofa","Gallus_gallus")
-# common tissues present in all 8 species
-tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
-counts_path <- "/home/master/Dropbox/0.Analysis/0.paper/counts/"
-```
-
-
-```{r}
+# function to create short name for species
 getSpeciesShortName <- function(species_list) {
     require(data.table)
     shortname <- c()
@@ -132,12 +129,20 @@ getSpeciesShortName <- function(species_list) {
 }
 species_short <- sapply(species, getSpeciesShortName)
 species_short
+# common tissues present in all 8 species
+tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
 ```
+
 
 # Load gene expression profiles
 
+Download the processed RNA-Seq counts file
+from https://figshare.com/s/4d8d5cf9c1362bcbe90d
 ```{r}
+# set the path to the counts. Change it accordingly
+counts_path <- "~/Dropbox/0.Analysis/0.paper/counts/"
 counts_list <- metadata_list <- list()
+require(data.table)
 for (sp in species) {
   counts <- fread(paste0(counts_path, sp, "_logTPM.tsv"), sep = "\t",
                   header = T, data.table = FALSE, nThread = 4)
@@ -158,7 +163,6 @@ for (sp in species) {
 
   counts_list[[sp]] <- counts_sel
   metadata_list[[sp]] <- metadata_sel
-
 }
 ```
 
@@ -190,13 +194,13 @@ calcAvgCounts <- function(counts, metadata, ndecimal = 4) {
      avg.counts <- as.data.frame(counts.avg %>% bind_cols())
      row.names(avg.counts) <- row.names(counts)
      return(avg.counts)
-   }else {
+   } else {
      stop("'key' column not found in the metadata!Exiting!")
    }
 }
 
 avg_counts <- list()
-for(sp in species) {
+for (sp in species) {
     avg_counts[[sp]] <- calcAvgCounts(counts_list[[sp]],
                                       metadata_list[[sp]])
 }
@@ -204,7 +208,7 @@ for(sp in species) {
 c_tissues <- as.data.frame(sapply(avg_counts, function(x) {
             tstrsplit(colnames(x),"_")[[2]]
   }))
-if( !all(apply(c_tissues,1,function(x) all(x == x[1])))) {
+if (!all(apply(c_tissues,1,function(x) all(x == x[1])))) {
         stop("Error! tissues not matching")
 }
 ```
@@ -224,7 +228,7 @@ avg_counts <- lapply(avg_counts, removeZeros)
 sapply(avg_counts, dim)
 # update counts_list
 counts_list_sub <- list()
-for(sp in names(avg_counts)){
+for (sp in names(avg_counts)) {
   counts_list_sub[[sp]] = counts_list[[sp]][row.names(avg_counts[[sp]]), ,
                                                  drop = F]
 }
@@ -268,18 +272,44 @@ cat("ASBF with optimizing V=TRUE finished\n")
 cat("Time taken:\n")
 t2 - t1
 ```
-Note: reduce the tolerance threshold (e.g 1e-10) to further minimize the
-factorization error.
+Note: We use tolerance threshold = 1e-3 for fast computation. 
+Reduce the tolerance threshold (default value 1e-10) to further minimize
+the factorization error. Lowering threshold value increases the computing time.
 
 The final factorization error and number of updates taken:
 ```{r}
-cat("\n", sprintf("%-25s:","Final error [No V update]"), sprintf("%16.2f",
+cat("\n", sprintf("%-27s:","Final error [No V update]"), sprintf("%16.2f",
                                                         sbf_noVupdate$error))
-cat("\n", sprintf("%-25s:","Final error"), sprintf("%16.2f",sbf$error))
-cat("\n", sprintf("%-25s:","# of update [No V update]"), sprintf("%16d",
+cat("\n", sprintf("%-27s:","Final error [With V update]"), sprintf("%16.2f",sbf$error))
+cat("\n", sprintf("%-27s:","# of update [No V update]"), sprintf("%16d",
                                                       sbf_noVupdate$error_pos))
-cat("\n", sprintf("%-25s:","# of update"), sprintf("%16d",sbf$error_pos))
+cat("\n", sprintf("%-27s:","# of update [With V update]"), sprintf("%16d",sbf$error_pos))
 ```
+Optimization with updating $V$ achieves a lower decomposition error.
+
+```{r}
+sbf_noVupdate$error/sbf$error
+```
+
+Decomposition error vs. updates
+
+```{r}
+par(mfrow = c(1,3))
+plot(x = 1:length(sbf$error_vec), y = sbf$error_vec,
+     xlab = "# of updates (step 1 -> )",
+     ylab = "Factorization error", col = "red")
+plot(x = 10:length(sbf$error_vec),
+     y = sbf$error_vec[10:length(sbf$error_vec)],
+     xlab = "# of updates (step 10 -> )",
+     ylab = "Factorization error", col = "red")
+plot(x = 50:length(sbf$error_vec),
+     y = sbf$error_vec[50:length(sbf$error_vec)],
+     xlab = "# of updates (step 50 -> )",
+     ylab = "Factorization error", col = "red")
+```
+
+
+
 Percentage of information ($p_{ij}$) represented by a common space dimension is
 defined as
 $\textstyle{p_{ij} = \delta_{ij}^2 / \sum_{j=1}^6 \delta_{ij}^2 \times 100}$,
@@ -300,8 +330,8 @@ for (i in names(sbf$d)) {
   cat("\n", sprintf("%-25s:",i), sprintf("%8.2f", percentInfo[[i]]))
 }
 ```
-The percentage of information represented by different dimensions 
-looks very similar for both the cases.
+The percentage of information represented by different dimensions of the two
+approaches looks very similar.
 
 # Project libraries to common space
 
@@ -310,7 +340,7 @@ Let us first compute $\Delta^{-1}$
 ```{r}
 d_inv_NoVupdate <- list()
 for (sp in names(avg_counts)) {                                             
-        if(length(sbf_noVupdate$d[[sp]]) == 1) {       
+        if (length(sbf_noVupdate$d[[sp]]) == 1) {       
                 d_inv_NoVupdate[[sp]] <- as.matrix(diag(as.matrix(1/sbf_noVupdate$d[[sp]])))
         } else {                                                         
                 d_inv_NoVupdate[[sp]] <- as.matrix(diag(1/sbf_noVupdate$d[[sp]]))           
@@ -318,7 +348,7 @@ for (sp in names(avg_counts)) {
 }
 d_inv <- list()
 for (sp in names(avg_counts)) {                                             
-        if(length(sbf$d[[sp]]) == 1) {       
+        if (length(sbf$d[[sp]]) == 1) {       
                 d_inv[[sp]] <- as.matrix(diag(as.matrix(1/sbf$d[[sp]])))
         } else {                                                         
                 d_inv[[sp]] <- as.matrix(diag(1/sbf$d[[sp]]))           
@@ -327,13 +357,6 @@ for (sp in names(avg_counts)) {
 ```
 
 
-```{r}
-# function to return scientific name
-species_scientific <- function(x) {
-  parts <- tstrsplit(x,"_")
-  return(paste0(substr(x, 1, 1), ".", parts[[2]]))
-}
-```
 
 Project individual profiles and average counts to common space by computing
 $D_i^T U_i \Delta^{-1}$
@@ -407,11 +430,115 @@ df_proj <- df_proj %>% mutate(species = factor(species,
 
 ```
 
-
-# 2D plots in common space
+# Clustering in the common space
 
 ```{r}
-customTheme <- function(base_size=10, base_family="helvetica"){
+pkgs <- c("ComplexHeatmap", "RColorBrewer")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+suppressPackageStartupMessages({
+  library(ComplexHeatmap)
+  library(RColorBrewer)
+})
+
+
+data_noVupdate <- df_proj_noVupdate
+data_noVupdate$tissue <- NULL
+data_noVupdate$species <- NULL
+data_noVupdate <- as.matrix(data_noVupdate)
+data_noVupdate_dist <- as.matrix(dist(data_noVupdate, method = "euclidean"))
+meta <- tstrsplit(colnames(data_noVupdate_dist), "_")
+ht <- HeatmapAnnotation(tissue = meta[[3]], species = meta[[2]], 
+                        col = list(tissue = c("brain" = '#1B9E77',
+                                              "heart" = '#D95F02',
+                                              "kidney" ='#7570B3',
+                                              "liver" = '#E7298A',
+                                              "lung" = "#66A61E",
+                                              "testis" ='#E6AB02'),
+                                   species = c("hsapiens" = '#66C2A5',
+                                               "ptroglodytes" = "#FC8D62",
+                                               "mmulatta" = "#8DA0CB",
+                                               "mmusculus" = "#E78AC3",
+                                               "rnorvegicus" = "#A6D854",
+                                               "btaurus" = "#FFD92F",
+                                               "sscrofa" = "#E5C494",
+                                               "ggallus" = "#B3B3B3")),
+                        #show_annotation_name = F,
+                        annotation_name_side = "left")
+mypalette <- brewer.pal(9, "Blues")
+morecolors <- colorRampPalette(mypalette)
+
+myheatmap1 <- Heatmap(as.matrix(data_noVupdate_dist), cluster_rows = T,
+                     clustering_method_rows = "centroid",
+                     cluster_columns = T,
+                     clustering_method_columns = "centroid",
+                     top_annotation = ht, col = morecolors(50),
+                     show_row_names = F, show_column_names = F,
+                     name ="distance")
+myheatmap1
+```
+
+```{r}
+data <- df_proj
+data$tissue <- NULL
+data$species <- NULL
+data <- as.matrix(data)
+data_dist <- as.matrix(dist(data, method = "euclidean"))
+meta <- tstrsplit(colnames(data_dist), "_")
+ht <- HeatmapAnnotation(tissue = meta[[3]], species = meta[[2]], 
+                        col = list(tissue = c("brain" = '#1B9E77',
+                                              "heart" = '#D95F02',
+                                              "kidney" ='#7570B3',
+                                              "liver" = '#E7298A',
+                                              "lung" = "#66A61E",
+                                              "testis" ='#E6AB02'),
+                                   species = c("hsapiens" = '#66C2A5',
+                                               "ptroglodytes" = "#FC8D62",
+                                               "mmulatta" = "#8DA0CB",
+                                               "mmusculus" = "#E78AC3",
+                                               "rnorvegicus" = "#A6D854",
+                                               "btaurus" = "#FFD92F",
+                                               "sscrofa" = "#E5C494",
+                                               "ggallus" = "#B3B3B3")),
+                        #show_annotation_name = F,
+                        annotation_name_side = "left")
+mypalette <- brewer.pal(9, "Blues")
+morecolors <- colorRampPalette(mypalette)
+
+myheatmap <- Heatmap(as.matrix(data_dist), cluster_rows = T,
+                     clustering_method_rows = "centroid",
+                     cluster_columns = T,
+                     clustering_method_columns = "centroid",
+                     top_annotation = ht, col = morecolors(50),
+                     show_row_names = F, show_column_names = F,
+                     name ="distance")
+myheatmap
+```
+
+Gene expression profiles cluster by tissue type indepedent of the species of
+origin.
+
+
+# 2D plots in the common space
+
+Next we will explore the 2D projection plots in the common space. We will first
+define a custom theme that we will use for the plots.
+
+```{r}
+# custom theme for ggplot2
+
+pkgs <- c("grid","ggthemes","ggplot2")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+suppressPackageStartupMessages({
+  library(grid)
+  library(ggthemes)
+  library(ggplot2)
+})
+
+customTheme <- function(base_size = 10, base_family="helvetica") {
    require(grid)
    require(ggthemes)
    (theme_foundation(base_size=base_size)
@@ -442,8 +569,10 @@ customTheme <- function(base_size=10, base_family="helvetica"){
 ```
 
 
+Let us first check the projected libraries in dimension 1 and 2.
 ```{r}
-sel_colors <- brewer.pal(8,"Dark2")[1:length(unique(df_proj$tissue))]
+# 2D plot for Dim1 and Dim2 [No V update]
+sel_colors <- brewer.pal(8,"Dark2")[1:length(unique(df_proj_noVupdate$tissue))]
 i <- 1
 j <- 2
 ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[,i],
@@ -456,10 +585,68 @@ ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[,i],
   customTheme() + 
   theme(legend.title = element_blank())
 ```
+```{r}
+# 2D plot for Dim1 and Dim2 [With V update]
+sel_colors <- brewer.pal(8,"Dark2")[1:length(unique(df_proj$tissue))]
+i <- 1
+j <- 2
+ggplot(df_proj, aes(x = df_proj[,i],
+                              y = df_proj[,j], col = tissue,
+                              shape = species, fill = tissue)) +  
+  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  geom_point(size=1.5) + scale_color_manual(values = sel_colors) + 
+  scale_shape_manual(values = c(21:25,3:7)) +
+  scale_fill_manual(values = sel_colors) + 
+  customTheme() + 
+  theme(legend.title = element_blank())
+```
 
-Calculate tissue specificity ($\tau$) and scaled avg expression profile
+The projected libraries in dimension 2 and 3.
 
 ```{r}
+# 2D plot for Dim1 and Dim2 [No V update]
+sel_colors <- brewer.pal(8,"Dark2")[1:length(unique(df_proj_noVupdate$tissue))]
+i <- 2
+j <- 3
+ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[,i],
+                              y = df_proj_noVupdate[,j], col = tissue,
+                              shape = species, fill = tissue)) +  
+  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  geom_point(size=1.5) + scale_color_manual(values = sel_colors) + 
+  scale_shape_manual(values = c(21:25,3:7)) +
+  scale_fill_manual(values = sel_colors) + 
+  customTheme() + 
+  theme(legend.title = element_blank())
+```
+
+```{r}
+# 2D plot for Dim1 and Dim2 [With V update]
+sel_colors <- brewer.pal(8,"Dark2")[1:length(unique(df_proj$tissue))]
+i <- 2
+j <- 3
+ggplot(df_proj, aes(x = df_proj[, i],
+                              y = df_proj[, j], col = tissue,
+                              shape = species, fill = tissue)) +  
+  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  geom_point(size=1.5) + scale_color_manual(values = sel_colors) + 
+  scale_shape_manual(values = c(21:25,3:7)) +
+  scale_fill_manual(values = sel_colors) + 
+  customTheme() + 
+  theme(legend.title = element_blank())
+```
+Similarly we could check for other dimensions of the common space.
+We observe that both clustering and 2D projections plots in the common space
+with optimized V is very similar to the one without V update.
+So we will use the common space with optimized V for the future analysis.
+
+
+# Expression specificity and eigengene loading
+
+Functions to compute tissue specificity ($\tau$) and scaled average
+expression profile.
+
+```{r}
+# function to compute Tau
 calc_tissue_specificity <- function(a) {
     a <- as.matrix(a)
     b <- a / rowMaxs(a)
@@ -467,14 +654,101 @@ calc_tissue_specificity <- function(a) {
     return(rowSums(1-b) / (ncol(b) - 1))
 }
     
-Tau <- lapply(avg_counts, function(x) { calc_tissue_specificity(x)} )
-avg_counts_scaled <- lapply(avg_counts,function(x) { t(scale(t(x))) })
+Tau <- lapply(avg_counts, function(x) {calc_tissue_specificity(x)})
+avg_counts_scaled <- lapply(avg_counts,function(x) { t(scale(t(x)))})
 
 combine_expr <- list()
-for(sp in names(avg_counts_scaled)) {
+for (sp in names(avg_counts_scaled)) {
   x <- as.data.frame(avg_counts_scaled[[sp]])
   x[["Tau"]] <- Tau[[sp]]
   combine_expr[[sp]] <- x
 }
+```
+
+From 2D plot, we find that along dimension 2, testis profiles lie in the negative
+axis and separate from the rest of the tissues. We will plot the relationship
+between $U_i$ loadings in dimension 2 and testis expression.
+
+
+```{r}
+sel_dim <- 2
+sel_tissue <- "testis"
+species <- "Homo_sapiens"
+expr <- combine_expr[[species]]
+asbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- asbf_coef[, sel_dim, drop = T]
+expr1 <- expr[ , c(paste0(getSpeciesShortName(species), "_", sel_tissue),
+                   "Tau", "coef")]
+colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
+head(expr1) 
+```
+
+Dimension 2 $U_i$ loading vs $\tau$ for humans
+
+```{r}
+# function to return scientific name
+species_scientific <- function(x) {
+  parts <- tstrsplit(x,"_")
+  return(paste0(substr(x, 1, 1), ".", parts[[2]]))
+}
+
+# plot scatter
+mid <- 0
+p1 <- ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + theme_bw() +
+  geom_point(size = 0.5) + xlab("Expression specificity") + 
+  ylab(paste0("Dim",sel_dim," Coefficient")) +
+  scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                        high = "red", space ="Lab" ) +
+  scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)), max(abs(expr1$coef))),
+                     breaks = seq(-1 * round(max(abs(expr$coef)), 2),
+                                  round(max(abs(expr$coef)), 2), by = 0.01)) + 
+  customTheme() +  theme(legend.position = "right",
+                         legend.direction = "vertical") +
+  labs(title = paste0(species_scientific(species)), color = "Z-score") +
+  theme(legend.key.size = unit(0.5, 'cm'),
+        plot.title = element_text(face = "italic"))
+p1
+```
+
+Dimension 2 $U_i$ loading vs $\tau$ for pig
+
+
+```{r}
+sel_dim <- 2
+sel_tissue <- "testis"
+species <- "Sus_scrofa"
+expr <- combine_expr[[species]]
+asbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- asbf_coef[, sel_dim, drop = T]
+expr1 <- expr[ , c(paste0(getSpeciesShortName(species), "_", sel_tissue),
+                   "Tau", "coef")]
+colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
+
+# plot scatter
+mid <- 0
+p2 <- ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + theme_bw() +
+  geom_point(size = 0.5) + xlab("Expression specificity") + 
+  ylab(paste0("Dim",sel_dim," Coefficient")) +
+  scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                        high = "red", space ="Lab" ) +
+  scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)), max(abs(expr1$coef))),
+                     breaks = seq(-1 * round(max(abs(expr$coef)), 2),
+                                  round(max(abs(expr$coef)), 2), by = 0.01)) + 
+  customTheme() +  theme(legend.position = "right",
+                         legend.direction = "vertical") +
+  labs(title = paste0(species_scientific(species)), color = "Z-score") +
+  theme(legend.key.size = unit(0.5, 'cm'),
+        plot.title = element_text(face = "italic"))
+p2
+```
+
+# GO analysis
+
+https://figshare.com/s/d96c586d5e53199d5370
+10.6084/m9.figshare.19633131
+We will perform the gene ontology analysis for genes with high coefficients.
+
+```{r}
+
 ```
 
