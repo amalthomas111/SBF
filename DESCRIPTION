@@ -22,5 +22,14 @@ Imports:
     rlang
 Suggests: 
     rmarkdown,
-    knitr
+    knitr,
+    BiocManager,
+    ComplexHeatmap,
+    RColorBrewer,
+    data.table,
+    dplyr,
+    ggplot2,
+    ggthemes,
+    goseq,
+    matrixStats
 VignetteBuilder: knitr
