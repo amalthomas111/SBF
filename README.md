@@ -9,7 +9,7 @@ analysis.
 
 ### Installation
 
--   1.  Clone from Github and install
+1.  Clone `SBF` from Github and install
 
 <!-- -->
 
@@ -26,12 +26,13 @@ Inside an R console
 
 <!-- -->
 
+    # check devtools is installed. If not install.
     pkgs <- c("devtools")
     require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
     if (length(require_install))
       install.packages(require_install)
 
--   install SBF directly from Github via `devtools`
+-   Install SBF directly from Github via `devtools`
 
 <!-- -->
 
