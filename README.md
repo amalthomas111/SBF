@@ -4,28 +4,35 @@
 ## SBF: A R package for Shared Basis Factorization
 
 Approximate Shared Basis Factorization (A-SBF) is a joint matrix
-diagonalization approach we developed for cross-species gene expression
+diagonalization algorithm we developed for cross-species gene expression
 analysis.
 
 ### Installation
 
--   Clone from Github
+Install `devtools` if not already installed.
 
-``` r
-git clone https://github.com/amalthomas111/SBF.git
-```
+    pkgs <- c("devtools")
+    require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+    if (length(require_install))
+      install.packages(require_install)
+
+-   install SBF directly from Github via `devtools`
+
+<!-- -->
+
+    library(devtools)
+    devtools::install_github("amalthomas111/SBF")
+
+-   \[OR\] clone from Github and install
+
+<!-- -->
+
+    git clone https://github.com/amalthomas111/SBF.git
 
 Inside an R console
 
     library(devtools)
     install("<path to SBF>/SBF")
-
--   \[OR\] install directly from Github via `devtools`
-
-``` r
-library(devtools)
-devtools::install_github("amalthomas111/SBF", build_vignettes = TRUE)
-```
 
 Please contact us via e-mail or submit a [GitHub
 issue](https://github.com/amalthomas111/SBF/issues) if there is any
@@ -40,7 +47,7 @@ trouble with installation.
 library(SBF)
 ```
 
-### Analysis for a test dataset
+### Create a test dataset
 
 -   We will first create a test dataset. `SBF` package has the function
     `createRandomMatrices` to create matrices with full column rank and
@@ -67,15 +74,18 @@ We will use the test dataset as our *D*<sub>*i*</sub> matrices.
 ### A-SBF examples
 
 The A-SBF’s shared orthogonal *V*, *U*<sub>*i*</sub>’s with orthonormal
-columns and diagonal matrices *Δ*<sub>*i*</sub>’s can be estimated using
-`SBF` function with argument `approximate = TRUE`.
+columns, and diagonal matrices *Δ*<sub>*i*</sub>’s can be estimated
+using the `SBF` function with argument `approximate = TRUE`.
 
-``` r
-# A-SBF call
-asbf <- SBF(matrix_list = mymat, approximate = TRUE)
-#> 
-#> A-SBF optimizing factorization error
-```
+Check the arguments for the SBF function call using `?SBF`.
+
+
+
+    ```r
+    # A-SBF call
+    asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+    #> 
+    #> A-SBF optimizing factorization error
 
 ``` r
 names(asbf)
@@ -86,10 +96,10 @@ names(asbf)
 ```
 
 For A-SBF, the factorization error is optimized by default
-(`minimizeError=TRUE`) and the `optimizeFactorization` function is
-invoked. Depending upon the data matrix (`mymat`) and initial values,
-optimization could take some time. `?SBF` help function shows all
-arguments for the SBF call.
+(`minimizeError=TRUE`), and the `optimizeFactorization` function is
+invoked. Optimization could take some time depending on the data matrix
+(`mymat`) and initial values.  
+`?SBF` help function shows all arguments for the SBF call.
 
 In A-SBF, *V* is orthogonal and columns of *U*<sub>*i*</sub>’s are
 orthonormal (*U*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub> = *I*).
@@ -131,8 +141,8 @@ cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
 #> For asbf, # iteration = 220 final error = 1411.555
 ```
 
-Detailed explanation of the math and examples case of factorization can
-be found in the vignettes/docs directory.
+A detailed explanation of the algorithm and example cases of
+factorization can be found in the vignettes/docs directory.
 
 ### Factorization for an example gene expression dataset
 
@@ -174,17 +184,11 @@ asbf_gem$error
 Note: For high-dimensional datasets, vary the tolerance threshold
 (`tol`) or maximum number of iteration parameter (`max_iter`) to reduce
 the computing time.
-<!-- For gene-expression analysis, if we want the shared space to represent -->
-<!-- inter-sample correlation relationship, we do not update/change $V$ -->
-<!-- while optimizing the factorization error. -->
-<!-- In such cases, while reducing the factorization error -->
-<!-- we set `optimizeV = FALSE` in the `optimizeFactorization` function. -->
-<!-- We now optimize the factorization error to find the closest space. -->
 
-When calling `SBF`, `approximate = FALSE` compute the SBF factorization
-which is an exact join matrix factorization we developed. In SBF, the
-estimated *U*<sub>*i*</sub>’s are not orthonormal. More details and
-examples can be found in the vignettes/docs directory.
+When calling `SBF`, `approximate = FALSE` computes the SBF
+factorization, an exact joint matrix factorization we developed. In SBF,
+the estimated columns of *U*<sub>*i*</sub> are not orthonormal. More
+details and examples can be found in the vignettes/docs directory.
 
 ### Contacts
 
