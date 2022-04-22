@@ -9,7 +9,22 @@ analysis.
 
 ### Installation
 
-Install `devtools` if not already installed.
+-   1.  Clone from Github and install
+
+<!-- -->
+
+    git clone https://github.com/amalthomas111/SBF.git
+
+Inside an R console
+
+    install.packages("<path to SBF>/SBF", repos = NULL, type = "source")
+
+\[OR\]
+
+2.  Install using `devtools`. Install `devtools` if not already
+    installed.
+
+<!-- -->
 
     pkgs <- c("devtools")
     require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
@@ -22,17 +37,6 @@ Install `devtools` if not already installed.
 
     library(devtools)
     devtools::install_github("amalthomas111/SBF")
-
--   \[OR\] clone from Github and install
-
-<!-- -->
-
-    git clone https://github.com/amalthomas111/SBF.git
-
-Inside an R console
-
-    library(devtools)
-    install("<path to SBF>/SBF")
 
 Please contact us via e-mail or submit a [GitHub
 issue](https://github.com/amalthomas111/SBF/issues) if there is any
