@@ -250,7 +250,7 @@ cat("\nASBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
 t1 <- proc.time()
 sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
-                     optimizeV = FALSE, tol = 1e-3)
+                     optimizeV = FALSE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
 cat("ASBF with optimizing V = FALSE finished\n")
@@ -265,7 +265,7 @@ cat("\nASBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
 t1 <- proc.time()
 sbf <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
-                     optimizeV = TRUE, tol = 1e-3)
+                     optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
 cat("ASBF with optimizing V=TRUE finished\n")
@@ -744,11 +744,184 @@ p2
 
 # GO analysis
 
-https://figshare.com/s/d96c586d5e53199d5370
-10.6084/m9.figshare.19633131
+Data link: https://figshare.com/s/d96c586d5e53199d5370
+
 We will perform the gene ontology analysis for genes with high coefficients.
+For GO analysis, we will use shared 1-to-1 orthologs in eight species as
+the background. You can files required for the GO analysis at this
+link: 10.6084/m9.figshare.19633131
+
 
 ```{r}
+go_path <- "~/Dropbox/0.Analysis/0.paper/GOKeggFiles/"
+file <- "allwayOrthologs_hsapiens-ptroglodytes-mmulatta-mmusculus-rnorvegicus-btaurus-sscrofa-ggallus_ens94.tsv"
+orthologs <- read.table(file.path(go_path, file), header = T, sep = "\t")
+head(orthologs)
+```
 
+We will use the goseq bioconductor package to perform GO enrichment analysis.
+
+
+```{r}
+pkgs <- c("goseq")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install)) {
+  if (!require("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+  BiocManager::install("goseq")
+}
+suppressPackageStartupMessages({
+  library(goseq)
+})
+```
+
+Let us perform GO analysis for top testis specific genes in Dimension 2.
+The testis-specific genes has negative loadings.
+
+
+```{r}
+sel_dim <- 2
+sel_tissue <- "testis"
+top_genes <- 100
+sel_sign <- "neg"
+```
+
+We will perform GO analysis for human first.
+
+```{r}
+species <- "Homo_sapiens"
+expr <- combine_expr[[species]]
+asbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- asbf_coef[, sel_dim, drop=T]
+expr1 <- expr[,c(paste0(getSpeciesShortName(species),"_",sel_tissue),"Tau","coef")]
+colnames(expr1) <- c("tissue_zscore","Tau","coef")
+if (sel_sign == "neg") {
+  cat("\n selecting negative loadings")
+  expr1_selsign <- expr1[expr1$coef < 0,]
+} else {
+  cat("\n selecting positive loadings")
+  expr1_selsign <- expr1[expr1$coef >= 0,]
+}
+expr1_selsign$score <- expr1_selsign$Tau * abs(expr1_selsign$coef)
+expr1_selsign$rank <- rank(-1 * expr1_selsign$score)
+expr1_selsign <- expr1_selsign[order(expr1_selsign$rank), ]
+genes_fg <- row.names(expr1_selsign[expr1_selsign$rank <= top_genes,])
+if (species == "Homo_sapiens") {
+  cat("\nUsing orthologs (human IDs) as background")
+  genes_bg <- orthologs$hsapiens
+}
+if (species == "Mus_musculus") {
+  cat("\nUsing orthologs (mouse IDs) as background")
+  genes_bg <- orthologs$mmusculus
+}
+genes_bg <- genes_bg[!genes_bg %in% genes_fg]
+genome <- "hg38"
+total_genes <- unique(c(genes_fg, genes_bg))
+up_genes <- as.integer(total_genes %in%  genes_fg)
+names(up_genes) <- total_genes
+
+load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/hg38_length.EnsemblV94.RData")
+lengthData.up <- lengthData[names(up_genes)]
+load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/hg38_geneID2GO.EnsemblID2GO.EnsembleV94.Robj")
+pwf <- nullp(up_genes, bias.data = lengthData.up, plot.fit = F)
+go <- goseq(pwf, "hg38", "ensGene", gene2cat = geneID2GO, test.cats= c("GO:BP"))
+go.sub <- go[go$ontology == "BP",]
+go.sub$padj <- p.adjust(go.sub$over_represented_pvalue, method="BH")
+go.sub[["ratio"]] <- round(go.sub[["numDEInCat"]] / go.sub[["numInCat"]],4)
+go.sub <- go.sub[with(go.sub, order(padj, decreasing = c(FALSE))),]
+go.sub$over_represented_pvalue <- NULL
+go.sub$under_represented_pvalue <- NULL
+```
+
+```{r}
+head(go.sub)
+```
+
+Barplot with enrichment and p-value
+
+```{r}
+go_out <- head(go.sub, n = 8)
+go_out$padj <- as.numeric(go_out$padj)
+go_out$term <- factor(go_out$term , levels = go_out$term)
+breaks <- round( c(0, 1/4, 2/4, 3/4, 1) * max(go_out[['ratio']]) , 2)
+go_plot <- ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom_col() +
+  scale_y_continuous(expand = c(0, 0), breaks = breaks,
+                     limits = c(0, max(go_out[["ratio"]] + 0.05))) +
+  scale_x_discrete() + coord_flip() + 
+  scale_color_gradient(low="blue", high="red") +
+  ylab(paste0("Ratio of genes in GO category (", species_scientific(species),")")) +
+  xlab("") + customTheme() + theme(legend.position = "right",                                         
+               legend.direction = "vertical",
+               plot.margin=unit(c(10,5,5,5),"mm"))
+go_plot
+```
+
+
+GO analysis for mouse
+
+```{r}
+species <- "Mus_musculus"
+expr <- combine_expr[[species]]
+asbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- asbf_coef[, sel_dim, drop=T]
+expr1 <- expr[,c(paste0(getSpeciesShortName(species),"_",sel_tissue),"Tau","coef")]
+colnames(expr1) <- c("tissue_zscore","Tau","coef")
+if (sel_sign == "neg") {
+  cat("\n selecting negative loadings")
+  expr1_selsign <- expr1[expr1$coef < 0,]
+} else {
+  cat("\n selecting positive loadings")
+  expr1_selsign <- expr1[expr1$coef >= 0,]
+}
+expr1_selsign$score <- expr1_selsign$Tau * abs(expr1_selsign$coef)
+expr1_selsign$rank <- rank(-1 * expr1_selsign$score)
+expr1_selsign <- expr1_selsign[order(expr1_selsign$rank), ]
+genes_fg <- row.names(expr1_selsign[expr1_selsign$rank <= top_genes,])
+if (species == "Homo_sapiens") {
+  cat("\nUsing orthologs (human IDs) as background")
+  genes_bg <- orthologs$hsapiens
+}
+if (species == "Mus_musculus") {
+  cat("\nUsing orthologs (mouse IDs) as background")
+  genes_bg <- orthologs$mmusculus
+}
+genes_bg <- genes_bg[!genes_bg %in% genes_fg]
+genome <- "mm10"
+total_genes <- unique(c(genes_fg, genes_bg))
+up_genes <- as.integer(total_genes %in%  genes_fg)
+names(up_genes) <- total_genes
+
+load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/mm10_length_EnsemblV94.RData")
+lengthData.up <- lengthData[names(up_genes)]
+load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/mm10_geneID2GO.EnsemblID2GO.EnsembleV94.Robj")
+pwf <- nullp(up_genes, bias.data = lengthData.up, plot.fit = F)
+go <- goseq(pwf, "mm10", "ensGene", gene2cat = mouse_geneID2GO, test.cats= c("GO:BP"))
+go.sub <- go[go$ontology == "BP",]
+go.sub$padj <- p.adjust(go.sub$over_represented_pvalue, method="BH")
+go.sub[["ratio"]] <- round(go.sub[["numDEInCat"]] / go.sub[["numInCat"]],4)
+go.sub <- go.sub[with(go.sub, order(padj, decreasing = c(FALSE))),]
+go.sub$over_represented_pvalue <- NULL
+go.sub$under_represented_pvalue <- NULL
+```
+
+```{r}
+head(go.sub)
+```
+
+```{r}
+go_out <- head(go.sub, n = 8)
+go_out$padj <- as.numeric(go_out$padj)
+go_out$term <- factor(go_out$term , levels = go_out$term)
+breaks <- round( c(0, 1/4, 2/4, 3/4, 1) * max(go_out[['ratio']]) , 2)
+go_plot <- ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom_col() +
+  scale_y_continuous(expand = c(0, 0), breaks = breaks,
+                     limits = c(0, max(go_out[["ratio"]] + 0.05))) +
+  scale_x_discrete() + coord_flip() + 
+  scale_color_gradient(low="blue", high="red") +
+  ylab(paste0("Ratio of genes in GO category (", species_scientific(species),")")) +
+  xlab("") + customTheme() + theme(legend.position = "right",                                         
+               legend.direction = "vertical",
+               plot.margin=unit(c(10,5,5,5),"mm"))
+go_plot
 ```
 
