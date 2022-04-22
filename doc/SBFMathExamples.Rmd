@@ -1,0 +1,731 @@
+---
+title: "SBF Math vignette"
+author: "Amal Thomas"
+output:
+  pdf_document:
+    toc: yes
+    number_section: yes
+  knitr:::html_vignette:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
+bibliography: references.bib
+vignette: |
+ %\VignetteIndexEntry{SBF_vignette}
+ %\VignetteEncoding{UTF-8}
+ %\VignetteEngine{knitr::rmarkdown}
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
+# Background
+
+Joint matrix factorization facilitates the comparison of expression
+profiles from different species without using gene mapping.
+Transforming gene expression profiles into reduced eigengene space
+using singular value decomposition (SVD) has been shown to capture
+meaningful biological information [@alter2000singular].
+@tamayo2007metagene used a non-negative matrix factorization approach
+to learn a low-dimensional approximation of the microarray expression
+datasets and used the reduced space for comparisons.  Matrix
+factorization-based methods are commonly used for gene expression
+analysis [@alter2000singular; @tamayo2007metagene].  An orthology
+independent matrix factorization framework based on generalized
+singular value decomposition [GSVD; @van1976generalizing] was used by
+@alter2003generalized to compare gene-expression profiles from two
+species.  This framework was later extended to develop higher-order
+generalized singular value decomposition (HO GSVD) to analyze data
+from more than two species [@ponnapalli2011higher].
+
+This study developed a joint diagonalization approach called
+approximate shared basis factorization (A-SBF) for cross-species
+expression comparisons.  This approach extends the exact factorization
+approach we developed called shared basis factorization (SBF).
+We implemented both algorithms in the SBF package. The details 
+and example cases of the two methods are shown in the following sections.
+
+# Shared basis factorization
+
+Consider a set of real matrices $D_i \in \mathbb{R}^{m_i \times n}$
+($i={1,\ldots ,k}$) with full column rank. We define shared basis
+factorization (SBF) as
+\begin{align*}
+  D_1 &= U_1\Delta_1V^T, \\
+  D_2 &= U_2\Delta_2V^T, \\
+      & \vdots \\
+  D_k &= U_N\Delta_kV^T.
+\end{align*}
+Here each $U_i \in \mathbb{R}^{m_i \times n}$ is a dataset-specific
+left basis matrix, each $\Delta_i \in \mathbb{R}^{n \times n}$ is a
+diagonal matrix with positive values $\delta_{ij}$, and $V$ is a
+a shared orthogonal matrix.
+
+## Estimating the shared right basis matrix
+
+Let $M$ be the scaled sum of the $D_i^T D_i$.  We define $M$ is
+defined as
+\[
+ M = \frac{\sum_{i=1}^{k} D_i^T D_i/w_i}{\alpha}.
+\]
+The scaling factor $w_i$ is the total variance explained by the column
+vectors of $D_i$, and $\alpha$ is the inverse sum of the total
+variance of $D_i$, for $i = 1, \ldots, k$. The weights $w_i$ and
+$\alpha$ are defined as
+\begin{align*}
+    w_i &= \sum_{j=1}^{n} \sigma_{jj}^{2\mbox{ }(i)} \mbox{ and}\\
+    \alpha &= \sum_{i=1}^{k} \frac{1}{\sum_{j=1}^{n} \sigma_{jj}^{2\mbox{ }(i)}}.
+\end{align*}
+Here $\sum_{j=1}^{n} \sigma_{jj}^{2\mbox{ }(i)} = \tr(D_i^T D_i)$.
+Using the $w_i$ and $\alpha$, individual $D_i^T D_i$ are
+standardized.  If all the variances are equal, $M$ becomes the
+arithmetic mean of the sum of $D_i^T D_i$.  The shared right basis
+matrix $V$ is then determined from the eigenvalue decomposition of
+$M$, where $M=V \Theta V^T$.  The shared right basis matrix $V$ is an
+orthogonal matrix as $M$ is symmetric.  Given $V$, we compute $U_i$
+and $\Delta_i$ by solving the linear system $D_i V = U_i \Delta_i =
+L_i$.  By normalizing the columns of $L_i$, we have $\delta_{ij} =
+\|l_{ij}\|$ and $\Delta_i =
+\mbox{diag}(\delta_{i1},\ldots,\delta_{in})$.
+
+# Approximate shared basis factorization
+
+Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times n}$ ($i=
+1,\ldots,k$), each with full column rank. We define approximate shared
+basis factorization (A-SBF) as
+
+\begin{align*}
+    D_1 &= U_1\Delta_1V^T + \epsilon_1, \\
+    D_2 &= U_2\Delta_2V^T + \epsilon_2, \\
+     & \vdots \\
+    D_k &= U_k\Delta_kV^T + \epsilon_k.
+\end{align*}
+
+Each $U_i \in \mathbb{R}^{m_i \times n}$ is a $D_i$ specific left basis
+matrix with **orthonormal columns** ($U_i^T U_i= I)$ and
+$\Delta_i \in \mathbb{R}^{n \times n}$ is a diagonal matrix with positive values.
+The right basis matrix $V \in \mathbb{R}^{n \times n}$ is an orthogonal matrix
+and identical in all the $k$ matrix factorizations.
+We use an alternate least square algorithm to minimize the total factorization
+error:
+$\sum^{k}_{i=1} {\| \epsilon_i \|^2}_F = {\sum^{k}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$
+
+# Use cases
+
+## SBF examples
+
+```{r setup}
+# load SBF package
+library(SBF)
+```
+Let us create some random matrices using the `createRandomMatrices`
+function from the SBF package. We will create four matrices, each with
+three columns with rows varying from 4 to 6.
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+sapply(mymat, dim)
+```
+The rank of each of these matrices:
+```{r}
+sapply(mymat, function(x) {
+  qr(x)$rank
+  })
+```
+
+Let us compute SBF using different approaches:
+
+- Estimate $V$ using the sum of $D_i^T D_i / k$
+
+- Estimate $V$ using the sum of $D_i^T D_i / k$ with inverse variance weighting
+
+- Estimate $V$ using the inter-sample correlation
+
+```{r}
+sbf <- SBF(matrix_list = mymat)
+sbf_inv <- SBF(matrix_list = mymat, weighted = TRUE)
+sbf_cor <- SBF(matrix_list = mymat, transform_matrix = TRUE)
+```
+
+When the $D_i$ matrices are transformed to compute inter-sample
+correlation, we do not need to scale it using inverse-variance
+weighting anymore. We recommend using inverse variance weights, giving
+a more robust estimate of $V$ when noisy datasets are present. We
+estimate $V$ using inter-sample correlation when dealing with gene
+expression data sets.
+
+The `?SBF` help function shows all arguments for the SBF function.
+Let us inspect the output of the `SBF` call.
+
+```{r}
+names(sbf)
+```
+`sbf$u`, `sbf$v`, and `sbf$delta` correspond to the estimated left basis
+matrix, shared right basis matrix, and diagonal matrices.
+
+
+The estimated $V$ has a dimension of $n \times n$,
+where $n$ is the number of columns in $D_i$.
+
+```{r}
+sbf$v
+```
+
+The delta values for each matrix for the three cases are shown below.
+
+```{r}
+printDelta <- function(l) {
+  for (eachmat in names(l$delta)) {
+  cat(eachmat, ":", l$delta[[eachmat]], "\n")
+  }
+}
+cat("sbf\n");printDelta(sbf)
+cat("sbf_inv\n");printDelta(sbf_inv)
+cat("sbf_cor\n");printDelta(sbf_cor)
+```
+
+The $V \in R^{n \times n}$ estimated in SBF is orthogonal.
+So $V^T V = V V^T = I$.
+
+```{r}
+zapsmall(t(sbf$v) %*% sbf$v)
+```
+
+The estimated $V$ is an invertible matrix.
+
+```{r}
+qr(sbf$v)$rank
+```
+
+The $U_i$ matrices estimated in the SBF do not have orthonormal columns.
+Let us explore that.
+
+```{r}
+sapply(sbf$u, dim)
+```
+Let us take the first matrix $U_i \in R^{m_i \times n}$ to check this.
+For this matrix, $U_i^T U_i$ will be $n \times n$ matrix where $n = 3$.
+
+```{r}
+t(sbf$u[[names(sbf$u)[1]]]) %*% sbf$u[[names(sbf$u)[1]]]
+```
+
+
+The estimated $M$ matrix is stored `sbf$m` and `sbf$lambda` gives the
+eigenvalues in the eigenvalue decomposition ($M=V \Theta V^T$).
+
+```{r}
+sbf$lambda
+```
+
+SBF is an exact factorization. Let compute the factorization error for the
+three cases using `calcDecompError` function.
+```{r}
+calcDecompError(mymat, sbf$u, sbf$delta, sbf$v)
+calcDecompError(mymat, sbf_inv$u, sbf_inv$delta, sbf_inv$v)
+calcDecompError(mymat, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
+```
+The errors are close to zero in all three cases.
+
+### Adding new dataset
+
+The total column variance of matrix 1-4 in `mymat` is approximately in the
+same range.
+
+```{r}
+sapply(mymat, function(x) sum(diag(cov(x))))
+```
+
+Now, let us create two new matrix lists containing the `mymat`.
+We will add a dataset with a similar variance to the first list and
+a high variance to the second.
+
+```{r}
+mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = T,
+                    nrow = 3, ncol = 3)
+mat5_highvar <- matrix(c(406, 319, 388, 292, 473, 287, 390, 533, 452),
+                       byrow = T, nrow = 3, ncol = 3)
+
+mymat_new <- mymat
+mymat_new[["mat5"]] <- mat5
+sapply(mymat_new, function(x) sum(diag(cov(x))))
+mymat_new_noisy <- mymat
+mymat_new_noisy[["mat5"]] <- mat5_highvar
+sapply(mymat_new_noisy, function(x) sum(diag(cov(x))))
+```
+
+Let us compute SBF with the new datasets.
+
+```{r}
+sbf_new <- SBF(matrix_list = mymat_new)
+sbf_inv_new <- SBF(matrix_list = mymat_new, weighted = TRUE)
+
+
+sbf_new_noisy <- SBF(matrix_list = mymat_new_noisy)
+sbf_inv_new_noisy <- SBF(matrix_list = mymat_new_noisy, weighted = TRUE)
+```
+
+Let us take the newly estimated values $U_i$, $\Delta_i$, and $V$ for the four
+initial matrices in `mymat`.
+We will then compare the decomposition error for the two cases with and without
+inverse variance weighting.
+
+```{r}
+e1 <- calcDecompError(mymat, sbf_new$u[1:4], sbf_new$delta[1:4], sbf_new$v)
+e2 <- calcDecompError(mymat, sbf_new_noisy$u[1:4], sbf_new_noisy$delta[1:4],
+                      sbf_new_noisy$v)
+e2 / e1
+```
+
+```{r}
+e3 <- calcDecompError(mymat, sbf_inv_new$u[1:4], sbf_inv_new$delta[1:4],
+                      sbf_inv_new$v)
+e4 <- calcDecompError(mymat, sbf_inv_new_noisy$u[1:4],
+                      sbf_inv_new_noisy$delta[1:4], sbf_inv_new_noisy$v)
+e4 / e3
+```
+
+With inverse variance weighting, the deviation is smaller.
+
+
+## A-SBF examples
+
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+sapply(mymat, dim)
+```
+
+Now let us compute Approximate-SBF for the same datasets for the following
+three cases.
+
+- A-SBF
+- A-SBF with inverse variance weighting
+- A-SBF with inter-sample correlation
+
+Here the A-SBF is invoked without minimizing the factorization error (`minimizeError=FALSE`).
+```{r}
+asbf <- SBF(matrix_list = mymat, approximate = TRUE,
+            minimizeError = FALSE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE,
+                minimizeError = FALSE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
+                transform_matrix = TRUE, minimizeError = FALSE)
+```
+
+```{r}
+names(asbf)
+```
+A-SBF is not an exact factorization and has decomposition error.
+
+```{r}
+# decomposition error
+asbf$error
+asbf_inv$error
+asbf_cor$error
+```
+
+- `asbf$u_ortho` is the matrix with orthonormal columns that is closet to the
+exact $U$ in SBF 
+- `asbf$v` is orthogonal.
+
+```{r}
+zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
+           asbf$u_ortho[[names(asbf$u_ortho)[1]]])
+```
+
+```{r}
+zapsmall(t(asbf$v) %*% asbf$v)
+```
+
+# Minimizing A-SBF factorization error
+
+We use an alternate least square algorithm to minimize the total factorization
+error:
+$\sum^{k}_{i=1} {\| \epsilon_i \|^2}_F = {\sum^{k}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
+Our algorithm determines the optimal learning rate in each update step
+and guarantees convergence to a stable function value (see additional file 2
+in manuscript).
+
+
+## Examples
+
+### Optimizing A-SBF error
+
+Let us optimize the factorization error using the `optimizeFactorization`
+function for the three cases of A-SBF computation. The `optimizeFactorization`
+is called setting `approximate = TRUE` and `minimizeError = TRUE` in the SBF
+function. The argument `minimizeError` is set to be TRUE by default.
+Depending upon the data matrix and initial values of $U_i$, $\Delta_i$, and $V$,
+optimization could take some time.
+
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
+```
+
+```{r}
+names(asbf)
+```
+
+- `asbf$u` is the optimized left basis matrices with orthonormal columns
+- `asbf$v` is the optimized shared right basis matrix
+- `asbf$d` is the optimized delta matrices
+- `asbf$error` gives the final decomposition error
+
+```{r}
+# initial decomposition error
+asbf$error_start
+asbf_inv$error_start
+asbf_cor$error_start
+```
+This is the same error (A-SBF with no optimization) we showed previously in the
+A-SBF examples section.
+Now let us check the final decomposition error after optimization.
+
+```{r}
+# final decomposition error
+asbf$error
+asbf_inv$error
+asbf_cor$error
+```
+After optimization, for all three A-SBF factorizations, the final error is 
+```{r, echo = FALSE}
+if ((round(asbf$error, 2) == round(asbf_inv$error, 2)) &&
+    (round(asbf$error, 2) == round(asbf_cor$error, 2))) {
+  cat("same (up to 2 decimals). The final error is", round(asbf$error, 2))
+  } else {
+  cat("not exactly the same")
+    }
+```
+
+Independent of the initial values, if the optimization converges, we achieve
+the same decomposition error.
+
+We can also compute the same optimization by independently calling the
+`optimizeFactorization`. For example,
+
+```{r}
+myopt <- optimizeFactorization(mymat, asbf$u_ortho_start, asbf$delta_start,
+                               asbf$v_start)
+names(myopt)
+```
+
+```{r}
+myopt$error
+```
+
+
+The number of iteration taken for optimizing and new factorization error:
+
+```{r}
+cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
+cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
+    asbf_inv$error)
+cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
+    asbf_cor$error)
+```
+
+
+### Using different initial values
+
+```{r}
+set.seed(1231)
+mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+```
+
+1. Let us initialize the `optimizeFactorization` function with a random
+orthogonal matrix and check the final optimization error. The $V$ matrix
+estimated from the `mymat` matrix has a dimension of $3 \times 3$.
+First, we will create a random $3 \times 3$ matrix and obtain
+an orthogonal matrix based on this.
+
+```{r}
+set.seed(111)
+rand_mat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+cat("\nRank is:", qr(rand_mat[[1]])$rank, "\n")
+dim(rand_mat[[1]])
+```
+
+Get an orthogonal $V$ matrix using SVD. We will set $V$ as the right basis
+matrix from the SVD.
+
+```{r}
+mysvd <- svd(rand_mat[[1]])
+randV <- mysvd$v
+```
+
+Now for this $V$, we will first compute $U_i$'s and $\Delta_i$ for different
+$D_i$ matrices in the `mymat`. We achieve this by
+solving the linear equations: $D_i = U_i \Delta_i V^T$ for $i = 1, \ldots, 4$.
+We then orthonormalize the columns of $U_i$ using Proposition I.
+
+```{r}
+# get Ui and Delta for this newV
+out <- computeUDelta(mymat, randV)
+names(out)
+```
+
+The initial decomposition error is :
+
+```{r}
+calcDecompError(mymat, out$u_ortho, out$d, randV)
+```
+
+Now we will try to optimize using the new random $V$ and corresponding $U_i$'s
+and $\Delta_i$'s.
+
+```{r}
+newopt <- optimizeFactorization(mymat, out$u_ortho, out$d, randV)
+# Number of updates taken
+newopt$error_pos
+# New error
+newopt$error
+```
+
+We achieve the same factorization error (```r newopt$error```) after the
+`optimizeFactorization` function call.
+
+
+2. Now, instead of the right basis matrix from the SVD, we will
+set $V$ as the left basis matrix.
+
+```{r}
+mysvd <- svd(rand_mat[[1]])
+randV <- mysvd$u
+dim(randV)
+```
+
+```{r}
+# get Ui and Delta for this newV
+out <- computeUDelta(mymat, randV)
+calcDecompError(mymat, out$u_ortho, out$d, randV)
+```
+
+Now we will try to optimize with these matrices as our initial values.
+
+```{r}
+newopt <- optimizeFactorization(mymat, out$u_ortho, out$d, randV)
+# Number of updates taken
+newopt$error_pos
+# New error
+newopt$error
+```
+
+Again we get the same decomposition error after optimizing.
+
+3. Instead of the initial value being an orthogonal matrix, we will initialize
+$U_i$'s, $\Delta_i$, and $V$ with random matrices such that it
+does not guarantee
+- orthogonal property for $V$ and
+- orthonormal columns for $U_i$'s.
+
+```{r}
+set.seed(111)
+# new random v
+newv <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)[[1]]
+# seed value
+k <- 2392
+newu <- newd <- list()
+for (i in names(mymat)) {
+  myrow <- nrow(mymat[[i]])
+  mycol <- ncol(mymat[[i]])
+  set.seed(k)
+  # new random u_i
+  newu[[i]] <- createRandomMatrices(n = 1, ncols = mycol, nrows = myrow)[[1]]
+  set.seed(k * 2)
+  # new random d_i
+  newd[[i]] <- sample(1:1000, size = mycol)
+  newmat <- newu[[i]] %*% diag(newd[[i]]) %*% t(newv)
+  if (!qr(newmat)$rank == mycol)
+    cat("\nNew matrix does not have full column rank")
+  k <- k + 1
+}
+error <- calcDecompError(mymat, newu, newd, newv)
+cat("\nInitial error = ", error, "\n")
+```
+
+We see a very high factorization error because of the random initialization.
+
+```{r}
+newopt <- optimizeFactorization(mymat, newu, newd, newv)
+newopt$error_pos
+newopt$error
+```
+
+Again, we get the same factorization error after optimizing. Try changing
+the seed value and compare the results.
+
+This shows that the iterative update procedure converges and achieves the
+same decomposition error regardless of the initial values.
+
+### Estimating SVD
+
+We will further demonstrate the case for $k=1$ when we have just one matrix.
+The `optimizeFactorization` function gives $U_i$'s with orthonormal column,
+$\Delta_i$ a diagonal matrix, and an orthogonal $V$. If the function converges,
+the results should be identical to a standard SVD, except for the sign
+changes corresponding to $U$ and $V$ columns.
+So we will compare the results from the `optimizeFactorization`
+function with the standard SVD output.
+Let us generate one example matrix say `newmat`.
+
+```{r}
+set.seed(171)
+newmat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+newmat
+```
+
+1. We will estimate the SVD of `newmat` using our iterative update function by
+setting the initial values to be an identity matrix.
+
+```{r}
+newu <- newd <- list()
+newu[["mat1"]]  <- diag(3)
+newd[["mat1"]] <- diag(newu[["mat1"]])
+newu
+newd
+```
+The factorization error when initializing using an identity matrix:
+
+```{r}
+calcDecompError(newmat, newu, newd, diag(3))
+```
+
+Let us optimize.
+
+```{r}
+opt_new <- optimizeFactorization(newmat, newu, newd, diag(3))
+cat("\n # of updates:", opt_new$error_pos, "\n")
+opt_new$error
+```
+Error is close to zero. Let us compare the original matrix with the
+reconstructed matrix based on the estimated $u$, $d$ and $v$ using
+the `optimizeFactorization` function.
+
+```{r}
+newmat
+opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
+```
+
+```{r}
+opt_new1 <- optimizeFactorization(newmat, newu, newd, diag(3), tol = 1e-21)
+cat("\n # of updates:", opt_new1$error_pos, "\n")
+opt_new1$error
+```
+```{r}
+newmat
+opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
+```
+The reconstructed matrix is the same as the original matrix. Let us compare
+the $U$ and $V$ with that from the standard SVD.
+
+
+```{r}
+newmat_svd <- svd(newmat[[1]])
+```
+
+```{r}
+newmat_svd$d
+opt_new1$d
+```
+
+
+```{r}
+newmat_svd$u
+opt_new1$u[[1]]
+```
+```{r}
+newmat_svd$v
+opt_new1$v
+```
+The results agree except for the sign and order of columns.
+
+2. Now, we will estimate the SVD of `newmat` using our iterative update function from
+another random matrix with the same dimension.
+
+```{r}
+set.seed(253)
+randmat_new <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
+randmat_new
+newsvd <- svd(randmat_new[[1]])
+```
+
+Let us create a list for the $u$ and $\delta$ matrices we just obtained from the
+SVD of the random matrix. This allows us to use these matrices as the initial
+values for the `optimizeFactorization` function.
+
+```{r}
+newu <- newd <- list()
+newu[[names(randmat_new)]] <- newsvd$u
+newd[[names(randmat_new)]] <- newsvd$d
+```
+
+The factorization error
+```{r}
+calcDecompError(newmat, newu, newd, newsvd$v)
+```
+
+Let us optimize.
+
+```{r}
+opt_new <- optimizeFactorization(newmat, newu, newd, newsvd$v)
+cat("\n # of updates:", opt_new$error_pos, "\n")
+opt_new$error
+```
+
+Error is close to zero. Let us compare the original matrix with the
+reconstructed matrix based on the estimated $u$, $d$ and $v$ using
+the `optimizeFactorization` function.
+
+```{r}
+newmat
+opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
+```
+The estimated value is very close.
+
+We can further improve our estimate by decreasing the tolerance parameter
+(`tol`) in the optimization function.
+
+```{r}
+opt_new1 <- optimizeFactorization(newmat, newu, newd, newsvd$v, tol = 1e-21)
+cat("\n # of updates:", opt_new1$error_pos, "\n")
+opt_new1$error
+opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
+```
+The reconstructed matrix is the same as the original matrix. Let us compare
+the $U$ and $V$ with that from the standard SVD.
+
+```{r}
+newmat_svd <- svd(newmat[[1]])
+```
+
+```{r}
+newmat_svd$u
+opt_new1$u[[1]]
+```
+```{r}
+newmat_svd$v
+opt_new1$v
+```
+The results agree!
+
+
+# References

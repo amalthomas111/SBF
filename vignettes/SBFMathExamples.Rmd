@@ -323,8 +323,8 @@ asbf <- SBF(matrix_list = mymat, approximate = TRUE,
             minimizeError = FALSE)
 asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE,
                 minimizeError = FALSE)
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE, 
-                minimizeError = FALSE)
+asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
+                transform_matrix = TRUE, minimizeError = FALSE)
 ```
 
 ```{r}
@@ -408,11 +408,12 @@ asbf_cor$error
 ```
 After optimization, for all three A-SBF factorizations, the final error is 
 ```{r, echo = FALSE}
-if ((round(asbf$error,2) == round(asbf_inv$error,2)) && (round(asbf$error,2) == round(asbf_cor$error,2))) {
-  cat("same (up to 2 decimals). The final error is", round(asbf$error,2))  
-} else {
-  cat("not exactly the same")  
-}
+if ((round(asbf$error, 2) == round(asbf_inv$error, 2)) &&
+    (round(asbf$error, 2) == round(asbf_cor$error, 2))) {
+  cat("same (up to 2 decimals). The final error is", round(asbf$error, 2))
+  } else {
+  cat("not exactly the same")
+    }
 ```
 
 Independent of the initial values, if the optimization converges, we achieve
@@ -459,7 +460,7 @@ an orthogonal matrix based on this.
 ```{r}
 set.seed(111)
 rand_mat <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)
-cat("\nRank is:", qr(rand_mat[[1]])$rank,"\n")
+cat("\nRank is:", qr(rand_mat[[1]])$rank, "\n")
 dim(rand_mat[[1]])
 ```
 
@@ -543,22 +544,22 @@ newv <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)[[1]]
 # seed value
 k <- 2392
 newu <- newd <- list()
-for(i in names(mymat)){
+for (i in names(mymat)) {
   myrow <- nrow(mymat[[i]])
   mycol <- ncol(mymat[[i]])
   set.seed(k)
   # new random u_i
   newu[[i]] <- createRandomMatrices(n = 1, ncols = mycol, nrows = myrow)[[1]]
-  set.seed(k*2)
+  set.seed(k * 2)
   # new random d_i
   newd[[i]] <- sample(1:1000, size = mycol)
   newmat <- newu[[i]] %*% diag(newd[[i]]) %*% t(newv)
   if (!qr(newmat)$rank == mycol)
     cat("\nNew matrix does not have full column rank")
-  k = k+1
+  k <- k + 1
 }
 error <- calcDecompError(mymat, newu, newd, newv)
-cat("\nInitial error = ", error,"\n")
+cat("\nInitial error = ", error, "\n")
 ```
 
 We see a very high factorization error because of the random initialization.
@@ -612,7 +613,7 @@ Let us optimize.
 
 ```{r}
 opt_new <- optimizeFactorization(newmat, newu, newd, diag(3))
-cat("\n # of updates:", opt_new$error_pos,"\n")
+cat("\n # of updates:", opt_new$error_pos, "\n")
 opt_new$error
 ```
 Error is close to zero. Let us compare the original matrix with the
@@ -623,9 +624,10 @@ the `optimizeFactorization` function.
 newmat
 opt_new$u[[1]] %*% diag(opt_new$d[[1]]) %*% t(opt_new$v)
 ```
+
 ```{r}
 opt_new1 <- optimizeFactorization(newmat, newu, newd, diag(3), tol = 1e-21)
-cat("\n # of updates:", opt_new1$error_pos,"\n")
+cat("\n # of updates:", opt_new1$error_pos, "\n")
 opt_new1$error
 ```
 ```{r}
@@ -685,7 +687,7 @@ Let us optimize.
 
 ```{r}
 opt_new <- optimizeFactorization(newmat, newu, newd, newsvd$v)
-cat("\n # of updates:", opt_new$error_pos,"\n")
+cat("\n # of updates:", opt_new$error_pos, "\n")
 opt_new$error
 ```
 
@@ -704,7 +706,7 @@ We can further improve our estimate by decreasing the tolerance parameter
 
 ```{r}
 opt_new1 <- optimizeFactorization(newmat, newu, newd, newsvd$v, tol = 1e-21)
-cat("\n # of updates:", opt_new1$error_pos,"\n")
+cat("\n # of updates:", opt_new1$error_pos, "\n")
 opt_new1$error
 opt_new1$u[[1]] %*% diag(opt_new1$d[[1]]) %*% t(opt_new1$v)
 ```

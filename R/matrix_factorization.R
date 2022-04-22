@@ -92,8 +92,8 @@ HOGSVD <- function(matrix_list = NULL, check_col_matching = FALSE,
     }
     S <- matrix(0L, nrow = nrow(A[[matrix_names[1]]]),
                 ncol = ncol(A[[matrix_names[1]]]))
-    for (i in 1:length(matrix_names)) {
-      for (j in 1:length(matrix_names)) {
+    for (i in seq_len(length(matrix_names))) {
+      for (j in seq_len(length(matrix_names))) {
         if (j > i) {
           sum1 <- A[[matrix_names[i]]] %*% solve(A[[matrix_names[j]]])
           sum2 <- A[[matrix_names[j]]] %*% solve(A[[matrix_names[i]]])
