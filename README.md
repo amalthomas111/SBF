@@ -9,20 +9,22 @@ analysis.
 
 ### Installation
 
-1.  Clone `SBF` from Github and install
+1.  If you have git installed, clone `SBF` from Github and install.
 
 <!-- -->
 
     git clone https://github.com/amalthomas111/SBF.git
 
-Inside an R console
+If git is not installed, go to code -&gt; Download ZIP. Unzip the file.
+
+Then, inside an R console
 
     install.packages("<path to SBF>/SBF", repos = NULL, type = "source")
 
 \[OR\]
 
 2.  Install using `devtools`. Install `devtools` if not already
-    installed.
+    installed. Note: `devtools` requires lot of dependencies.
 
 <!-- -->
 
@@ -69,6 +71,46 @@ sapply(mymat, dim)
 ```
 
 ``` r
+mymat
+#> $mat1
+#>      [,1] [,2] [,3]
+#> [1,]   47   98   10
+#> [2,]   12   40   26
+#> [3,]   60   62   41
+#> [4,]   36   46   89
+#> [5,]   53   61   83
+#> 
+#> $mat2
+#>      [,1] [,2] [,3]
+#> [1,]   12   92   42
+#> [2,]   84   37   73
+#> [3,]   38   33   29
+#> [4,]   11   53   18
+#> [5,]   74   41    6
+#> [6,]   43   78   71
+#> 
+#> $mat3
+#>      [,1] [,2] [,3]
+#> [1,]   15   96   62
+#> [2,]   87   81   59
+#> [3,]   33   53   32
+#> [4,]    3   69    7
+#> 
+#> $mat4
+#>      [,1] [,2] [,3]
+#> [1,]    3   39   97
+#> [2,]   57   29   22
+#> [3,]   20   89   58
+#> [4,]   90   63   36
+#> [5,]   35   71   13
+```
+
+Note: Depending upon the R versions, the random matrices generated could
+be different.
+
+The rank of the matrices
+
+``` r
 sapply(mymat, function(x) {qr(x)$rank})
 #> mat1 mat2 mat3 mat4 
 #>    3    3    3    3
@@ -84,13 +126,12 @@ using the `SBF` function with argument `approximate = TRUE`.
 
 Check the arguments for the SBF function call using `?SBF`.
 
-
-
-    ```r
-    # A-SBF call
-    asbf <- SBF(matrix_list = mymat, approximate = TRUE)
-    #> 
-    #> A-SBF optimizing factorization error
+``` r
+# A-SBF call
+asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+#> 
+#> A-SBF optimizing factorization error
+```
 
 ``` r
 names(asbf)
@@ -128,7 +169,9 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
 ```
 
 A-SBF is not an exact factorization. The decomposition error is
-minimized and stored in `asbf$error`.
+minimized and the final factorization error is stored in `asbf$error`.
+The initial factorization error we started with is stored in
+`asbf$error_start`.
 
 ``` r
 # initial decomposition error
@@ -138,6 +181,8 @@ asbf$error_start
 asbf$error
 #> [1] 1411.555
 ```
+
+The error decreased by 1.65
 
 The number of iteration taken for optimizing:
 

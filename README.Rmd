@@ -20,12 +20,14 @@ algorithm we developed for cross-species gene expression analysis.
 
 ### Installation
 
-1. Clone `SBF` from Github and install
+1. If you have git installed, clone `SBF` from Github and install.
 ```
 git clone https://github.com/amalthomas111/SBF.git
 ```
 
-Inside an R console
+If git is not installed, go to code -> Download ZIP. Unzip the file.
+
+Then, inside an R console
 ```
 install.packages("<path to SBF>/SBF", repos = NULL, type = "source")
 ```
@@ -33,7 +35,8 @@ install.packages("<path to SBF>/SBF", repos = NULL, type = "source")
 [OR]
 
 2. Install using `devtools`.
-Install `devtools` if not already installed.
+Install `devtools` if not already installed. Note: `devtools` requires lot of
+dependencies.
 ```
 # check devtools is installed. If not install.
 pkgs <- c("devtools")
@@ -72,7 +75,13 @@ set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 ```
+```{r}
+mymat
+```
+Note: Depending upon the R versions, the random matrices generated could be
+different.
 
+The rank of the matrices
 ```{r}
 sapply(mymat, function(x) {qr(x)$rank})
 ```
@@ -87,13 +96,11 @@ diagonal matrices $\Delta_i$'s can be estimated using the `SBF` function with
 argument `approximate = TRUE`.
 
 Check the arguments for the SBF function call using `?SBF`.
-```
 
 ```{r}
 # A-SBF call
 asbf <- SBF(matrix_list = mymat, approximate = TRUE)
 ```
-
 
 ```{r}
 names(asbf)
@@ -119,7 +126,8 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
 ```
 
 A-SBF is not an exact factorization. The decomposition error is minimized and
-stored in `asbf$error`.
+the final factorization error is stored in `asbf$error`.
+The initial factorization error we started with is stored in `asbf$error_start`.
 
 ```{r}
 # initial decomposition error
@@ -127,7 +135,7 @@ asbf$error_start
 # final decomposition error
 asbf$error
 ```
-
+The error decreased by `r round(asbf$error_start/asbf$error,2)`
 
 The number of iteration taken for optimizing:
 ```{r}
