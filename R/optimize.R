@@ -187,6 +187,7 @@ updateV <- function(mat_list, u, d) {
 #' @param tol Tolerance value. During the iterations, if the difference between
 #' previous best and current best factorization error becomes less than tol,
 #' no more iteration is performed. Default tol = 1e-10
+#' @param verbose print error at each update. Default FALSE
 #'
 #' @return a list containing optimal U, delta, and V that
 #' minimizes the factorization error
@@ -203,7 +204,8 @@ updateV <- function(mat_list, u, d) {
 #' opt <- optimizeFactorization(mymat, newU, newDelta, newV, max_iter = 1e4)
 optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
                                   initial_exact = FALSE,
-                                  max_iter = 1e4, tol = 1e-10) {
+                                  max_iter = 1e4, tol = 1e-10,
+                                  verbose = FALSE) {
   min_error <- calcDecompError(mat_list, u, d, v)
   if (initial_exact == TRUE) {
     u <- updateU(mat_list, d, v)
@@ -215,10 +217,21 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
   }
   error_vec <- c()
   error_decreased <- FALSE
+  k <- 0
+  if (verbose) {
+    cat("\t\n Update:", k, " Error:", round(min_error, 2))
+    k <- k + 1
+  }
+
   for (i in 1:max_iter) {
     d <- updateDelta(mat_list, u, v)
     error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
+    if (verbose) {
+      cat("\t\n Update:", k, " Error:", round(error, 2), "dt:",
+          round(error - min_error, 2))
+      k <- k + 1
+    }
     if (error <= min_error) {
       u_opt <- u
       v_opt <- v
@@ -234,6 +247,11 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
       v <- updateV(mat_list, u, d)
       error <- calcDecompError(mat_list, u, d, v)
       error_vec <- c(error_vec, error)
+      if (verbose) {
+        cat("\t\n Update:", k, " Error:", round(error, 2), "dt:",
+            round(error - min_error, 2))
+        k <- k + 1
+      }
       if (error <= min_error) {
         u_opt <- u
         v_opt <- v
@@ -249,6 +267,11 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
     u <- updateU(mat_list, d, v)
     error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
+    if (verbose) {
+      cat("\t\n Update:", k, " Error:", round(error, 2), "dt:",
+          round(error - min_error, 2))
+      k <- k + 1
+    }
     if (error <= min_error) {
       u_opt <- u
       v_opt <- v

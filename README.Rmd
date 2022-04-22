@@ -135,7 +135,7 @@ asbf$error_start
 # final decomposition error
 asbf$error
 ```
-The error decreased by `r round(asbf$error_start/asbf$error,2)`
+The error decreased by a factor of `r round(asbf$error_start/asbf$error,2)`.
 
 The number of iteration taken for optimizing:
 ```{r}

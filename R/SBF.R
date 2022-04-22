@@ -143,7 +143,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
             cat("\n[Warning] Non-defective M matrix\n")
         }
         V <- ev$vectors
-        B <- delta <- U <- U_ortho <- list()
+        B <- delta <- U <- list()
         for (mat in matrix_names) {
             B[[mat]] <- as.matrix(matrix_list[[mat]]) %*% V
             delta[[mat]] <- sqrt(colSums(B[[mat]]^2))
@@ -162,20 +162,21 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 }
                 cat("\n")
             }
-            if (approximate) {
-                if (length(delta[[mat]]) == 1) {
-                  phi <- as.matrix(diag(as.matrix(delta[[mat]])))
-                } else {
-                  phi <- as.matrix(diag(delta[[mat]]))
-                }
-                dvsig_svd <- svd(as.matrix(matrix_list[[mat]]) %*% V %*% phi)
-                U_ortho[[mat]] <- dvsig_svd$u %*% t(dvsig_svd$v)
-                row.names(U_ortho[[mat]]) <- row.names(U[[mat]])
-            }
+            # if (approximate) {
+            #     if (length(delta[[mat]]) == 1) {
+            #       phi <- as.matrix(diag(as.matrix(delta[[mat]])))
+            #     } else {
+            #       phi <- as.matrix(diag(delta[[mat]]))
+            #     }
+            #     dvsig_svd <- svd(as.matrix(matrix_list[[mat]]) %*% V %*% phi)
+            #     U_ortho[[mat]] <- dvsig_svd$u %*% t(dvsig_svd$v)
+            #     row.names(U_ortho[[mat]]) <- row.names(U[[mat]])
+            # }
         }
         if (approximate) {
             if (verbose)
                 cat("\nA-SBF is computed\n")
+            U_ortho <- updateU(matrix_list, delta, V)
             initial_error <- calcDecompError(matrix_list, U_ortho, delta, V)
             myopt <- NULL
             if (minimizeError) {
@@ -184,7 +185,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                                                     V, optimizeV = optimizeV,
                                                     initial_exact = initial_exact,
                                                     max_iter = max_iter,
-                                                    tol = tol)
+                                                    tol = tol, verbose = verbose)
                 if (!is.null(myopt)) {
                     out <- list(v = myopt$v, u = myopt$u, d = myopt$d,
                                 error = myopt$error, error_pos = myopt$error_pos,

@@ -182,7 +182,7 @@ asbf$error
 #> [1] 1411.555
 ```
 
-The error decreased by 1.65
+The error decreased by a factor of 1.65.
 
 The number of iteration taken for optimizing:
 

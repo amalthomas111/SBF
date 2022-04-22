@@ -12,7 +12,8 @@ optimizeFactorization(
   optimizeV = TRUE,
   initial_exact = FALSE,
   max_iter = 10000,
-  tol = 1e-10
+  tol = 1e-10,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ v are updated. Default 1e4}
 \item{tol}{Tolerance value. During the iterations, if the difference between
 previous best and current best factorization error becomes less than tol,
 no more iteration is performed. Default tol = 1e-10}
+
+\item{verbose}{print error at each update. Default FALSE}
 }
 \value{
 a list containing optimal U, delta, and V that
