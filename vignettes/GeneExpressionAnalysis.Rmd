@@ -136,8 +136,9 @@ tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
 
 # Load gene expression profiles
 
-Download the processed RNA-Seq counts file
+Download the processed RNA-Seq counts file ("counts.tar.gz")
 from https://figshare.com/s/4d8d5cf9c1362bcbe90d
+Uncompress the .tar.gz file and add it to the working directory.
 ```{r}
 # set the path to the counts. Change it accordingly
 counts_path <- "~/Dropbox/0.Analysis/0.paper/counts/"
@@ -439,10 +440,17 @@ df_proj <- df_proj %>% mutate(species = factor(species,
 
 ```{r}
 # install packages
-pkgs <- c("ComplexHeatmap", "RColorBrewer")
+pkgs <- c("RColorBrewer")
 require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
 if (length(require_install))
   install.packages(require_install)
+pkgs <- c("ComplexHeatmap")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install)) {
+  if (!require("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+  BiocManager::install("ComplexHeatmap")
+}
 suppressPackageStartupMessages({
   library(ComplexHeatmap)
   library(RColorBrewer)

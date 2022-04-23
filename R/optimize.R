@@ -228,7 +228,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
     error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
     if (verbose) {
-      cat("\t\n Update:", k, " Error:", round(error, 2), "dt:",
+      cat("\t\n Update d:", k, " Error:", round(error, 2), "dt:",
           round(error - min_error, 2))
       k <- k + 1
     }
@@ -248,7 +248,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
       error <- calcDecompError(mat_list, u, d, v)
       error_vec <- c(error_vec, error)
       if (verbose) {
-        cat("\t\n Update:", k, " Error:", round(error, 2), "dt:",
+        cat("\t\n Update v:", k, " Error:", round(error, 2), "dt:",
             round(error - min_error, 2))
         k <- k + 1
       }
@@ -268,7 +268,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
     error <- calcDecompError(mat_list, u, d, v)
     error_vec <- c(error_vec, error)
     if (verbose) {
-      cat("\t\n Update:", k, " Error:", round(error, 2), "dt:",
+      cat("\t\n Update u:", k, " Error:", round(error, 2), "dt:",
           round(error - min_error, 2))
       k <- k + 1
     }
