@@ -1,5 +1,5 @@
 ---
-title: "Gene expression analysis using A-SBF"
+title: "Gene expression analysis using OSBF"
 author: "Amal Thomas"
 output:
   pdf_document:
@@ -45,7 +45,7 @@ a similar phenotype across species.
 The number of rows is different for each $D_i$ matrix, but they all have the
 same number of columns.
 
-In A-SBF, we estimate an orthonormal basis $V$ for the common expression
+In OSBF, we estimate an orthonormal basis $V$ for the common expression
 space based on the inter-tissue correlations within each species.
 Let $X_i \in \mathbb{R}^{m_i \times n}$ be the standardized gene
 expression matrix for species $i$. We can write
@@ -238,9 +238,9 @@ for (sp in names(avg_counts)) {
 ```
 
 
-# A-SBF
+# OSBF
 
-We will perform A-SBF in two ways.
+We will perform OSBF in two ways.
 
 1. Keeping the initial estimate of $V$ the same while updating $U_i$ and
 $\Delta_i$ to minimize the factorization error.
@@ -253,7 +253,7 @@ cat("\n=======================================================")
 cat("\nASBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
-sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
+sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = FALSE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
@@ -268,7 +268,7 @@ cat("\n=======================================================")
 cat("\nASBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
-sbf <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
+sbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
@@ -600,7 +600,7 @@ j <- 2
 ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
                               y = df_proj_noVupdate[, j], col = tissue,
                               shape = species, fill = tissue)) +
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
@@ -617,7 +617,7 @@ j <- 2
 ggplot2::ggplot(df_proj, aes(x = df_proj[, i],
                               y = df_proj[, j], col = tissue,
                               shape = species, fill = tissue)) +
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
@@ -635,7 +635,7 @@ j <- 3
 ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
                               y = df_proj_noVupdate[, j], col = tissue,
                               shape = species, fill = tissue)) +
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
@@ -650,7 +650,7 @@ i <- 2
 j <- 3
 ggplot2::ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j], col = tissue,
                               shape = species, fill = tissue)) +  
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +

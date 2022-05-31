@@ -102,11 +102,11 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 
 ## -----------------------------------------------------------------------------
-asbf <- SBF(matrix_list = mymat, approximate = TRUE,
+asbf <- SBF(matrix_list = mymat, orthogonal = TRUE,
             minimizeError = FALSE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE,
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE,
                 minimizeError = FALSE)
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
+asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE,
                 transform_matrix = TRUE, minimizeError = FALSE)
 
 ## -----------------------------------------------------------------------------
@@ -128,9 +128,9 @@ zapsmall(t(asbf$v) %*% asbf$v)
 ## -----------------------------------------------------------------------------
 set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
-asbf <- SBF(matrix_list = mymat, approximate = TRUE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
+asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE)
+asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE, transform_matrix = TRUE)
 
 ## -----------------------------------------------------------------------------
 names(asbf)

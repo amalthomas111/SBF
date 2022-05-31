@@ -1,8 +1,8 @@
-#' Compute Shared Basis Factorization (SBF) and Approximate Shared Basis
-#' Factorization (A-SBF)
+#' Compute Shared Basis Factorization (SBF) and Orthogonal Shared Basis
+#' Factorization (OSBF)
 #'
 #' Function to compute Shared Basis Factorization (SBF) and
-#' Approximate Shared Basis Factorization (A-SBF)
+#' Orthogonal Shared Basis Factorization (OSBF)
 #' @param matrix_list A list containing Di matrices for joint matrix
 #' factorization. Column names of each Di matrix may or may not have information
 #' about tissue or cell type.
@@ -21,15 +21,15 @@
 #' Only checked if check_col_matching = TRUE. Default NULL.
 #' @param weighted If TRUE each Di^TDi is scaled using inverse variance weights
 #' Default FALSE.
-#' @param approximate TRUE will compute A-SBF. Default FALSE.
+#' @param orthogonal TRUE will compute OSBF. Default FALSE.
 #' @param transform_matrix If TRUE, then Di will be transformed to compute
 #' correlation matrix, and V is computed based on this instead of
 #' Di^TDi. An unbiased estimate of covariance (denominator n-1) is
 #' used for the computing correlation. Default FALSE.
 #' @param minimizeError  If true, the factorization error is minimized for the
-#'  A-SBF by invoking 'optimizeFactorization' function. Default TRUE.
+#'  OSBF by invoking 'optimizeFactorization' function. Default TRUE.
 #' @param optimizeV Whether initial V should be update or not when minimizing
-#' A-SBF factorization error. Default TRUE. This is an argument for
+#' OSBF factorization error. Default TRUE. This is an argument for
 #' 'optimizeFactorization' function.
 #' @param initial_exact Whether the initial value of U, Delta,
 #' and V gives exact factorization. Default FALSE. This is an argument for
@@ -44,7 +44,7 @@
 #' @param verbose if TRUE print verbose lines. Default FALSE.
 #'
 #' @return a list containing u, delta, v, m, lambda (eigenvalues of m), and
-#' other outputs of SBF/A-SBF factorization.
+#' other outputs of SBF/OSBF factorization.
 #' @export
 #'
 #' @examples
@@ -68,13 +68,13 @@
 #' avg_counts <- SBF::TissueExprSpecies
 #' sbf_cor <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
 #'
-#' # A-SBF call for gene expression dataset using correlation matrix
+#' # OSBF call for gene expression dataset using correlation matrix
 #' avg_counts <- SBF::TissueExprSpecies
-#' asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
+#' asbf_cor <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
 #'                 transform_matrix = TRUE, tol = 1e-2)
 SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 col_index = NULL, weighted = FALSE,
-                approximate = FALSE, transform_matrix = FALSE,
+                orthogonal = FALSE, transform_matrix = FALSE,
                 minimizeError = TRUE, optimizeV = TRUE,
                 initial_exact = FALSE,
                 max_iter = 1e4, tol = 1e-10,
@@ -162,7 +162,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 }
                 cat("\n")
             }
-            # if (approximate) {
+            # if (orthogonal) {
             #     if (length(delta[[mat]]) == 1) {
             #       phi <- as.matrix(diag(as.matrix(delta[[mat]])))
             #     } else {
@@ -173,14 +173,14 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
             #     row.names(U_ortho[[mat]]) <- row.names(U[[mat]])
             # }
         }
-        if (approximate) {
+        if (orthogonal) {
             if (verbose)
-                cat("\nA-SBF is computed\n")
+                cat("\nOSBF is computed\n")
             U_ortho <- updateU(matrix_list, delta, V)
             initial_error <- calcDecompError(matrix_list, U_ortho, delta, V)
             myopt <- NULL
             if (minimizeError) {
-                cat("\nA-SBF optimizing factorization error\n")
+                cat("\nOSBF optimizing factorization error\n")
                 myopt <- SBF::optimizeFactorization(matrix_list, U_ortho, delta,
                                                     V, optimizeV = optimizeV,
                                                     initial_exact = initial_exact,
@@ -197,7 +197,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 }
             }
             if (is.null(myopt) || minimizeError == FALSE) {
-                cat("\nA-SBF with no optimization\n")
+                cat("\nOSBF with no optimization\n")
                 out <- list(v = V, lambda = lambda,
                             u = U, u_ortho = U_ortho,
                             delta = delta, m = mat_list_trans_sum,

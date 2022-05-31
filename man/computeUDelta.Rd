@@ -4,14 +4,14 @@
 \alias{computeUDelta}
 \title{Compute U and Delta for a given set of matrices and a V}
 \usage{
-computeUDelta(mat_list, V, approximate = TRUE)
+computeUDelta(mat_list, V, orthogonal = TRUE)
 }
 \arguments{
 \item{mat_list}{A list containing numeric matrices}
 
 \item{V}{A numeric matrix of dimension ncol(matrix1) * ncol(matrix1)}
 
-\item{approximate}{Compute U with orthonormal columns. Default TRUE}
+\item{orthogonal}{Compute U with orthonormal columns. Default TRUE}
 }
 \value{
 list of U and delta

@@ -136,7 +136,7 @@ cat("\n=======================================================")
 cat("\nASBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
-sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
+sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = FALSE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
@@ -149,7 +149,7 @@ cat("\n=======================================================")
 cat("\nASBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
-sbf <- SBF(avg_counts, transform_matrix = TRUE, approximate = TRUE,
+sbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
@@ -286,10 +286,17 @@ df_proj <- df_proj %>% mutate(species = factor(species,
 
 ## -----------------------------------------------------------------------------
 # install packages
-pkgs <- c("ComplexHeatmap", "RColorBrewer")
+pkgs <- c("RColorBrewer")
 require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
 if (length(require_install))
   install.packages(require_install)
+pkgs <- c("ComplexHeatmap")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install)) {
+  if (!require("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+  BiocManager::install("ComplexHeatmap")
+}
 suppressPackageStartupMessages({
   library(ComplexHeatmap)
   library(RColorBrewer)
@@ -418,7 +425,7 @@ j <- 2
 ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
                               y = df_proj_noVupdate[, j], col = tissue,
                               shape = species, fill = tissue)) +
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
@@ -433,7 +440,7 @@ j <- 2
 ggplot2::ggplot(df_proj, aes(x = df_proj[, i],
                               y = df_proj[, j], col = tissue,
                               shape = species, fill = tissue)) +
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
@@ -448,7 +455,7 @@ j <- 3
 ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
                               y = df_proj_noVupdate[, j], col = tissue,
                               shape = species, fill = tissue)) +
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
@@ -462,7 +469,7 @@ i <- 2
 j <- 3
 ggplot2::ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j], col = tissue,
                               shape = species, fill = tissue)) +  
-  xlab(paste("A-SBF Dim", i)) + ylab(paste("A-SBF Dim", j)) +
+  xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
   geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +

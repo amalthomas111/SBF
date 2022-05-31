@@ -3,7 +3,7 @@
 
 ## SBF: A R package for Shared Basis Factorization
 
-Approximate Shared Basis Factorization (A-SBF) is a joint matrix
+Orthogonal Shared Basis Factorization (OSBF) is a joint matrix
 diagonalization algorithm we developed for cross-species gene expression
 analysis.
 
@@ -116,21 +116,27 @@ sapply(mymat, function(x) {qr(x)$rank})
 #>    3    3    3    3
 ```
 
-We will use the test dataset as our *D*<sub>*i*</sub> matrices.
+We will use the test dataset as our
+![D\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;D_i "D_i")
+matrices.
 
-### A-SBF examples
+### OSBF examples
 
-The A-SBF’s shared orthogonal *V*, *U*<sub>*i*</sub>’s with orthonormal
-columns, and diagonal matrices *Δ*<sub>*i*</sub>’s can be estimated
-using the `SBF` function with argument `approximate = TRUE`.
+The OSBF’s shared orthogonal
+![V](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;V "V"),
+![U\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")’s
+with orthonormal columns, and diagonal matrices
+![\\Delta\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5CDelta_i "\Delta_i")’s
+can be estimated using the `SBF` function with argument
+`orthogonal = TRUE`.
 
 Check the arguments for the SBF function call using `?SBF`.
 
 ``` r
-# A-SBF call
-asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+# OSBF call
+asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
 #> 
-#> A-SBF optimizing factorization error
+#> OSBF optimizing factorization error
 ```
 
 ``` r
@@ -141,14 +147,18 @@ names(asbf)
 #> [13] "error_start"
 ```
 
-For A-SBF, the factorization error is optimized by default
+For OSBF, the factorization error is optimized by default
 (`minimizeError=TRUE`), and the `optimizeFactorization` function is
 invoked. Optimization could take some time depending on the data matrix
 (`mymat`) and initial values.  
 `?SBF` help function shows all arguments for the SBF call.
 
-In A-SBF, *V* is orthogonal and columns of *U*<sub>*i*</sub>’s are
-orthonormal (*U*<sub>*i*</sub><sup>*T*</sup>*U*<sub>*i*</sub> = *I*).
+In OSBF,
+![V](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;V "V")
+is orthogonal and columns of
+![U\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")’s
+are orthonormal
+(![U\_i^T U\_i = I](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i%5ET%20U_i%20%3D%20I "U_i^T U_i = I")).
 
 ``` r
 zapsmall(t(asbf$v) %*% asbf$v)
@@ -168,10 +178,9 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
 #> [3,]    0    0    1
 ```
 
-A-SBF is not an exact factorization. The decomposition error is
-minimized and the final factorization error is stored in `asbf$error`.
-The initial factorization error we started with is stored in
-`asbf$error_start`.
+OSBF is not an exact factorization. The decomposition error is minimized
+and the final factorization error is stored in `asbf$error`. The initial
+factorization error we started with is stored in `asbf$error_start`.
 
 ``` r
 # initial decomposition error
@@ -198,7 +207,9 @@ factorization can be found in the vignettes/docs directory.
 
 -   SBF package has a sample gene expression data with the mean
     expression of nine tissues in five species. Now we will use this
-    data as our *D*<sub>*i*</sub> matrices.
+    data as our
+    ![D\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;D_i "D_i")
+    matrices.
 
 ``` r
 # load sample dataset from SBF package
@@ -214,15 +225,17 @@ names(avg_counts[["Homo_sapiens"]])
 #> [5] "hsapiens_testis"
 ```
 
-A-SBF computation based on inter-sample correlation. *V* is estimated
-using the mean *R*<sub>*i*</sub><sup>*T*</sup>*R*<sub>*i*</sub>.
+OSBF computation based on inter-sample correlation.
+![V](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;V "V")
+is estimated using the mean
+![R\_i^T R\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_i%5ET%20R_i "R_i^T R_i").
 
 ``` r
-# A-SBF call using correlation matrix
-asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
+# OSBF call using correlation matrix
+asbf_gem <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
                 transform_matrix = TRUE, tol = 1e-4)
 #> 
-#> A-SBF optimizing factorization error
+#> OSBF optimizing factorization error
 # initial decomposition error
 asbf_gem$error_start
 #> [1] 65865.92
@@ -235,10 +248,12 @@ Note: For high-dimensional datasets, vary the tolerance threshold
 (`tol`) or maximum number of iteration parameter (`max_iter`) to reduce
 the computing time.
 
-When calling `SBF`, `approximate = FALSE` computes the SBF
-factorization, an exact joint matrix factorization we developed. In SBF,
-the estimated columns of *U*<sub>*i*</sub> are not orthonormal. More
-details and examples can be found in the vignettes/docs directory.
+When calling `SBF`, `orthogonal = FALSE` computes the SBF factorization,
+an exact joint matrix factorization we developed. In SBF, the estimated
+columns of
+![U\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")
+are not orthonormal. More details and examples can be found in the
+vignettes/docs directory.
 
 ### Contacts
 

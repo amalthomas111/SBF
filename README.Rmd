@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 
 ## SBF: A R package for Shared Basis Factorization
 
-Approximate Shared Basis Factorization (A-SBF) is a joint matrix diagonalization
+Orthogonal Shared Basis Factorization (OSBF) is a joint matrix diagonalization
 algorithm we developed for cross-species gene expression analysis.
 
 ### Installation
@@ -89,30 +89,30 @@ sapply(mymat, function(x) {qr(x)$rank})
 We will use the test dataset as our $D_i$ matrices.
 
 
-### A-SBF examples
+### OSBF examples
 
-The A-SBF's shared orthogonal $V$, $U_i$'s with orthonormal columns, and
+The OSBF's shared orthogonal $V$, $U_i$'s with orthonormal columns, and
 diagonal matrices $\Delta_i$'s can be estimated using the `SBF` function with
-argument `approximate = TRUE`.
+argument `orthogonal = TRUE`.
 
 Check the arguments for the SBF function call using `?SBF`.
 
 ```{r}
-# A-SBF call
-asbf <- SBF(matrix_list = mymat, approximate = TRUE)
+# OSBF call
+asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
 ```
 
 ```{r}
 names(asbf)
 ```
 
-For A-SBF, the factorization error is optimized by default
+For OSBF, the factorization error is optimized by default
 (`minimizeError=TRUE`), and the `optimizeFactorization` function is invoked. 
 Optimization could take some time depending on the data matrix (`mymat`) and
 initial values.  
 `?SBF` help function shows all arguments for the SBF call.
 
-In A-SBF, $V$ is orthogonal and columns of $U_i$'s are orthonormal
+In OSBF, $V$ is orthogonal and columns of $U_i$'s are orthonormal
 ($U_i^T U_i = I$).
 
 ```{r}
@@ -125,7 +125,7 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
            asbf$u[[names(asbf$u)[[1]]]])
 ```
 
-A-SBF is not an exact factorization. The decomposition error is minimized and
+OSBF is not an exact factorization. The decomposition error is minimized and
 the final factorization error is stored in `asbf$error`.
 The initial factorization error we started with is stored in `asbf$error_start`.
 
@@ -159,12 +159,12 @@ sapply(avg_counts, dim)
 names(avg_counts[["Homo_sapiens"]])
 ```
 
-A-SBF computation based on inter-sample correlation. 
+OSBF computation based on inter-sample correlation. 
 $V$ is estimated using the mean $R_i^T R_i$.
 
 ```{r}
-# A-SBF call using correlation matrix
-asbf_gem <- SBF(matrix_list = avg_counts, approximate = TRUE,
+# OSBF call using correlation matrix
+asbf_gem <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
                 transform_matrix = TRUE, tol = 1e-4)
 # initial decomposition error
 asbf_gem$error_start
@@ -175,7 +175,7 @@ Note: For high-dimensional datasets, vary the tolerance threshold (`tol`) or
 maximum number of iteration parameter (`max_iter`) to reduce the computing time.
 
 
-When calling `SBF`, `approximate = FALSE` computes the SBF factorization,
+When calling `SBF`, `orthogonal = FALSE` computes the SBF factorization,
 an exact joint matrix factorization we developed. In SBF, the estimated
 columns of $U_i$ are not orthonormal. More details and examples can be found
 in the vignettes/docs directory.

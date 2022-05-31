@@ -53,7 +53,7 @@ generalized singular value decomposition (HO GSVD) to analyze data
 from more than two species [@ponnapalli2011higher].
 
 This study developed a joint diagonalization approach called
-approximate shared basis factorization (A-SBF) for cross-species
+Orthogonal Shared Basis Factorization (OSBF) for cross-species
 expression comparisons.  This approach extends the exact factorization
 approach we developed called shared basis factorization (SBF).
 We implemented both algorithms in the SBF package. The details 
@@ -102,11 +102,11 @@ L_i$.  By normalizing the columns of $L_i$, we have $\delta_{ij} =
 \|l_{ij}\|$ and $\Delta_i =
 \mbox{diag}(\delta_{i1},\ldots,\delta_{in})$.
 
-# Approximate shared basis factorization
+# Orthogonal shared basis factorization
 
 Consider a set of matrices $D_i \in \mathbb{R}^{m_i \times n}$ ($i=
-1,\ldots,k$), each with full column rank. We define approximate shared
-basis factorization (A-SBF) as
+1,\ldots,k$), each with full column rank. We define orthogonal shared
+basis factorization (OSBF) as
 
 \begin{align*}
     D_1 &= U_1\Delta_1V^T + \epsilon_1, \\
@@ -243,7 +243,7 @@ The errors are close to zero in all three cases.
 
 ### Adding new dataset
 
-The total column variance of matrix 1-4 in `mymat` is approximately in the
+The total column variance of matrix 1-4 in `mymat` is nearly in the
 same range.
 
 ```{r}
@@ -302,7 +302,7 @@ e4 / e3
 With inverse variance weighting, the deviation is smaller.
 
 
-## A-SBF examples
+## OSBF examples
 
 ```{r}
 set.seed(1231)
@@ -310,27 +310,27 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 ```
 
-Now let us compute Approximate-SBF for the same datasets for the following
+Now let us compute Orthogonal-SBF for the same datasets for the following
 three cases.
 
-- A-SBF
-- A-SBF with inverse variance weighting
-- A-SBF with inter-sample correlation
+- OSBF
+- OSBF with inverse variance weighting
+- OSBF with inter-sample correlation
 
-Here the A-SBF is invoked without minimizing the factorization error (`minimizeError=FALSE`).
+Here the OSBF is invoked without minimizing the factorization error (`minimizeError=FALSE`).
 ```{r}
-asbf <- SBF(matrix_list = mymat, approximate = TRUE,
+asbf <- SBF(matrix_list = mymat, orthogonal = TRUE,
             minimizeError = FALSE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE,
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE,
                 minimizeError = FALSE)
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE,
+asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE,
                 transform_matrix = TRUE, minimizeError = FALSE)
 ```
 
 ```{r}
 names(asbf)
 ```
-A-SBF is not an exact factorization and has decomposition error.
+OSBF is not an exact factorization and has decomposition error.
 
 ```{r}
 # decomposition error
@@ -352,7 +352,7 @@ zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
 zapsmall(t(asbf$v) %*% asbf$v)
 ```
 
-# Minimizing A-SBF factorization error
+# Minimizing OSBF factorization error
 
 We use an alternate least square algorithm to minimize the total factorization
 error:
@@ -364,11 +364,11 @@ in manuscript).
 
 ## Examples
 
-### Optimizing A-SBF error
+### Optimizing OSBF error
 
 Let us optimize the factorization error using the `optimizeFactorization`
-function for the three cases of A-SBF computation. The `optimizeFactorization`
-is called setting `approximate = TRUE` and `minimizeError = TRUE` in the SBF
+function for the three cases of OSBF computation. The `optimizeFactorization`
+is called setting `orthogonal = TRUE` and `minimizeError = TRUE` in the SBF
 function. The argument `minimizeError` is set to be TRUE by default.
 Depending upon the data matrix and initial values of $U_i$, $\Delta_i$, and $V$,
 optimization could take some time.
@@ -376,9 +376,9 @@ optimization could take some time.
 ```{r}
 set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
-asbf <- SBF(matrix_list = mymat, approximate = TRUE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, approximate = TRUE)
-asbf_cor <- SBF(matrix_list = mymat, approximate = TRUE, transform_matrix = TRUE)
+asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
+asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE)
+asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE, transform_matrix = TRUE)
 ```
 
 ```{r}
@@ -396,8 +396,8 @@ asbf$error_start
 asbf_inv$error_start
 asbf_cor$error_start
 ```
-This is the same error (A-SBF with no optimization) we showed previously in the
-A-SBF examples section.
+This is the same error (OSBF with no optimization) we showed previously in the
+OSBF examples section.
 Now let us check the final decomposition error after optimization.
 
 ```{r}
@@ -406,7 +406,7 @@ asbf$error
 asbf_inv$error
 asbf_cor$error
 ```
-After optimization, for all three A-SBF factorizations, the final error is 
+After optimization, for all three OSBF factorizations, the final error is 
 ```{r, echo = FALSE}
 if ((round(asbf$error, 2) == round(asbf_inv$error, 2)) &&
     (round(asbf$error, 2) == round(asbf_cor$error, 2))) {

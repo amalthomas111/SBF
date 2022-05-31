@@ -23,7 +23,7 @@ diag(U^T D V).
 \examples{
 set.seed(1231)
 mymat <- createRandomMatrices(n = 3, ncols = 3, nrows = 3)
-sbf <- SBF(matrix_list = mymat, approximate = FALSE,
+sbf <- SBF(matrix_list = mymat, orthogonal = FALSE,
            transform_matrix = FALSE)
 newU <- updateU(mymat, sbf$delta, sbf$v)
 newDelta <- updateDelta(mymat, newU, sbf$v)

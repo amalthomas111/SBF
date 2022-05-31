@@ -31,7 +31,7 @@ calcNearestOrthoMatrix <- function(mat_list) {
 #' Function to compute U and Delta for a given set of matrices and V.
 #' @param mat_list A list containing numeric matrices
 #' @param V A numeric matrix of dimension ncol(matrix1) * ncol(matrix1)
-#' @param approximate Compute U with orthonormal columns. Default TRUE
+#' @param orthogonal Compute U with orthonormal columns. Default TRUE
 #'
 #' @return list of U and delta
 #' @export
@@ -42,14 +42,14 @@ calcNearestOrthoMatrix <- function(mat_list) {
 #' set.seed(325)
 #' mymat_rand <- createRandomMatrices(n = 1, ncols = 3, nrows = 3)[[1]]
 #' out <- computeUDelta(mymat, svd(mymat_rand)$v)
-computeUDelta <- function(mat_list, V, approximate = TRUE) {
+computeUDelta <- function(mat_list, V, orthogonal = TRUE) {
   matrix_names <- names(mat_list)
   B <- delta <- U <- U_ortho <- list()
   for (mat in matrix_names) {
     B[[mat]] <- as.matrix(mat_list[[mat]]) %*% V
     delta[[mat]] <- sqrt(colSums(B[[mat]]^2))
     U[[mat]] <- sweep(B[[mat]], 2, delta[[mat]], FUN = "/")
-    if (approximate) {
+    if (orthogonal) {
       if (length(delta[[mat]]) == 1) {
         phi <- as.matrix(diag(as.matrix(delta[[mat]])))
       } else {
@@ -60,7 +60,7 @@ computeUDelta <- function(mat_list, V, approximate = TRUE) {
       row.names(U_ortho[[mat]]) <- row.names(U[[mat]])
     }
   }
-  if (approximate) {
+  if (orthogonal) {
     delta_new <- updateDelta(mat_list, U_ortho, V)
     error <- calcDecompError(mat_list, U_ortho, delta_new, V)
     return(list(u = U, u_ortho = U_ortho, d = delta, d_ortho = delta_new,
@@ -83,7 +83,7 @@ computeUDelta <- function(mat_list, V, approximate = TRUE) {
 #' @examples
 #' set.seed(1231)
 #' mymat <- createRandomMatrices(n = 3, ncols = 3, nrows = 3)
-#' sbf <- SBF(matrix_list = mymat, approximate = FALSE,
+#' sbf <- SBF(matrix_list = mymat, orthogonal = FALSE,
 #'            transform_matrix = FALSE)
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 updateU <- function(mat_list, d, v) {
@@ -116,7 +116,7 @@ updateU <- function(mat_list, d, v) {
 #' @examples
 #' set.seed(1231)
 #' mymat <- createRandomMatrices(n = 3, ncols = 3, nrows = 3)
-#' sbf <- SBF(matrix_list = mymat, approximate = FALSE,
+#' sbf <- SBF(matrix_list = mymat, orthogonal = FALSE,
 #'            transform_matrix = FALSE)
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 #' newDelta <- updateDelta(mymat, newU, sbf$v)
@@ -145,7 +145,7 @@ updateDelta <- function(mat_list, u, v) {
 #' @examples
 #' set.seed(1231)
 #' mymat <- createRandomMatrices(n = 3, ncols = 3, nrows = 3)
-#' sbf <- SBF(matrix_list = mymat, approximate = FALSE,
+#' sbf <- SBF(matrix_list = mymat, orthogonal = FALSE,
 #'            transform_matrix = FALSE)
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 #' newDelta <- updateDelta(mymat, newU, sbf$v)
@@ -196,7 +196,7 @@ updateV <- function(mat_list, u, d) {
 #' @examples
 #' set.seed(1231)
 #' mymat <- createRandomMatrices(n = 3, ncols = 3, nrows = 3)
-#' sbf <- SBF(matrix_list = mymat, approximate = FALSE,
+#' sbf <- SBF(matrix_list = mymat, orthogonal = FALSE,
 #'            transform_matrix = FALSE)
 #' newU <- updateU(mymat, sbf$delta, sbf$v)
 #' newDelta <- updateDelta(mymat, newU, sbf$v)

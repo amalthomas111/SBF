@@ -2,8 +2,8 @@
 % Please edit documentation in R/SBF.R
 \name{SBF}
 \alias{SBF}
-\title{Compute Shared Basis Factorization (SBF) and Approximate Shared Basis
-Factorization (A-SBF)}
+\title{Compute Shared Basis Factorization (SBF) and Orthogonal Shared Basis
+Factorization (OSBF)}
 \usage{
 SBF(
   matrix_list = NULL,
@@ -11,7 +11,7 @@ SBF(
   col_sep = "_",
   col_index = NULL,
   weighted = FALSE,
-  approximate = FALSE,
+  orthogonal = FALSE,
   transform_matrix = FALSE,
   minimizeError = TRUE,
   optimizeV = TRUE,
@@ -45,7 +45,7 @@ Only checked if check_col_matching = TRUE. Default NULL.}
 \item{weighted}{If TRUE each Di^TDi is scaled using inverse variance weights
 Default FALSE.}
 
-\item{approximate}{TRUE will compute A-SBF. Default FALSE.}
+\item{orthogonal}{TRUE will compute OSBF. Default FALSE.}
 
 \item{transform_matrix}{If TRUE, then Di will be transformed to compute
 correlation matrix, and V is computed based on this instead of
@@ -53,10 +53,10 @@ Di^TDi. An unbiased estimate of covariance (denominator n-1) is
 used for the computing correlation. Default FALSE.}
 
 \item{minimizeError}{If true, the factorization error is minimized for the
-A-SBF by invoking 'optimizeFactorization' function. Default TRUE.}
+OSBF by invoking 'optimizeFactorization' function. Default TRUE.}
 
 \item{optimizeV}{Whether initial V should be update or not when minimizing
-A-SBF factorization error. Default TRUE. This is an argument for
+OSBF factorization error. Default TRUE. This is an argument for
 'optimizeFactorization' function.}
 
 \item{initial_exact}{Whether the initial value of U, Delta,
@@ -76,11 +76,11 @@ no more iteration is performed. Default tol = 1e-10. This is an argument for
 }
 \value{
 a list containing u, delta, v, m, lambda (eigenvalues of m), and
-other outputs of SBF/A-SBF factorization.
+other outputs of SBF/OSBF factorization.
 }
 \description{
 Function to compute Shared Basis Factorization (SBF) and
-Approximate Shared Basis Factorization (A-SBF)
+Orthogonal Shared Basis Factorization (OSBF)
 }
 \examples{
 # create test dataset
@@ -103,8 +103,8 @@ decomperror <- calcDecompError(mymat, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
 avg_counts <- SBF::TissueExprSpecies
 sbf_cor <- SBF(matrix_list = avg_counts, transform_matrix = TRUE)
 
-# A-SBF call for gene expression dataset using correlation matrix
+# OSBF call for gene expression dataset using correlation matrix
 avg_counts <- SBF::TissueExprSpecies
-asbf_cor <- SBF(matrix_list = avg_counts, approximate = TRUE,
+asbf_cor <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
                 transform_matrix = TRUE, tol = 1e-2)
 }
