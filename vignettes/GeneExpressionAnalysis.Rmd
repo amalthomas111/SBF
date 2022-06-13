@@ -1,5 +1,5 @@
 ---
-title: "Gene expression analysis using OSBF"
+title: "Cross species gene expression analysis using OSBF"
 author: "Amal Thomas"
 output:
   pdf_document:
@@ -174,6 +174,8 @@ The dimensions and the number of RNA-Seq profiles for different species.
 sapply(counts_list, dim)
 ```
 
+## compute average gene expression profiles
+
 Now, for each species, let us compute the average expression profile for each
 tissue.
 
@@ -220,9 +222,11 @@ The dimension of mean expression profiles
 ```{r}
 sapply(avg_counts, dim)
 ```
+
 Remove genes not expressed.
 
 ```{r}
+# remove empty rows
 removeZeros <- function(df) {
     return(df[rowSums(df) > 0, ])
 }
@@ -250,14 +254,14 @@ correlation is maintained.
 
 ```{r}
 cat("\n=======================================================")
-cat("\nASBF with optimizing V = FALSE started\n")
+cat("\nOSBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
 sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = FALSE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
-cat("ASBF with optimizing V = FALSE finished\n")
+cat("OSBF with optimizing V = FALSE finished\n")
 cat("Time taken:\n")
 t2 - t1
 ```
@@ -265,14 +269,14 @@ t2 - t1
 
 ```{r}
 cat("\n=======================================================")
-cat("\nASBF with optimizing V=TRUE started\n")
+cat("\nOSBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
 sbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
-cat("ASBF with optimizing V=TRUE finished\n")
+cat("OSBF with optimizing V=TRUE finished\n")
 cat("Time taken:\n")
 t2 - t1
 ```
@@ -557,10 +561,10 @@ suppressPackageStartupMessages({
 })
 ```
 
-We will use the following custom theme for ggplots.
+We will use the following custom theme for the ggplots.
 ```{r}
 # custom theme function for ggplot2
-customTheme <- function(base_size = 10, base_family="helvetica") {
+customTheme <- function(base_size = 10, base_family = "helvetica") {
    require(grid)
    require(ggthemes)
    (ggthemes::theme_foundation(base_size = base_size)
@@ -658,6 +662,43 @@ ggplot2::ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j], col = tissue,
   theme(legend.title = element_blank())
 ```
 
+
+## save all 2D plots
+
+
+```{r}
+# create output directories. Change this path accordingly
+# outdir <- "~/Dropbox/0.Analysis/9.bloodAnalysis/"
+# dir.create(file.path(outdir), showWarnings = FALSE)
+# subDir <- "2Dplots"
+# dir.create(file.path(outdir, subDir), showWarnings = FALSE)
+
+sel_colors <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "mediumturquoise",
+                "#E6AB02", "darkmagenta", "#666666", "black", "darkolivegreen2")
+outputname <- "human_mouse_blood"
+finished <- c()
+for (i in 1:(ncol(df_proj)-2)) {
+  for (j in 1:(ncol(df_proj)-2)) {
+    if (i == j) next
+    if (j %in% finished) next
+    ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j],
+                            col = tissue, shape = species, fill = tissue)) +  
+      xlab(paste0("OSBF Dim ", i)) + 
+      ylab(paste0("OSBF Dim ", j)) +
+      geom_point(size = 1.5) +
+      scale_color_manual(values = sel_colors) + 
+      scale_shape_manual(values = c(21:25,3:7)) +
+      scale_fill_manual(values = sel_colors) +
+      customTheme(base_size = 12) + 
+      theme(legend.title = element_blank())
+    #ggsave(filename = paste0(outdir, "2Dplots/opt_2Dplot_Dim_", i, "-", j, "_",
+    #                         outputname, ".pdf"), device = "pdf",
+    #       width = 7, height = 7, useDingbats = FALSE)
+  }
+  finished <- c(finished,i)
+}
+```
+
 Similarly, we can check for other dimensions of the common space.
 We observe that both clustering and 2D projections plots in the common space
 with optimized V are similar to those without V update.
@@ -699,8 +740,8 @@ sel_dim <- 2
 sel_tissue <- "testis"
 species <- "Homo_sapiens"
 expr <- combine_expr[[species]]
-asbf_coef <- sbf$u[[species]]
-expr[["coef"]] <- asbf_coef[, sel_dim, drop = T]
+osbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue),
                    "Tau", "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -742,8 +783,8 @@ sel_dim <- 2
 sel_tissue <- "testis"
 species <- "Sus_scrofa"
 expr <- combine_expr[[species]]
-asbf_coef <- sbf$u[[species]]
-expr[["coef"]] <- asbf_coef[, sel_dim, drop = T]
+osbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue),
                    "Tau", "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -816,8 +857,8 @@ We will perform GO analysis for human first.
 ```{r}
 species <- "Homo_sapiens"
 expr <- combine_expr[[species]]
-asbf_coef <- sbf$u[[species]]
-expr[["coef"]] <- asbf_coef[, sel_dim, drop = T]
+osbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue), "Tau",
                   "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -895,8 +936,8 @@ GO analysis for mouse.
 ```{r}
 species <- "Mus_musculus"
 expr <- combine_expr[[species]]
-asbf_coef <- sbf$u[[species]]
-expr[["coef"]] <- asbf_coef[, sel_dim, drop = T]
+osbf_coef <- sbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue), "Tau",
                   "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
