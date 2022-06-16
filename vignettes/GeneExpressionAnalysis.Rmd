@@ -81,14 +81,15 @@ and the different dimensions of $V$ represent the correlation relationship
 between tissues independent of the fact to which species tissues belong.
 Once the $V$ is estimated, the species-specific left basis matrix with
 orthonormal columns $U_i$ (eigengenes) and the $\Delta_i$ that minimize
-the factorization error are computed 
+the factorization error are computed.
 
 ```{r setup}
 # load SBF package
 library(SBF)
 ```
 
-Additional package required for the vignette
+Additional packages required for the workflow
+
 ```{r}
 # install packages
 pkgs <- c("data.table", "dplyr", "matrixStats")
@@ -145,6 +146,7 @@ path <- "~/Dropbox/0.Analysis/0.paper/"
 counts_list <- metadata_list <- list()
 require(data.table)
 for (sp in species) {
+  # read logTPM counts for each species
   counts <- data.table::fread(paste0(path, "counts/", sp, "_logTPM.tsv"),
                               sep = "\t", header = T, data.table = FALSE,
                               nThread = 4)
@@ -174,9 +176,9 @@ The dimensions and the number of RNA-Seq profiles for different species.
 sapply(counts_list, dim)
 ```
 
-## compute mean expression profiles
+## Compute mean expression profiles
 
-Now, for each species, let us compute the average expression profile for each
+Now, for each species, let us compute the mean expression profile for each
 tissue.
 
 ```{r}
@@ -257,7 +259,7 @@ cat("\n=======================================================")
 cat("\nOSBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
-sbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
+osbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = FALSE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
@@ -272,7 +274,7 @@ cat("\n=======================================================")
 cat("\nOSBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
-sbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
+osbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
@@ -288,33 +290,33 @@ Lowering the threshold value increases the computing time.
 The final factorization error and number of updates taken:
 ```{r}
 cat("\n", sprintf("%-27s:", "Final error [No V update]"), sprintf("%16.2f",
-                                                        sbf_noVupdate$error))
+                                                        osbf_noVupdate$error))
 cat("\n", sprintf("%-27s:", "Final error [With V update]"), sprintf("%16.2f",
-                                                                    sbf$error))
+                                                                    osbf$error))
 cat("\n", sprintf("%-27s:", "# of update [No V update]"), sprintf("%16d",
-                                                      sbf_noVupdate$error_pos))
+                                                      osbf_noVupdate$error_pos))
 cat("\n", sprintf("%-27s:", "# of update [With V update]"), sprintf("%16d",
-                                                                sbf$error_pos))
+                                                                osbf$error_pos))
 ```
 Optimization with updating $V$ achieves a lower decomposition error.
 
 ```{r}
-sbf_noVupdate$error / sbf$error
+osbf_noVupdate$error / osbf$error
 ```
 
 Let us plot the decomposition error vs. updates.
 
 ```{r}
 par(mfrow = c(1, 3))
-plot(x = seq_len(length(sbf$error_vec)), y = sbf$error_vec,
+plot(x = seq_len(length(osbf$error_vec)), y = osbf$error_vec,
      xlab = "# of updates (step 1 -> )",
      ylab = "Factorization error", col = "red")
-plot(x = 10:length(sbf$error_vec),
-     y = sbf$error_vec[10:length(sbf$error_vec)],
+plot(x = 10:length(osbf$error_vec),
+     y = osbf$error_vec[10:length(osbf$error_vec)],
      xlab = "# of updates (step 10 -> )",
      ylab = "Factorization error", col = "red")
-plot(x = 50:length(sbf$error_vec),
-     y = sbf$error_vec[50:length(sbf$error_vec)],
+plot(x = 50:length(osbf$error_vec),
+     y = osbf$error_vec[50:length(osbf$error_vec)],
      xlab = "# of updates (step 50 -> )",
      ylab = "Factorization error", col = "red")
 ```
@@ -327,18 +329,18 @@ $\textstyle{p_{ij} = \delta_{ij}^2 / \sum_{j=1}^6 \delta_{ij}^2 \times 100}$,
 $\mbox{ where } \textstyle{\Delta_i = \diag(\delta_{i1},\ldots, \delta_{i6})}$
 
 ```{r}
-percentInfo_noVupdate <- lapply(sbf_noVupdate$d, function(x) {
+percentInfo_noVupdate <- lapply(osbf_noVupdate$d, function(x) {
   round(x^2 / sum(x^2) * 100, 2)})
 cat("\nPercentage for each delta [No V update]:")
-for (i in names(sbf_noVupdate$d)) {
+for (i in names(osbf_noVupdate$d)) {
   cat("\n", sprintf("%-25s:", i), sprintf("%8.2f", percentInfo_noVupdate[[i]]))
 }
 
 
-percentInfo <- lapply(sbf$d, function(x) {
+percentInfo <- lapply(osbf$d, function(x) {
   round(x^2 / sum(x^2) * 100, 2) })
 cat("\nPercentage for each delta:")
-for (i in names(sbf$d)) {
+for (i in names(osbf$d)) {
   cat("\n", sprintf("%-25s:", i), sprintf("%8.2f", percentInfo[[i]]))
 }
 ```
@@ -352,18 +354,18 @@ Let us first compute $\Delta^{-1}$
 ```{r}
 d_inv_NoVupdate <- list()
 for (sp in names(avg_counts)) {
-  if (length(sbf_noVupdate$d[[sp]]) == 1) {
-    d_inv_NoVupdate[[sp]] <- as.matrix(diag(as.matrix(1 / sbf_noVupdate$d[[sp]])))
+  if (length(osbf_noVupdate$d[[sp]]) == 1) {
+    d_inv_NoVupdate[[sp]] <- as.matrix(diag(as.matrix(1 / osbf_noVupdate$d[[sp]])))
     } else {
-      d_inv_NoVupdate[[sp]] <- as.matrix(diag(1 / sbf_noVupdate$d[[sp]]))
+      d_inv_NoVupdate[[sp]] <- as.matrix(diag(1 / osbf_noVupdate$d[[sp]]))
     }
 }
 d_inv <- list()
 for (sp in names(avg_counts)) {
-  if (length(sbf$d[[sp]]) == 1) {
-    d_inv[[sp]] <- as.matrix(diag(as.matrix(1 / sbf$d[[sp]])))
+  if (length(osbf$d[[sp]]) == 1) {
+    d_inv[[sp]] <- as.matrix(diag(as.matrix(1 / osbf$d[[sp]])))
     } else {
-      d_inv[[sp]] <- as.matrix(diag(1 / sbf$d[[sp]]))
+      d_inv[[sp]] <- as.matrix(diag(1 / osbf$d[[sp]]))
     }
 }
 ```
@@ -379,10 +381,10 @@ avgcounts_projected_noVupdate  <- counts_projected_noVupdate <- list()
 n_noVupdate <- n1_noVupdate <- c()
 for (sp in names(avg_counts)) {
   avgcounts_projected_noVupdate[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
-    as.matrix(sbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
+    as.matrix(osbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
   n_noVupdate <- c(n_noVupdate, row.names(avgcounts_projected_noVupdate[[sp]]))
   counts_projected_noVupdate[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
-    as.matrix(sbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
+    as.matrix(osbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
   n1_noVupdate <- c(n1_noVupdate, row.names(counts_projected_noVupdate[[sp]]))
 }
 
@@ -411,10 +413,10 @@ avgcounts_projected  <- counts_projected <- list()
 n <- n1 <- c()
 for (sp in names(avg_counts)) {
   avgcounts_projected[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
-    as.matrix(sbf$u[[sp]]) %*% d_inv[[sp]]
+    as.matrix(osbf$u[[sp]]) %*% d_inv[[sp]]
   n <- c(n, row.names(avgcounts_projected[[sp]]))
   counts_projected[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
-    as.matrix(sbf$u[[sp]]) %*% d_inv[[sp]]
+    as.matrix(osbf$u[[sp]]) %*% d_inv[[sp]]
   n1 <- c(n1, row.names(counts_projected[[sp]]))
 }
 
@@ -665,7 +667,7 @@ ggplot2::ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j], col = tissue,
 ```
 
 
-## save all 2D plots
+## Save all 2D plots
 
 
 ```{r}
@@ -742,7 +744,7 @@ sel_dim <- 2
 sel_tissue <- "testis"
 species <- "Homo_sapiens"
 expr <- combine_expr[[species]]
-osbf_coef <- sbf$u[[species]]
+osbf_coef <- osbf$u[[species]]
 expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue),
                    "Tau", "coef")]
@@ -785,7 +787,7 @@ sel_dim <- 2
 sel_tissue <- "testis"
 species <- "Sus_scrofa"
 expr <- combine_expr[[species]]
-osbf_coef <- sbf$u[[species]]
+osbf_coef <- osbf$u[[species]]
 expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue),
                    "Tau", "coef")]
@@ -861,7 +863,7 @@ We will perform GO analysis for human first.
 ```{r}
 species <- "Homo_sapiens"
 expr <- combine_expr[[species]]
-osbf_coef <- sbf$u[[species]]
+osbf_coef <- osbf$u[[species]]
 expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue), "Tau",
                   "coef")]
@@ -942,7 +944,7 @@ GO analysis for mouse.
 ```{r}
 species <- "Mus_musculus"
 expr <- combine_expr[[species]]
-osbf_coef <- sbf$u[[species]]
+osbf_coef <- osbf$u[[species]]
 expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue), "Tau",
                   "coef")]
@@ -1016,7 +1018,7 @@ go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom
 go_plot
 ```
 
-# Identify cell type specific genes
+# Identify tissue-specific genes
 
 Next, we will identify those genes with significant contribution to different
 cell types. We will first create a null distribution of scores
@@ -1032,8 +1034,7 @@ countToTpm <- function(counts, effLen){
    denom <- log(sum(exp(rate)))
    exp(rate - denom + log(1e6))
 }
-normalizeTPM <- function(rawCounts, method, gene_length = NULL,
-                              priorcount = 0.01, min = 1) {
+normalizeTPM <- function(rawCounts, method, gene_length = NULL, min = 1) {
   common_genes <- intersect(rownames(rawCounts), names(gene_length))
   rawCounts <- rawCounts[common_genes, ,drop = F]
   gene_length <- gene_length[common_genes]
@@ -1062,13 +1063,13 @@ species <- c("Homo_sapiens", "Pan_troglodytes", "Macaca_mulatta",
              "Mus_musculus", "Rattus_norvegicus", "Bos_taurus",
              "Sus_scrofa", "Gallus_gallus")
 species_short <- sapply(species, getSpeciesShortName)
+tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
 # set the path to the working directory. Change this accordingly
 path <- "~/Dropbox/0.Analysis/0.paper/"
 counts_list_shuff <- metadata_list_shuff <- avg_counts_shuff <- list()
 for (sp in species) {
   # reading raw counts
-  counts <- read.table(paste0(path, "counts/", sp,
-                              "_blood_rawcounts.tsv"), header = T,
+  counts <- read.table(paste0(path, "counts/", sp, "_rawcounts.tsv"), header = T,
                            sep = "\t", row.names = 1)
   info <- tstrsplit(colnames(counts), "_")
   metadata <- data.frame(project = info[[1]],
@@ -1091,9 +1092,9 @@ for (sp in species) {
   colnames(counts_avg) <- cnames
   row.names(counts_avg) <- rnames
   # normalize the shuffled counts to log TPM
-  # change this path accordingly
-  gene_length_path <- "~/Dropbox/0.Analysis/0.paper/ensembl94_annotation/"
-  gene_length <- read.table(paste0(gene_length_path, sp, "_genelength.tsv"),
+  # set the path to the working directory. Change this accordingly
+  path <- "~/Dropbox/0.Analysis/0.paper/"
+  gene_length <- read.table(paste0(path, "ensembl94_annotation/", sp, "_genelength.tsv"),
                         sep = "\t",header = T, row.names = 1, stringsAsFactors = F)
   if (!all(row.names(counts_avg) %in% row.names(gene_length))) stop("Error")
   gene_length$Length <- gene_length$Length/1e3
@@ -1120,6 +1121,107 @@ for (sp in species) {
   metadata_list_shuff[[sp]] <- metadata
 }
 sapply(counts_list_shuff, dim)
+# remove zero counts
+avg_counts_shuff <- lapply(avg_counts_shuff, removeZeros)
+sapply(avg_counts_shuff, dim)
+```
+## OSBF call for shuffled counts
+
+Depending upon the shuffled counts this could take a while. Decrease
+`tol` for lower factorization error.
+```{r}
+cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+osbf_shuf <- SBF(avg_counts_shuff, transform_matrix = TRUE, orthogonal = TRUE,
+                 tol = 1e-2)
+cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+osbf_shuf$error
+```
+Compute Tau and scaled expression for the null datasets
+
+```{r}
+Tau_null <- lapply(avg_counts_shuff, function(x) {calc_tissue_specificity(x)})
+avg_counts_shuff_scaled <- lapply(avg_counts_shuff, function(x){ t(scale(t(x)))})
+combine_expr_null <- list()
+for (sp in names(avg_counts_shuff_scaled)) {
+  x <- as.data.frame(avg_counts_shuff_scaled[[sp]])
+  x[["Tau"]] <- Tau_null[[sp]]
+  combine_expr_null[[sp]] <- x
+}
 ```
 
 
+## Identify testis-specific genes
+
+Now let us find genes with significant loadings in dimension 4
+
+
+```{r}
+sel_dim <- 2
+sel_tissue <- "testis"
+# axis positive (pos) or negative (neg)
+sel_sign <- "neg"
+species <- "Homo_sapiens"
+species_short <- "hsapiens"
+expr <- combine_expr[[species]]
+osbf_coef <- osbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
+expr1 <- expr[, c(paste0(species_short, "_", sel_tissue),
+                   "Tau", "coef")]
+colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
+
+# null loadings for the same dimensions
+expr_null <- combine_expr_null[[species]]
+null_u <- osbf_shuf$u[[species]]
+expr_null[["coef"]] <- null_u[, sel_dim, drop = T]
+expr1_null <- expr_null[, c(paste0(species_short,"_",sel_tissue),"Tau","coef")]
+if (sel_sign == "pos") {
+  expr1 <- expr1[expr1$coef >= 0, ]
+  expr1_null <- expr1_null[expr1_null$coef >= 0, ]
+} else if (sel_dim == "neg") {
+  expr1 <- expr1[expr1$coef < 0, ]
+  expr1_null <- expr1_null[expr1_null$coef < 0, ]
+}
+expr1$score <- expr1$Tau * abs(expr1$coef)
+expr1$rank <- rank(-1 * expr1$score)
+expr1 <- expr1[order(expr1$rank), ]
+
+expr1_null$score <- expr1_null$Tau * abs(expr1_null$coef)
+expr1$pvalue <- sapply(expr1$score, function(x) { sum(as.integer(expr1_null$score > x))/length(expr1_null$score)})
+head(expr1)
+```
+
+Find the number of genes with significant p-value
+
+```{r}
+# cut off for the p-value
+alpha <- 1e-3
+summary(expr1$pvalue <= alpha)
+```
+Lets check the top 10 genes for dimension 4
+
+```{r}
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
+gene_info <- read.table(paste0(path, "ensembl94_annotation/", species_short, "_genes_completeinfo.tsv"),
+                               sep = "\t", header = T, quote = "\"")
+gene_info <- gene_info[!duplicated(gene_info$ensembl_gene_id), ]
+gene_info <- gene_info[gene_info$ensembl_gene_id %in% row.names(expr1), ]
+row.names(gene_info) <- gene_info$ensembl_gene_id
+gene_info <- gene_info[row.names(expr1), ]
+expr1$gene_name <- gene_info$external_gene_name
+expr1$biotype <- gene_info$gene_biotype
+head(expr1, n = 10)
+```
+
+We see that that the top genes are well studied genes with testis-specific
+expression. 
+
+
+session info
+
+```{r}
+sessionInfo()
+```
+
+
+# References
