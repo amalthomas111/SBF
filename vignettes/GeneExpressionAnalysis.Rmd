@@ -140,12 +140,12 @@ Download the processed RNA-Seq counts file ("counts.tar.gz")
 from https://figshare.com/s/4d8d5cf9c1362bcbe90d
 Uncompress the .tar.gz file and add it to the working directory.
 ```{r}
-# set the path to the counts. Change it accordingly
-counts_path <- "~/Dropbox/0.Analysis/0.paper/counts/"
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
 counts_list <- metadata_list <- list()
 require(data.table)
 for (sp in species) {
-  counts <- data.table::fread(paste0(counts_path, sp, "_logTPM.tsv"),
+  counts <- data.table::fread(paste0(path, "counts/", sp, "_logTPM.tsv"),
                               sep = "\t", header = T, data.table = FALSE,
                               nThread = 4)
   row.names(counts) <- counts$V1
@@ -174,7 +174,7 @@ The dimensions and the number of RNA-Seq profiles for different species.
 sapply(counts_list, dim)
 ```
 
-## compute average gene expression profiles
+## compute mean expression profiles
 
 Now, for each species, let us compute the average expression profile for each
 tissue.
@@ -543,7 +543,9 @@ Gene expression profiles cluster by tissue type independent of the species of
 origin.
 
 
-# Two-dimensional projection plots in the common space
+# Explore different dimensions
+
+## 2D plots in the common space
 
 Next, we will explore the 2D projection plots in the common space. We will first
 define a custom theme that we will use for the plots.
@@ -632,7 +634,7 @@ ggplot2::ggplot(df_proj, aes(x = df_proj[, i],
 Let us plot the projected libraries in dimensions 2 and 3.
 
 ```{r}
-# 2D plot for Dim1 and Dim2 [No V update]
+# 2D plot for Dim2 and Dim3 [No V update]
 sel_colors <- RColorBrewer::brewer.pal(8, "Dark2")[seq_len(length(unique(df_proj_noVupdate$tissue)))]
 i <- 2
 j <- 3
@@ -648,7 +650,7 @@ ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
 ```
 
 ```{r}
-# 2D plot for Dim1 and Dim2 [With V update]
+# 2D plot for Dim2 and Dim3 [With V update]
 sel_colors <- RColorBrewer::brewer.pal(8, "Dark2")[seq_len(length(unique(df_proj$tissue)))]
 i <- 2
 j <- 3
@@ -705,7 +707,7 @@ with optimized V are similar to those without V update.
 So we will use the common space with optimized V for future analysis.
 
 
-# Expression specificity and eigengene loadings
+## Expression specificity and eigengene loadings
 
 Functions to compute tissue specificity ($\tau$) and scaled average
 expression profile.
@@ -807,7 +809,7 @@ p2 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + them
 p2
 ```
 
-# GO analysis
+## GO analysis
 
 Download the GO files from: https://figshare.com/s/d96c586d5e53199d5370
 <!-- 10.6084/m9.figshare.19633131 -->
@@ -817,10 +819,11 @@ the background.
 
 ```{r}
 # load GO analysis files
-# go_path <- "path to shared 1-to-1 orthologs"
-go_path <- "~/Dropbox/0.Analysis/0.paper/GOKeggFiles/"
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
 file <- "allwayOrthologs_hsapiens-ptroglodytes-mmulatta-mmusculus-rnorvegicus-btaurus-sscrofa-ggallus_ens94.tsv"
-orthologs <- read.table(file.path(go_path, file), header = T, sep = "\t")
+orthologs <- read.table(file.path(path, "GOKeggFiles/", file), header = T,
+                        sep = "\t")
 head(orthologs)
 ```
 
@@ -849,6 +852,7 @@ The testis-specific genes have negative loadings.
 sel_dim <- 2
 sel_tissue <- "testis"
 top_genes <- 100
+# axis positive (pos) or negative (neg)
 sel_sign <- "neg"
 ```
 
@@ -890,11 +894,13 @@ names(up_genes) <- total_genes
 
 
 ```{r, echo = FALSE, warning = FALSE}
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
 # load("hg38 length data")
-load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/hg38_length.EnsemblV94.RData")
+load(paste0(path, "GOKeggFiles/hg38_length.EnsemblV94.RData"))
 lengthData.up <- lengthData[names(up_genes)]
 # load("hg38 EnsembleID to GO data")
-load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/hg38_geneID2GO.EnsemblID2GO.EnsembleV94.Robj")
+load(paste0(path, "GOKeggFiles/hg38_geneID2GO.EnsemblID2GO.EnsembleV94.Robj"))
 pwf <- goseq::nullp(up_genes, bias.data = lengthData.up, plot.fit = F)
 go <- goseq::goseq(pwf, "hg38", "ensGene", gene2cat = geneID2GO, test.cats = c("GO:BP"))
 go.sub <- go[go$ontology == "BP", ]
@@ -968,11 +974,13 @@ names(up_genes) <- total_genes
 ```
 
 ```{r, echo = FALSE, warning = FALSE}
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
 # load("mm10 length data")
-load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/mm10_length_EnsemblV94.RData")
+load(paste0(path, "/GOKeggFiles/mm10_length_EnsemblV94.RData"))
 lengthData.up <- lengthData[names(up_genes)]
 # load("mm10 EnsembleID to GO data")
-load("~/Dropbox/0.Analysis/0.paper/GOKeggFiles/mm10_geneID2GO.EnsemblID2GO.EnsembleV94.Robj")
+load(paste0(path, "/GOKeggFiles/mm10_geneID2GO.EnsemblID2GO.EnsembleV94.Robj"))
 pwf <- goseq::nullp(up_genes, bias.data = lengthData.up, plot.fit = F)
 go <- goseq::goseq(pwf, "mm10", "ensGene", gene2cat = mouse_geneID2GO, test.cats = c("GO:BP"))
 go.sub <- go[go$ontology == "BP", ]
@@ -1007,4 +1015,111 @@ go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom
                                    plot.margin = unit(c(10, 5, 5, 5), "mm"))
 go_plot
 ```
+
+# Identify cell type specific genes
+
+Next, we will identify those genes with significant contribution to different
+cell types. We will first create a null distribution of scores
+for the coefficient and identify genes of interest with respect to the null.
+
+
+## Create shuffled counts to generate null
+
+```{r}
+# function for TPM
+countToTpm <- function(counts, effLen){
+   rate <- log(counts) - log(effLen)
+   denom <- log(sum(exp(rate)))
+   exp(rate - denom + log(1e6))
+}
+normalizeTPM <- function(rawCounts, method, gene_length = NULL,
+                              priorcount = 0.01, min = 1) {
+  common_genes <- intersect(rownames(rawCounts), names(gene_length))
+  rawCounts <- rawCounts[common_genes, ,drop = F]
+  gene_length <- gene_length[common_genes]
+  glen <- gene_length[match(toupper(rownames(rawCounts)),
+                        toupper(names(gene_length)))]
+  if(nrow(rawCounts) == length(gene_length)) {
+    cat("\nTPM counts returned")
+    df <- as.data.frame(apply(rawCounts, 2,
+                             function(col) {countToTpm(counts = col,
+                                                      effLen = glen)}))
+    df <- round(df, 4)
+  } else {
+    stop ("\tunequal number of genes for TPM calculation")
+  }  
+}
+```
+
+
+We will create random average counts based on shuffled reads.
+
+```{r}
+# set seed
+s1 <- 135
+s2 <- 13835
+species <- c("Homo_sapiens", "Pan_troglodytes", "Macaca_mulatta",
+             "Mus_musculus", "Rattus_norvegicus", "Bos_taurus",
+             "Sus_scrofa", "Gallus_gallus")
+species_short <- sapply(species, getSpeciesShortName)
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
+counts_list_shuff <- metadata_list_shuff <- avg_counts_shuff <- list()
+for (sp in species) {
+  # reading raw counts
+  counts <- read.table(paste0(path, "counts/", sp,
+                              "_blood_rawcounts.tsv"), header = T,
+                           sep = "\t", row.names = 1)
+  info <- tstrsplit(colnames(counts), "_")
+  metadata <- data.frame(project = info[[1]],
+        species = info[[2]],
+        tissue = info[[3]],
+        gsm = info[[4]],
+        name = colnames(counts),
+        stringsAsFactors = F)
+  metadata$ref <- seq_len(nrow(metadata))
+  metadata$key <- paste0(metadata$species, "_", metadata$tissue)
+  metadata$tissue_factor <- factor(metadata$tissue)
+  
+  counts_avg <- calcAvgCounts(counts, metadata)
+  cnames <- colnames(counts_avg)
+  rnames <- row.names(counts_avg)
+  set.seed(s1)
+  counts_avg <- as.data.frame(apply(counts_avg, 2, sample))
+  set.seed(s2)
+  counts_avg <- as.data.frame(t(apply(counts_avg, 1, sample)))
+  colnames(counts_avg) <- cnames
+  row.names(counts_avg) <- rnames
+  # normalize the shuffled counts to log TPM
+  # change this path accordingly
+  gene_length_path <- "~/Dropbox/0.Analysis/0.paper/ensembl94_annotation/"
+  gene_length <- read.table(paste0(gene_length_path, sp, "_genelength.tsv"),
+                        sep = "\t",header = T, row.names = 1, stringsAsFactors = F)
+  if (!all(row.names(counts_avg) %in% row.names(gene_length))) stop("Error")
+  gene_length$Length <- gene_length$Length/1e3
+  gene_length <- gene_length[row.names(counts_avg), , drop=T]
+  names(gene_length) <- row.names(counts_avg)
+  counts_tpm <- normalizeTPM(counts_avg, method = "TPM",
+                             gene_length = gene_length)
+  min_tpm <- 1
+  counts_tpm[counts_tpm < min_tpm] <- 1
+  counts_tpm <- log2(counts_tpm)
+
+  info <- tstrsplit(colnames(counts_tpm),"_")
+  metadata <- data.frame(
+        species = info[[1]],
+        tissue = info[[2]],
+        name = colnames(counts_tpm),
+        stringsAsFactors = F)
+  metadata$key <- paste0(metadata$species,"_",metadata$tissue)
+  avg_counts_shuff[[sp]] <- calcAvgCounts(counts_tpm, metadata)
+  # write.table(avg_counts_shuff[[sp]],file=paste0(mainDir, "shuffledavgCounts/avg_logTPM_",
+  #                               species,"_SHUFF_counts_seed",z,"_",z1,".tsv"),
+  #           sep="\t",quote=F,col.names=NA)
+  counts_list_shuff[[sp]] <- counts_tpm
+  metadata_list_shuff[[sp]] <- metadata
+}
+sapply(counts_list_shuff, dim)
+```
+
 
