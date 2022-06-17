@@ -112,22 +112,6 @@ from eight species.
 species <- c("Homo_sapiens", "Pan_troglodytes", "Macaca_mulatta",
              "Mus_musculus", "Rattus_norvegicus", "Bos_taurus",
              "Sus_scrofa", "Gallus_gallus")
-# function to create short name for species
-getSpeciesShortName <- function(species_list) {
-    require(data.table)
-    shortname <- c()
-    for (sp in species_list) {
-       if (!grepl("_", sp)) {
-          cat("\nspecies:", sp, "\n")
-          stop("Invalid species full name")
-       }
-       shortname <- c(shortname,
-                       paste0(tolower(substr(data.table::tstrsplit(sp, "_")[[1]],
-                                             1, 1)),
-                       tstrsplit(sp, "_")[[2]]))
-    }
-    return(shortname)
-}
 species_short <- sapply(species, getSpeciesShortName)
 species_short
 # common tissues present in all 8 species
@@ -259,6 +243,7 @@ cat("\n=======================================================")
 cat("\nOSBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
+# decrease tol to minimize error
 osbf_noVupdate <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = FALSE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
@@ -274,6 +259,7 @@ cat("\n=======================================================")
 cat("\nOSBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
+# decrease tol to minimize error
 osbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
                      optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
 t2 <- proc.time()
@@ -755,12 +741,6 @@ head(expr1)
 Dimension 2 $U_i$ loadings vs expression specificity ($\tau$) for humans
 
 ```{r}
-# function to return scientific name
-species_scientific <- function(x) {
-  parts <- data.table::tstrsplit(x, "_")
-  return(paste0(substr(x, 1, 1), ".", parts[[2]]))
-}
-
 # plot scatter
 mid <- 0
 p1 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + theme_bw() +
@@ -773,7 +753,7 @@ p1 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + them
                                   round(max(abs(expr$coef)), 2), by = 0.01)) +
   customTheme() +  theme(legend.position = "right",
                          legend.direction = "vertical") +
-  labs(title = paste0(species_scientific(species)), color = "Z-score") +
+  labs(title = paste0(getScientificName(species)), color = "Z-score") +
   theme(legend.key.size = unit(0.5, "cm"),
         plot.title = element_text(face = "italic"))
 p1
@@ -805,7 +785,7 @@ p2 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + them
                                   round(max(abs(expr$coef)), 2), by = 0.01)) +
   customTheme() +  theme(legend.position = "right",
                          legend.direction = "vertical") +
-  labs(title = paste0(species_scientific(species)), color = "Z-score") +
+  labs(title = paste0(getScientificName(species)), color = "Z-score") +
   theme(legend.key.size = unit(0.5, "cm"),
         plot.title = element_text(face = "italic"))
 p2
@@ -931,7 +911,7 @@ go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom
   scale_x_discrete() + coord_flip() +
   scale_color_gradient(low = "blue", high = "red") +
   ylab(paste0("Ratio of genes in GO category (",
-              species_scientific(species), ")")) +
+              getScientificName(species), ")")) +
   xlab("") + customTheme() + theme(legend.position = "right",
                                    legend.direction = "vertical",
                                    plot.margin = unit(c(10, 5, 5, 5), "mm"))
@@ -1011,7 +991,7 @@ go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom
   scale_x_discrete() + coord_flip() +
   scale_color_gradient(low = "blue", high = "red") +
   ylab(paste0("Ratio of genes in GO category (",
-              species_scientific(species), ")")) +
+              getScientificName(species), ")")) +
   xlab("") + customTheme() + theme(legend.position = "right",
                                    legend.direction = "vertical",
                                    plot.margin = unit(c(10, 5, 5, 5), "mm"))
@@ -1026,32 +1006,6 @@ for the coefficient and identify genes of interest with respect to the null.
 
 
 ## Create shuffled counts to generate null
-
-```{r}
-# function for TPM
-countToTpm <- function(counts, effLen){
-   rate <- log(counts) - log(effLen)
-   denom <- log(sum(exp(rate)))
-   exp(rate - denom + log(1e6))
-}
-normalizeTPM <- function(rawCounts, method, gene_length = NULL, min = 1) {
-  common_genes <- intersect(rownames(rawCounts), names(gene_length))
-  rawCounts <- rawCounts[common_genes, ,drop = F]
-  gene_length <- gene_length[common_genes]
-  glen <- gene_length[match(toupper(rownames(rawCounts)),
-                        toupper(names(gene_length)))]
-  if(nrow(rawCounts) == length(gene_length)) {
-    cat("\nTPM counts returned")
-    df <- as.data.frame(apply(rawCounts, 2,
-                             function(col) {countToTpm(counts = col,
-                                                      effLen = glen)}))
-    df <- round(df, 4)
-  } else {
-    stop ("\tunequal number of genes for TPM calculation")
-  }  
-}
-```
-
 
 We will create random average counts based on shuffled reads.
 
@@ -1131,6 +1085,7 @@ Depending upon the shuffled counts this could take a while. Decrease
 `tol` for lower factorization error.
 ```{r}
 cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+# decrease tol to minimize error
 osbf_shuf <- SBF(avg_counts_shuff, transform_matrix = TRUE, orthogonal = TRUE,
                  tol = 1e-2)
 cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
