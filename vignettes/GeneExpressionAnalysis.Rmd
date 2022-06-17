@@ -166,30 +166,6 @@ Now, for each species, let us compute the mean expression profile for each
 tissue.
 
 ```{r}
-#function to calculate mean expression values for each tissue/group
-calcAvgCounts <- function(counts, metadata, ndecimal = 4) {
-   require(dplyr)
-   counts.avg <- list()
-   if ("key" %in% colnames(metadata)) {
-     for (species.organ in sort(unique(metadata$key))) {
-        no.of.libs <- length(colnames(counts)[grepl(species.organ,
-                                                    colnames(counts))])
-        if (no.of.libs > 1)
-           counts.avg[[species.organ]] <- round(rowMeans(counts[, colnames(counts)[
-                                   grepl(species.organ, colnames(counts))]],
-                                   dim = 1), ndecimal)
-        else if (no.of.libs == 1)
-           counts.avg[[species.organ]] <- round(counts[, colnames(counts)[grepl(
-                              species.organ, colnames(counts))], drop = T], ndecimal)
-     }
-     avg.counts <- as.data.frame(counts.avg %>% dplyr::bind_cols())
-     row.names(avg.counts) <- row.names(counts)
-     return(avg.counts)
-   } else {
-     stop("'key' column not found in the metadata!Exiting!")
-   }
-}
-
 avg_counts <- list()
 for (sp in species) {
     avg_counts[[sp]] <- calcAvgCounts(counts_list[[sp]],

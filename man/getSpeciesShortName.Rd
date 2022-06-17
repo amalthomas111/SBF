@@ -7,7 +7,7 @@
 getSpeciesShortName(species_list)
 }
 \arguments{
-\item{species_list:}{a vector of species name}
+\item{species_list}{a vector of species name}
 }
 \value{
 short version of species name
