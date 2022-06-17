@@ -162,16 +162,6 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                 }
                 cat("\n")
             }
-            # if (orthogonal) {
-            #     if (length(delta[[mat]]) == 1) {
-            #       phi <- as.matrix(diag(as.matrix(delta[[mat]])))
-            #     } else {
-            #       phi <- as.matrix(diag(delta[[mat]]))
-            #     }
-            #     dvsig_svd <- svd(as.matrix(matrix_list[[mat]]) %*% V %*% phi)
-            #     U_ortho[[mat]] <- dvsig_svd$u %*% t(dvsig_svd$v)
-            #     row.names(U_ortho[[mat]]) <- row.names(U[[mat]])
-            # }
         }
         if (orthogonal) {
             if (verbose)
@@ -187,7 +177,7 @@ SBF <- function(matrix_list = NULL, check_col_matching = FALSE, col_sep = "_",
                                                     max_iter = max_iter,
                                                     tol = tol, verbose = verbose)
                 if (!is.null(myopt)) {
-                    out <- list(v = myopt$v, u = myopt$u, d = myopt$d,
+                    out <- list(v = myopt$v, u = myopt$u, delta = myopt$d,
                                 error = myopt$error, error_pos = myopt$error_pos,
                                 error_vec = myopt$error_vec,
                                 v_start = V, lambda_start = lambda,

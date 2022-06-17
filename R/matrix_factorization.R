@@ -13,7 +13,7 @@
 #' gsvd <- GSVD(mymat$mat1, mymat$mat2)
 #' print(gsvd$v)
 GSVD <- function(D1, D2) {
-  if (!is.numeric(D1) | !is.numeric(D2)) {
+  if (!is.numeric(D1) || !is.numeric(D2)) {
     stop("D1 and D2 must be numeric matrices")
   }
   if (ncol(D1) != ncol(D2))
@@ -71,9 +71,9 @@ GSVD <- function(D1, D2) {
 #' print(hogsvd$v)
 HOGSVD <- function(matrix_list = NULL, check_col_matching = FALSE,
                    col_index = NULL, col_sep = "_", verbose = FALSE) {
-  if (length(matrix_list) >= 2 & !is.null(matrix_list)) {
+  if (length(matrix_list) >= 2 && !is.null(matrix_list)) {
     if (check_col_matching) {
-      if (is.null(col_index) | !is.numeric(col_index))
+      if (is.null(col_index) || !is.numeric(col_index))
         stop(paste0("\nInvalid index to match columns. Exiting!"))
       col_selected <- as.data.frame(sapply(matrix_list, function(x) {
         sapply(strsplit(as.character(colnames(x)), col_sep), function(y) {

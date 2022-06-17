@@ -66,7 +66,7 @@ countToTpm <- function(x, gene_len) {
 #' @examples
 normalizeTPM <- function(rawCounts, gene_len = NULL) {
   common_genes <- intersect(rownames(rawCounts), names(gene_len))
-  rawCounts <- rawCounts[common_genes, , drop = F]
+  rawCounts <- rawCounts[common_genes, , drop = FALSE]
   gene_len <- gene_len[common_genes]
   glen <- gene_len[match(toupper(rownames(rawCounts)),
                             toupper(names(gene_len)))]
@@ -76,7 +76,7 @@ normalizeTPM <- function(rawCounts, gene_len = NULL) {
        countToTpm(x = col, gene_len = glen)}))
     df <- round(df, 4)
   } else {
-    stop ("\tUnequal number of genes for TPM calculation")
+    stop("\tUnequal number of genes for TPM calculation")
   }
 }
 
@@ -102,12 +102,39 @@ calcAvgCounts <- function(counts, metadata, ndecimal = 4) {
           dim = 1), ndecimal)
       else if (nlibs == 1)
         counts_avg[[species_organ]] <- round(counts[, colnames(counts)[grepl(
-          species_organ, colnames(counts))], drop = T], ndecimal)
+          species_organ, colnames(counts))], drop = TRUE], ndecimal)
     }
     avg_counts <- as.data.frame(do.call(cbind, counts_avg))
     #row.names(avg_counts) <- row.names(counts)
     return(avg_counts)
   } else {
     stop("'key' column not found in the metadata!Exiting!")
+  }
+}
+
+#' Compute information represented by each dimensions
+#'
+#' @param l SBF list object
+#'
+#' @return list with percentage of information represented by each dimension
+#' according to their Delta_i values
+#' @export
+#'
+#' @examples
+#' #' @examples
+#' # create test dataset
+#' set.seed(1231)
+#' mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
+#'
+#' # SBF call. Estimate V using the sum of Di^TDi
+#' sbf <- SBF(matrix_list = mymat)
+#' calcPercentInfo(sbf)
+calcPercentInfo <- function(l) {
+  if (is.list(l) && ("delta" %in% names(l))) {
+  lapply(l$delta, function(x) {
+    round(x^2 / sum(x^2) * 100, 2)
+  })
+  } else {
+    stop("Not an output list of SBF call")
   }
 }

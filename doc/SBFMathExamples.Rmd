@@ -12,7 +12,7 @@ output:
     df_print: paged
 bibliography: references.bib
 vignette: |
- %\VignetteIndexEntry{SBF_vignette}
+ %\VignetteIndexEntry{OSBF_MathExamples}
  %\VignetteEncoding{UTF-8}
  %\VignetteEngine{knitr::rmarkdown}
 ---
@@ -721,11 +721,16 @@ newmat_svd <- svd(newmat[[1]])
 newmat_svd$u
 opt_new1$u[[1]]
 ```
+
 ```{r}
 newmat_svd$v
 opt_new1$v
 ```
 The results agree!
 
+
+```{r}
+sessionInfo()
+```
 
 # References
