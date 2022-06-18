@@ -2,7 +2,9 @@
 % Please edit documentation in R/analysis.R
 \name{projectCounts}
 \alias{projectCounts}
-\title{Function to project counts to the common expression space}
+\title{Function to project counts to the common expression space
+This function projects individual profiles or average counts to the
+common space by computing D_i^T U_i Delta^{-1}}
 \usage{
 projectCounts(counts, obj, combine = TRUE)
 }
@@ -20,4 +22,6 @@ list with projected counts
 }
 \description{
 Function to project counts to the common expression space
+This function projects individual profiles or average counts to the
+common space by computing D_i^T U_i Delta^{-1}
 }

@@ -99,7 +99,7 @@ calcAvgCounts <- function(counts, metadata, ndecimal = 4) {
       if (nlibs > 1)
         counts_avg[[species_organ]] <- round(rowMeans(counts[, colnames(counts)[
           grepl(species_organ, colnames(counts))]],
-          dim = 1), ndecimal)
+          dims = 1), ndecimal)
       else if (nlibs == 1)
         counts_avg[[species_organ]] <- round(counts[, colnames(counts)[grepl(
           species_organ, colnames(counts))], drop = TRUE], ndecimal)
