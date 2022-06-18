@@ -319,37 +319,37 @@ three cases.
 
 Here the OSBF is invoked without minimizing the factorization error (`minimizeError=FALSE`).
 ```{r}
-asbf <- SBF(matrix_list = mymat, orthogonal = TRUE,
+osbf <- SBF(matrix_list = mymat, orthogonal = TRUE,
             minimizeError = FALSE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE,
+osbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE,
                 minimizeError = FALSE)
-asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE,
+osbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE,
                 transform_matrix = TRUE, minimizeError = FALSE)
 ```
 
 ```{r}
-names(asbf)
+names(osbf)
 ```
 OSBF is not an exact factorization and has decomposition error.
 
 ```{r}
 # decomposition error
-asbf$error
-asbf_inv$error
-asbf_cor$error
+osbf$error
+osbf_inv$error
+osbf_cor$error
 ```
 
-- `asbf$u_ortho` is the matrix with orthonormal columns that is closet to the
+- `osbf$u_ortho` is the matrix with orthonormal columns that is closet to the
 exact $U$ in SBF 
-- `asbf$v` is orthogonal.
+- `osbf$v` is orthogonal.
 
 ```{r}
-zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
-           asbf$u_ortho[[names(asbf$u_ortho)[1]]])
+zapsmall(t(osbf$u_ortho[[names(osbf$u_ortho)[1]]]) %*%
+           osbf$u_ortho[[names(osbf$u_ortho)[1]]])
 ```
 
 ```{r}
-zapsmall(t(asbf$v) %*% asbf$v)
+zapsmall(t(osbf$v) %*% osbf$v)
 ```
 
 # Minimizing OSBF factorization error
@@ -376,25 +376,25 @@ optimization could take some time.
 ```{r}
 set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
-asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE)
-asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE, transform_matrix = TRUE)
+osbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
+osbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE)
+osbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE, transform_matrix = TRUE)
 ```
 
 ```{r}
-names(asbf)
+names(osbf)
 ```
 
-- `asbf$u` is the optimized left basis matrices with orthonormal columns
-- `asbf$v` is the optimized shared right basis matrix
-- `asbf$d` is the optimized delta matrices
-- `asbf$error` gives the final decomposition error
+- `osbf$u` is the optimized left basis matrices with orthonormal columns
+- `osbf$v` is the optimized shared right basis matrix
+- `osbf$delta` is the optimized delta matrices
+- `osbf$error` gives the final decomposition error
 
 ```{r}
 # initial decomposition error
-asbf$error_start
-asbf_inv$error_start
-asbf_cor$error_start
+osbf$error_start
+osbf_inv$error_start
+osbf_cor$error_start
 ```
 This is the same error (OSBF with no optimization) we showed previously in the
 OSBF examples section.
@@ -402,15 +402,15 @@ Now let us check the final decomposition error after optimization.
 
 ```{r}
 # final decomposition error
-asbf$error
-asbf_inv$error
-asbf_cor$error
+osbf$error
+osbf_inv$error
+osbf_cor$error
 ```
 After optimization, for all three OSBF factorizations, the final error is 
 ```{r, echo = FALSE}
-if ((round(asbf$error, 2) == round(asbf_inv$error, 2)) &&
-    (round(asbf$error, 2) == round(asbf_cor$error, 2))) {
-  cat("same (up to 2 decimals). The final error is", round(asbf$error, 2))
+if ((round(osbf$error, 2) == round(osbf_inv$error, 2)) &&
+    (round(osbf$error, 2) == round(osbf_cor$error, 2))) {
+  cat("same (up to 2 decimals). The final error is", round(osbf$error, 2))
   } else {
   cat("not exactly the same")
     }
@@ -423,8 +423,8 @@ We can also compute the same optimization by independently calling the
 `optimizeFactorization`. For example,
 
 ```{r}
-myopt <- optimizeFactorization(mymat, asbf$u_ortho_start, asbf$delta_start,
-                               asbf$v_start)
+myopt <- optimizeFactorization(mymat, osbf$u_ortho_start, osbf$delta_start,
+                               osbf$v_start)
 names(myopt)
 ```
 
@@ -436,11 +436,11 @@ myopt$error
 The number of iteration taken for optimizing and new factorization error:
 
 ```{r}
-cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
-cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
-    asbf_inv$error)
-cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
-    asbf_cor$error)
+cat("For osbf, # iteration =", osbf$error_pos, "final error =", osbf$error)
+cat("For osbf inv, # iteration =", osbf_inv$error_pos, "final error =",
+    osbf_inv$error)
+cat("For osbf cor, # iteration =", osbf_cor$error_pos, "final error =",
+    osbf_cor$error)
 ```
 
 
@@ -727,6 +727,8 @@ newmat_svd$v
 opt_new1$v
 ```
 The results agree!
+
+# Session info
 
 
 ```{r}

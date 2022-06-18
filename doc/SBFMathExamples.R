@@ -102,73 +102,73 @@ mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
 sapply(mymat, dim)
 
 ## -----------------------------------------------------------------------------
-asbf <- SBF(matrix_list = mymat, orthogonal = TRUE,
+osbf <- SBF(matrix_list = mymat, orthogonal = TRUE,
             minimizeError = FALSE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE,
+osbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE,
                 minimizeError = FALSE)
-asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE,
+osbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE,
                 transform_matrix = TRUE, minimizeError = FALSE)
 
 ## -----------------------------------------------------------------------------
-names(asbf)
+names(osbf)
 
 ## -----------------------------------------------------------------------------
 # decomposition error
-asbf$error
-asbf_inv$error
-asbf_cor$error
+osbf$error
+osbf_inv$error
+osbf_cor$error
 
 ## -----------------------------------------------------------------------------
-zapsmall(t(asbf$u_ortho[[names(asbf$u_ortho)[1]]]) %*%
-           asbf$u_ortho[[names(asbf$u_ortho)[1]]])
+zapsmall(t(osbf$u_ortho[[names(osbf$u_ortho)[1]]]) %*%
+           osbf$u_ortho[[names(osbf$u_ortho)[1]]])
 
 ## -----------------------------------------------------------------------------
-zapsmall(t(asbf$v) %*% asbf$v)
+zapsmall(t(osbf$v) %*% osbf$v)
 
 ## -----------------------------------------------------------------------------
 set.seed(1231)
 mymat <- createRandomMatrices(n = 4, ncols = 3, nrows = 4:6)
-asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
-asbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE)
-asbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE, transform_matrix = TRUE)
+osbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
+osbf_inv <- SBF(matrix_list = mymat, weighted = TRUE, orthogonal = TRUE)
+osbf_cor <- SBF(matrix_list = mymat, orthogonal = TRUE, transform_matrix = TRUE)
 
 ## -----------------------------------------------------------------------------
-names(asbf)
+names(osbf)
 
 ## -----------------------------------------------------------------------------
 # initial decomposition error
-asbf$error_start
-asbf_inv$error_start
-asbf_cor$error_start
+osbf$error_start
+osbf_inv$error_start
+osbf_cor$error_start
 
 ## -----------------------------------------------------------------------------
 # final decomposition error
-asbf$error
-asbf_inv$error
-asbf_cor$error
+osbf$error
+osbf_inv$error
+osbf_cor$error
 
 ## ---- echo = FALSE------------------------------------------------------------
-if ((round(asbf$error, 2) == round(asbf_inv$error, 2)) &&
-    (round(asbf$error, 2) == round(asbf_cor$error, 2))) {
-  cat("same (up to 2 decimals). The final error is", round(asbf$error, 2))
+if ((round(osbf$error, 2) == round(osbf_inv$error, 2)) &&
+    (round(osbf$error, 2) == round(osbf_cor$error, 2))) {
+  cat("same (up to 2 decimals). The final error is", round(osbf$error, 2))
   } else {
   cat("not exactly the same")
     }
 
 ## -----------------------------------------------------------------------------
-myopt <- optimizeFactorization(mymat, asbf$u_ortho_start, asbf$delta_start,
-                               asbf$v_start)
+myopt <- optimizeFactorization(mymat, osbf$u_ortho_start, osbf$delta_start,
+                               osbf$v_start)
 names(myopt)
 
 ## -----------------------------------------------------------------------------
 myopt$error
 
 ## -----------------------------------------------------------------------------
-cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
-cat("For asbf inv, # iteration =", asbf_inv$error_pos, "final error =",
-    asbf_inv$error)
-cat("For asbf cor, # iteration =", asbf_cor$error_pos, "final error =",
-    asbf_cor$error)
+cat("For osbf, # iteration =", osbf$error_pos, "final error =", osbf$error)
+cat("For osbf inv, # iteration =", osbf_inv$error_pos, "final error =",
+    osbf_inv$error)
+cat("For osbf cor, # iteration =", osbf_cor$error_pos, "final error =",
+    osbf_cor$error)
 
 ## -----------------------------------------------------------------------------
 set.seed(1231)

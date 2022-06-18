@@ -138,3 +138,65 @@ calcPercentInfo <- function(l) {
     stop("Not an output list of SBF call")
   }
 }
+#' Invert delta_i entries and return a matrix
+#'
+#' @param l SBF list object
+#'
+#' @return a matrix with inverted delta_i values
+#' @export
+#'
+#' @examples
+invertDelta <- function(l) {
+  if (!is.list(l) || !("delta" %in% names(l)))
+    stop("Not an output list of SBF call")
+  d_inv <- list()
+  for (sp in names(l$delta)) {
+    if (length(l$delta[[sp]]) == 1) {
+      d_inv[[sp]] <- as.matrix(diag(as.matrix(1 / l$delta[[sp]])))
+    } else {
+      d_inv[[sp]] <- as.matrix(diag(1 / l$delta[[sp]]))
+    }
+  }
+  return(d_inv)
+}
+
+#' Function to project counts to the common expression space
+#' This function projects individual profiles or average counts to the
+#' common space by computing D_i^T U_i Delta^{-1}
+#'
+#' @param counts mean expression list or counts list
+#' @param obj SBF output list
+#' @param combine If multiple libraries exist, the function
+#' will row bind the projected counts if set TRUE
+#' @return projected counts data.frame if combine is set TRUE else
+#' list with projected counts
+#' @export
+#'
+#' @examples
+projectCounts <- function(counts, obj, combine = TRUE) {
+  if (!is.list(counts) || !is.list(obj))
+    stop("counts and sbf object should be lists")
+  if (!all(c("delta", "u") %in% names(obj)))
+    stop("Invalid sbf list")
+  if (!all(names(counts) == names(obj$u)) ||
+      !all(names(counts) == names(obj$delta)))
+    stop("Names of counts not match sbf's u or delta")
+  if (nrow(counts[[names(counts)[1]]]) != nrow(obj$u[[names(obj$u)[1]]]))
+    stop("# of genes not matching counts and osbf$u")
+  counts_projected <- list()
+  counts_rnames <- c()
+  d_inv <- invertDelta(obj)
+  for (sp in names(counts)) {
+    counts_projected[[sp]] <- as.matrix(t(counts[[sp]])) %*%
+      as.matrix(obj$u[[sp]]) %*% d_inv[[sp]]
+    counts_rnames <- c(counts_rnames, row.names(counts_projected[[sp]]))
+  }
+  if (combine) {
+    df_proj <- as.data.frame(do.call(rbind, counts_projected))
+    rownames(df_proj) <- counts_rnames
+    colnames(df_proj) <- paste0("Dim", seq_len(ncol(df_proj)))
+    return(df_proj)
+  } else {
+    return(counts_projected)
+  }
+}

@@ -99,11 +99,11 @@ Check the arguments for the SBF function call using `?SBF`.
 
 ```{r}
 # OSBF call
-asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
+osbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
 ```
 
 ```{r}
-names(asbf)
+names(osbf)
 ```
 
 For OSBF, the factorization error is optimized by default
@@ -116,30 +116,30 @@ In OSBF, $V$ is orthogonal and columns of $U_i$'s are orthonormal
 ($U_i^T U_i = I$).
 
 ```{r}
-zapsmall(t(asbf$v) %*% asbf$v)
+zapsmall(t(osbf$v) %*% osbf$v)
 ```
 
 ```{r}
 # check the columns of first matrix of U_ortho
-zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
-           asbf$u[[names(asbf$u)[[1]]]])
+zapsmall(t(osbf$u[[names(osbf$u)[[1]]]]) %*%
+           osbf$u[[names(osbf$u)[[1]]]])
 ```
 
 OSBF is not an exact factorization. The decomposition error is minimized and
-the final factorization error is stored in `asbf$error`.
-The initial factorization error we started with is stored in `asbf$error_start`.
+the final factorization error is stored in `osbf$error`.
+The initial factorization error we started with is stored in `osbf$error_start`.
 
 ```{r}
 # initial decomposition error
-asbf$error_start
+osbf$error_start
 # final decomposition error
-asbf$error
+osbf$error
 ```
-The error decreased by a factor of `r round(asbf$error_start/asbf$error,2)`.
+The error decreased by a factor of `r round(osbf$error_start/osbf$error,2)`.
 
 The number of iteration taken for optimizing:
 ```{r}
-cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
+cat("For osbf, # iteration =", osbf$error_pos, "final error =", osbf$error)
 ```
 
 A detailed explanation of the algorithm and example cases of factorization can be
@@ -164,12 +164,12 @@ $V$ is estimated using the mean $R_i^T R_i$.
 
 ```{r}
 # OSBF call using correlation matrix
-asbf_gem <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
+osbf_gem <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
                 transform_matrix = TRUE, tol = 1e-4)
 # initial decomposition error
-asbf_gem$error_start
+osbf_gem$error_start
 # final decomposition error
-asbf_gem$error
+osbf_gem$error
 ```
 Note: For high-dimensional datasets, vary the tolerance threshold (`tol`) or
 maximum number of iteration parameter (`max_iter`) to reduce the computing time.

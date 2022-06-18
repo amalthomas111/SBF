@@ -37,7 +37,7 @@ require(data.table)
 for (sp in species) {
   # read logTPM counts for each species
   counts <- data.table::fread(paste0(path, "counts/", sp, "_logTPM.tsv"),
-                              sep = "\t", header = T, data.table = FALSE,
+                              sep = "\t", header = TRUE, data.table = FALSE,
                               nThread = 4)
   row.names(counts) <- counts$V1
   counts$V1 <- NULL
@@ -48,9 +48,9 @@ for (sp in species) {
       tissue = col_fields[[3]],
       gsm = col_fields[[4]],
       name = colnames(counts),
-      stringsAsFactors = F)
-  metadata_sel <- metadata[metadata$tissue %in% tissues, , drop = F]
-  counts_sel <- counts[, colnames(counts) %in% metadata_sel$name, drop = F]
+      stringsAsFactors = FALSE)
+  metadata_sel <- metadata[metadata$tissue %in% tissues, , drop = FALSE]
+  counts_sel <- counts[, colnames(counts) %in% metadata_sel$name, drop = FALSE]
   metadata_sel$ref <- seq_len(nrow(metadata_sel))
   metadata_sel$key <- paste0(metadata_sel$species, "_", metadata_sel$tissue)
 
@@ -90,11 +90,10 @@ sapply(avg_counts, dim)
 counts_list_sub <- list()
 for (sp in names(avg_counts)) {
   counts_list_sub[[sp]] <- counts_list[[sp]][row.names(avg_counts[[sp]]), ,
-                                                 drop = F]
+                                                 drop = FALSE]
 }
 
 ## -----------------------------------------------------------------------------
-cat("\n=======================================================")
 cat("\nOSBF with optimizing V = FALSE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
@@ -108,7 +107,6 @@ cat("Time taken:\n")
 t2 - t1
 
 ## -----------------------------------------------------------------------------
-cat("\n=======================================================")
 cat("\nOSBF with optimizing V=TRUE started\n")
 cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 t1 <- proc.time()
@@ -149,88 +147,38 @@ plot(x = 50:length(osbf$error_vec),
      ylab = "Factorization error", col = "red")
 
 ## -----------------------------------------------------------------------------
-percentInfo_noVupdate <- lapply(osbf_noVupdate$d, function(x) {
-  round(x^2 / sum(x^2) * 100, 2)})
 cat("\nPercentage for each delta [No V update]:")
-for (i in names(osbf_noVupdate$d)) {
+percentInfo_noVupdate <- calcPercentInfo(osbf_noVupdate)
+for (i in names(osbf_noVupdate$delta)) {
   cat("\n", sprintf("%-25s:", i), sprintf("%8.2f", percentInfo_noVupdate[[i]]))
 }
-
-
-percentInfo <- lapply(osbf$d, function(x) {
-  round(x^2 / sum(x^2) * 100, 2) })
-cat("\nPercentage for each delta:")
-for (i in names(osbf$d)) {
+percentInfo <- calcPercentInfo(osbf)
+for (i in names(osbf$delta)) {
   cat("\n", sprintf("%-25s:", i), sprintf("%8.2f", percentInfo[[i]]))
 }
 
 ## -----------------------------------------------------------------------------
-d_inv_NoVupdate <- list()
-for (sp in names(avg_counts)) {
-  if (length(osbf_noVupdate$d[[sp]]) == 1) {
-    d_inv_NoVupdate[[sp]] <- as.matrix(diag(as.matrix(1 / osbf_noVupdate$d[[sp]])))
-    } else {
-      d_inv_NoVupdate[[sp]] <- as.matrix(diag(1 / osbf_noVupdate$d[[sp]]))
-    }
-}
-d_inv <- list()
-for (sp in names(avg_counts)) {
-  if (length(osbf$d[[sp]]) == 1) {
-    d_inv[[sp]] <- as.matrix(diag(as.matrix(1 / osbf$d[[sp]])))
-    } else {
-      d_inv[[sp]] <- as.matrix(diag(1 / osbf$d[[sp]]))
-    }
-}
-
-## -----------------------------------------------------------------------------
-# project using no V update estimates
-avgcounts_projected_noVupdate  <- counts_projected_noVupdate <- list()
-n_noVupdate <- n1_noVupdate <- c()
-for (sp in names(avg_counts)) {
-  avgcounts_projected_noVupdate[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
-    as.matrix(osbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
-  n_noVupdate <- c(n_noVupdate, row.names(avgcounts_projected_noVupdate[[sp]]))
-  counts_projected_noVupdate[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
-    as.matrix(osbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
-  n1_noVupdate <- c(n1_noVupdate, row.names(counts_projected_noVupdate[[sp]]))
-}
-
-# combine projected profiles
-df_proj_avg_noVupdate <- as.data.frame(do.call(rbind, avgcounts_projected_noVupdate))
-rownames(df_proj_avg_noVupdate) <- n_noVupdate
-colnames(df_proj_avg_noVupdate) <- paste0("Dim", 1:ncol(df_proj_avg_noVupdate))
-meta <- tstrsplit(row.names(df_proj_avg_noVupdate), "_")
+# project profles using no V update estimates
+# we can project both mean expression profiles as well as individual expression
+# profiles
+df_proj_avg_noVupdate <- projectCounts(avg_counts, osbf_noVupdate)
+meta <- data.table::tstrsplit(row.names(df_proj_avg_noVupdate), "_")
 df_proj_avg_noVupdate$tissue <- factor(meta[[2]])
 df_proj_avg_noVupdate$species <- factor(meta[[1]])
-df_proj_avg_noVupdate <- df_proj_avg_noVupdate %>% mutate(species = factor(species,
-                            levels = species_short))
+df_proj_avg_noVupdate <- df_proj_avg_noVupdate %>%
+  mutate(species = factor(species, levels = species_short))
 
 
-df_proj_noVupdate <- as.data.frame(do.call(rbind, counts_projected_noVupdate))
-rownames(df_proj_noVupdate) <- n1_noVupdate
-colnames(df_proj_noVupdate) <- paste0("Dim", 1:ncol(df_proj_noVupdate))
+df_proj_noVupdate <- projectCounts(counts_list_sub, osbf_noVupdate)
 meta1 <- data.table::tstrsplit(row.names(df_proj_noVupdate), "_")
 df_proj_noVupdate$tissue <- factor(meta1[[3]])
 df_proj_noVupdate$species <- factor(meta1[[2]])
 df_proj_noVupdate <- df_proj_noVupdate %>% mutate(species = factor(species,
                             levels = species_short))
 
+## -----------------------------------------------------------------------------
 # project using V update estimates
-avgcounts_projected  <- counts_projected <- list()
-n <- n1 <- c()
-for (sp in names(avg_counts)) {
-  avgcounts_projected[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
-    as.matrix(osbf$u[[sp]]) %*% d_inv[[sp]]
-  n <- c(n, row.names(avgcounts_projected[[sp]]))
-  counts_projected[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
-    as.matrix(osbf$u[[sp]]) %*% d_inv[[sp]]
-  n1 <- c(n1, row.names(counts_projected[[sp]]))
-}
-
-# combine projected profiles
-df_proj_avg <- as.data.frame(do.call(rbind, avgcounts_projected))
-rownames(df_proj_avg) <- n
-colnames(df_proj_avg) <- paste0("Dim", 1:ncol(df_proj_avg))
+df_proj_avg <- projectCounts(avg_counts, osbf)
 meta <- data.table::tstrsplit(row.names(df_proj_avg), "_")
 df_proj_avg$tissue <- factor(meta[[2]])
 df_proj_avg$species <- factor(meta[[1]])
@@ -238,10 +186,8 @@ df_proj_avg <- df_proj_avg %>% mutate(species = factor(species,
                             levels = species_short))
 
 
-df_proj <- as.data.frame(do.call(rbind, counts_projected))
-rownames(df_proj) <- n1
-colnames(df_proj) <- paste0("Dim", 1:ncol(df_proj))
-meta1 <- tstrsplit(row.names(df_proj), "_")
+df_proj <- projectCounts(counts_list_sub, osbf)
+meta1 <- data.table::tstrsplit(row.names(df_proj), "_")
 df_proj$tissue <- factor(meta1[[3]])
 df_proj$species <- factor(meta1[[2]])
 df_proj <- df_proj %>% mutate(species = factor(species,
@@ -293,13 +239,15 @@ ht <- ComplexHeatmap::HeatmapAnnotation(tissue = meta[[3]], species = meta[[2]],
 mypalette <- RColorBrewer::brewer.pal(9, "Blues")
 morecolors <- colorRampPalette(mypalette)
 
-myheatmap1 <- ComplexHeatmap::Heatmap(as.matrix(data_noVupdate_dist), cluster_rows = T,
-                     clustering_method_rows = "centroid",
-                     cluster_columns = T,
-                     clustering_method_columns = "centroid",
-                     top_annotation = ht, col = morecolors(50),
-                     show_row_names = F, show_column_names = F,
-                     name = "distance")
+myheatmap1 <- ComplexHeatmap::Heatmap(as.matrix(data_noVupdate_dist),
+                                      cluster_rows = TRUE,
+                                      clustering_method_rows = "centroid",
+                                      cluster_columns = TRUE,
+                                      clustering_method_columns = "centroid",
+                                      top_annotation = ht, col = morecolors(50),
+                                      show_row_names = FALSE,
+                                      show_column_names = FALSE,
+                                      name = "distance")
 myheatmap1
 
 ## -----------------------------------------------------------------------------
@@ -329,13 +277,14 @@ ht <- ComplexHeatmap::HeatmapAnnotation(tissue = meta[[3]], species = meta[[2]],
 mypalette <- RColorBrewer::brewer.pal(9, "Blues")
 morecolors <- colorRampPalette(mypalette)
 
-myheatmap <- ComplexHeatmap::Heatmap(as.matrix(data_dist), cluster_rows = T,
-                     clustering_method_rows = "centroid",
-                     cluster_columns = T,
-                     clustering_method_columns = "centroid",
-                     top_annotation = ht, col = morecolors(50),
-                     show_row_names = F, show_column_names = F,
-                     name = "distance")
+myheatmap <- ComplexHeatmap::Heatmap(as.matrix(data_dist), cluster_rows = TRUE,
+                                     clustering_method_rows = "centroid",
+                                     cluster_columns = TRUE,
+                                     clustering_method_columns = "centroid",
+                                     top_annotation = ht, col = morecolors(50),
+                                     show_row_names = FALSE,
+                                     show_column_names = FALSE,
+                                     name = "distance")
 myheatmap
 
 ## -----------------------------------------------------------------------------
@@ -398,14 +347,12 @@ ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
 
 ## -----------------------------------------------------------------------------
 # 2D plot for Dim1 and Dim2 [With V update]
-sel_colors <- RColorBrewer::brewer.pal(8, "Dark2")[seq_len(length(unique(df_proj$tissue)))]
 i <- 1
 j <- 2
-ggplot2::ggplot(df_proj, aes(x = df_proj[, i],
-                              y = df_proj[, j], col = tissue,
-                              shape = species, fill = tissue)) +
+ggplot2::ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j], col = tissue,
+                             shape = species, fill = tissue)) +
   xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
-  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
+  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
   customTheme() +
@@ -413,14 +360,13 @@ ggplot2::ggplot(df_proj, aes(x = df_proj[, i],
 
 ## -----------------------------------------------------------------------------
 # 2D plot for Dim2 and Dim3 [No V update]
-sel_colors <- RColorBrewer::brewer.pal(8, "Dark2")[seq_len(length(unique(df_proj_noVupdate$tissue)))]
 i <- 2
 j <- 3
 ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
-                              y = df_proj_noVupdate[, j], col = tissue,
-                              shape = species, fill = tissue)) +
+                                       y = df_proj_noVupdate[, j], col = tissue,
+                                       shape = species, fill = tissue)) +
   xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
-  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
+  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
   customTheme() +
@@ -428,48 +374,41 @@ ggplot2::ggplot(df_proj_noVupdate, aes(x = df_proj_noVupdate[, i],
 
 ## -----------------------------------------------------------------------------
 # 2D plot for Dim2 and Dim3 [With V update]
-sel_colors <- RColorBrewer::brewer.pal(8, "Dark2")[seq_len(length(unique(df_proj$tissue)))]
 i <- 2
 j <- 3
 ggplot2::ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j], col = tissue,
-                              shape = species, fill = tissue)) +  
+                              shape = species, fill = tissue)) +
   xlab(paste("OSBF Dim", i)) + ylab(paste("OSBF Dim", j)) +
-  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) + 
+  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
   scale_shape_manual(values = c(21:25, 3:7)) +
   scale_fill_manual(values = sel_colors) +
   customTheme() +
   theme(legend.title = element_blank())
 
 ## -----------------------------------------------------------------------------
-# create output directories. Change this path accordingly
-# outdir <- "~/Dropbox/0.Analysis/9.bloodAnalysis/"
-# dir.create(file.path(outdir), showWarnings = FALSE)
-# subDir <- "2Dplots"
-# dir.create(file.path(outdir, subDir), showWarnings = FALSE)
-
 sel_colors <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "mediumturquoise",
                 "#E6AB02", "darkmagenta", "#666666", "black", "darkolivegreen2")
 outputname <- "human_mouse_blood"
 finished <- c()
-for (i in 1:(ncol(df_proj)-2)) {
-  for (j in 1:(ncol(df_proj)-2)) {
+for (i in 1:(ncol(df_proj) - 2)) {
+  for (j in 1:(ncol(df_proj) - 2)) {
     if (i == j) next
     if (j %in% finished) next
     ggplot(df_proj, aes(x = df_proj[, i], y = df_proj[, j],
-                            col = tissue, shape = species, fill = tissue)) +  
-      xlab(paste0("OSBF Dim ", i)) + 
+                            col = tissue, shape = species, fill = tissue)) +
+      xlab(paste0("OSBF Dim ", i)) +
       ylab(paste0("OSBF Dim ", j)) +
       geom_point(size = 1.5) +
-      scale_color_manual(values = sel_colors) + 
-      scale_shape_manual(values = c(21:25,3:7)) +
+      scale_color_manual(values = sel_colors) +
+      scale_shape_manual(values = c(21:25, 3:7)) +
       scale_fill_manual(values = sel_colors) +
-      customTheme(base_size = 12) + 
+      customTheme(base_size = 12) +
       theme(legend.title = element_blank())
     #ggsave(filename = paste0(outdir, "2Dplots/opt_2Dplot_Dim_", i, "-", j, "_",
     #                         outputname, ".pdf"), device = "pdf",
     #       width = 7, height = 7, useDingbats = FALSE)
   }
-  finished <- c(finished,i)
+  finished <- c(finished, i)
 }
 
 ## -----------------------------------------------------------------------------
@@ -479,7 +418,6 @@ calc_tissue_specificity <- function(a) {
     b <- a / matrixStats::rowMaxs(a)
     return(rowSums(1 - b) / (ncol(b) - 1))
 }
-    
 Tau <- lapply(avg_counts, function(x) { calc_tissue_specificity(x)})
 avg_counts_scaled <- lapply(avg_counts, function(x) { t(scale(t(x)))})
 
@@ -496,7 +434,7 @@ sel_tissue <- "testis"
 species <- "Homo_sapiens"
 expr <- combine_expr[[species]]
 osbf_coef <- osbf$u[[species]]
-expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue),
                    "Tau", "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -505,12 +443,14 @@ head(expr1)
 ## -----------------------------------------------------------------------------
 # plot scatter
 mid <- 0
-p1 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + theme_bw() +
+p1 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) +
+  theme_bw() +
   geom_point(size = 0.5) + xlab("Expression specificity") +
   ylab(paste0("Dim", sel_dim, " Coefficient")) +
   scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
                         high = "red", space = "Lab") +
-  scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)), max(abs(expr1$coef))),
+  scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)),
+                                max(abs(expr1$coef))),
                      breaks = seq(-1 * round(max(abs(expr$coef)), 2),
                                   round(max(abs(expr$coef)), 2), by = 0.01)) +
   customTheme() +  theme(legend.position = "right",
@@ -526,19 +466,21 @@ sel_tissue <- "testis"
 species <- "Sus_scrofa"
 expr <- combine_expr[[species]]
 osbf_coef <- osbf$u[[species]]
-expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue),
                    "Tau", "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
 
 # plot scatter
 mid <- 0
-p2 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) + theme_bw() +
+p2 <- ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) +
+  theme_bw() +
   geom_point(size = 0.5) + xlab("Expression specificity") +
   ylab(paste0("Dim", sel_dim, " Coefficient")) +
   scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
                         high = "red", space = "Lab") +
-  scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)), max(abs(expr1$coef))),
+  scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)),
+                                max(abs(expr1$coef))),
                      breaks = seq(-1 * round(max(abs(expr$coef)), 2),
                                   round(max(abs(expr$coef)), 2), by = 0.01)) +
   customTheme() +  theme(legend.position = "right",
@@ -553,7 +495,7 @@ p2
 # set the path to the working directory. Change this accordingly
 path <- "~/Dropbox/0.Analysis/0.paper/"
 file <- "allwayOrthologs_hsapiens-ptroglodytes-mmulatta-mmusculus-rnorvegicus-btaurus-sscrofa-ggallus_ens94.tsv"
-orthologs <- read.table(file.path(path, "GOKeggFiles/", file), header = T,
+orthologs <- read.table(file.path(path, "GOKeggFiles/", file), header = TRUE,
                         sep = "\t")
 head(orthologs)
 
@@ -581,7 +523,7 @@ sel_sign <- "neg"
 species <- "Homo_sapiens"
 expr <- combine_expr[[species]]
 osbf_coef <- osbf$u[[species]]
-expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue), "Tau",
                   "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -618,8 +560,9 @@ load(paste0(path, "GOKeggFiles/hg38_length.EnsemblV94.RData"))
 lengthData.up <- lengthData[names(up_genes)]
 # load("hg38 EnsembleID to GO data")
 load(paste0(path, "GOKeggFiles/hg38_geneID2GO.EnsemblID2GO.EnsembleV94.Robj"))
-pwf <- goseq::nullp(up_genes, bias.data = lengthData.up, plot.fit = F)
-go <- goseq::goseq(pwf, "hg38", "ensGene", gene2cat = geneID2GO, test.cats = c("GO:BP"))
+pwf <- goseq::nullp(up_genes, bias.data = lengthData.up, plot.fit = FALSE)
+go <- goseq::goseq(pwf, "hg38", "ensGene", gene2cat = geneID2GO,
+                   test.cats = c("GO:BP"))
 go.sub <- go[go$ontology == "BP", ]
 go.sub$padj <- p.adjust(go.sub$over_represented_pvalue, method = "BH")
 go.sub[["ratio"]] <- round(go.sub[["numDEInCat"]] / go.sub[["numInCat"]], 4)
@@ -636,7 +579,8 @@ go_out <- head(go.sub, n = 8)
 go_out$padj <- as.numeric(go_out$padj)
 go_out$term <- factor(go_out$term, levels = go_out$term)
 breaks <- round(c(0, 1 / 4, 2 / 4, 3 / 4, 1) * max(go_out[["ratio"]]), 2)
-go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom_col() +
+go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) +
+  geom_col() +
   scale_y_continuous(expand = c(0, 0), breaks = breaks,
                      limits = c(0, max(go_out[["ratio"]] + 0.05))) +
   scale_x_discrete() + coord_flip() +
@@ -652,7 +596,7 @@ go_plot
 species <- "Mus_musculus"
 expr <- combine_expr[[species]]
 osbf_coef <- osbf$u[[species]]
-expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
 expr1 <- expr[, c(paste0(getSpeciesShortName(species), "_", sel_tissue), "Tau",
                   "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -689,8 +633,9 @@ load(paste0(path, "/GOKeggFiles/mm10_length_EnsemblV94.RData"))
 lengthData.up <- lengthData[names(up_genes)]
 # load("mm10 EnsembleID to GO data")
 load(paste0(path, "/GOKeggFiles/mm10_geneID2GO.EnsemblID2GO.EnsembleV94.Robj"))
-pwf <- goseq::nullp(up_genes, bias.data = lengthData.up, plot.fit = F)
-go <- goseq::goseq(pwf, "mm10", "ensGene", gene2cat = mouse_geneID2GO, test.cats = c("GO:BP"))
+pwf <- goseq::nullp(up_genes, bias.data = lengthData.up, plot.fit = FALSE)
+go <- goseq::goseq(pwf, "mm10", "ensGene", gene2cat = mouse_geneID2GO,
+                   test.cats = c("GO:BP"))
 go.sub <- go[go$ontology == "BP", ]
 go.sub$padj <- p.adjust(go.sub$over_represented_pvalue, method = "BH")
 go.sub[["ratio"]] <- round(go.sub[["numDEInCat"]] / go.sub[["numInCat"]], 4)
@@ -707,7 +652,8 @@ go_out <- head(go.sub, n = 8)
 go_out$padj <- as.numeric(go_out$padj)
 go_out$term <- factor(go_out$term, levels = go_out$term)
 breaks <- round(c(0, 1 / 4, 2 / 4, 3 / 4, 1) * max(go_out[["ratio"]]), 2)
-go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) + geom_col() +
+go_plot <- ggplot2::ggplot(go_out, aes(x = term, y = ratio, fill = padj)) +
+  geom_col() +
   scale_y_continuous(expand = c(0, 0), breaks = breaks,
                      limits = c(0, max(go_out[["ratio"]] + 0.05))) +
   scale_x_discrete() + coord_flip() +
@@ -733,19 +679,18 @@ path <- "~/Dropbox/0.Analysis/0.paper/"
 counts_list_shuff <- metadata_list_shuff <- avg_counts_shuff <- list()
 for (sp in species) {
   # reading raw counts
-  counts <- read.table(paste0(path, "counts/", sp, "_rawcounts.tsv"), header = T,
-                           sep = "\t", row.names = 1)
+  counts <- read.table(paste0(path, "counts/", sp, "_rawcounts.tsv"),
+                       header = TRUE, sep = "\t", row.names = 1)
   info <- tstrsplit(colnames(counts), "_")
   metadata <- data.frame(project = info[[1]],
         species = info[[2]],
         tissue = info[[3]],
         gsm = info[[4]],
         name = colnames(counts),
-        stringsAsFactors = F)
+        stringsAsFactors = FALSE)
   metadata$ref <- seq_len(nrow(metadata))
   metadata$key <- paste0(metadata$species, "_", metadata$tissue)
   metadata$tissue_factor <- factor(metadata$tissue)
-  
   counts_avg <- calcAvgCounts(counts, metadata)
   cnames <- colnames(counts_avg)
   rnames <- row.names(counts_avg)
@@ -758,24 +703,26 @@ for (sp in species) {
   # normalize the shuffled counts to log TPM
   # set the path to the working directory. Change this accordingly
   path <- "~/Dropbox/0.Analysis/0.paper/"
-  gene_length <- read.table(paste0(path, "ensembl94_annotation/", sp, "_genelength.tsv"),
-                        sep = "\t",header = T, row.names = 1, stringsAsFactors = F)
+  gene_length <- read.table(paste0(path, "ensembl94_annotation/", sp,
+                                   "_genelength.tsv"), sep = "\t",
+                            header = TRUE, row.names = 1,
+                            stringsAsFactors = FALSE)
   if (!all(row.names(counts_avg) %in% row.names(gene_length))) stop("Error")
-  gene_length$Length <- gene_length$Length/1e3
-  gene_length <- gene_length[row.names(counts_avg), , drop=T]
+  gene_length$Length <- gene_length$Length / 1e3
+  gene_length <- gene_length[row.names(counts_avg), , drop = TRUE]
   names(gene_length) <- row.names(counts_avg)
   counts_tpm <- normalizeTPM(rawCounts = counts_avg, gene_len = gene_length)
   min_tpm <- 1
   counts_tpm[counts_tpm < min_tpm] <- 1
   counts_tpm <- log2(counts_tpm)
 
-  info <- tstrsplit(colnames(counts_tpm),"_")
+  info <- tstrsplit(colnames(counts_tpm), "_")
   metadata <- data.frame(
         species = info[[1]],
         tissue = info[[2]],
         name = colnames(counts_tpm),
-        stringsAsFactors = F)
-  metadata$key <- paste0(metadata$species,"_",metadata$tissue)
+        stringsAsFactors = FALSE)
+  metadata$key <- paste0(metadata$species, "_", metadata$tissue)
   avg_counts_shuff[[sp]] <- calcAvgCounts(counts_tpm, metadata)
   # write.table(avg_counts_shuff[[sp]],file=paste0(mainDir, "shuffledavgCounts/avg_logTPM_",
   #                               species,"_SHUFF_counts_seed",z,"_",z1,".tsv"),
@@ -789,16 +736,18 @@ avg_counts_shuff <- lapply(avg_counts_shuff, removeZeros)
 sapply(avg_counts_shuff, dim)
 
 ## -----------------------------------------------------------------------------
-cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 # decrease tol to minimize error
 osbf_shuf <- SBF(avg_counts_shuff, transform_matrix = TRUE, orthogonal = TRUE,
                  tol = 1e-2)
-cat(format(Sys.time(), "%a %b %d %X %Y"),"\n")
+cat(format(Sys.time(), "%a %b %d %X %Y"), "\n")
 osbf_shuf$error
 
 ## -----------------------------------------------------------------------------
 Tau_null <- lapply(avg_counts_shuff, function(x) {calc_tissue_specificity(x)})
-avg_counts_shuff_scaled <- lapply(avg_counts_shuff, function(x){ t(scale(t(x)))})
+avg_counts_shuff_scaled <- lapply(avg_counts_shuff, function(x) {
+  t(scale(t(x)))
+  })
 combine_expr_null <- list()
 for (sp in names(avg_counts_shuff_scaled)) {
   x <- as.data.frame(avg_counts_shuff_scaled[[sp]])
@@ -815,7 +764,7 @@ species <- "Homo_sapiens"
 species_short <- "hsapiens"
 expr <- combine_expr[[species]]
 osbf_coef <- osbf$u[[species]]
-expr[["coef"]] <- osbf_coef[, sel_dim, drop = T]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
 expr1 <- expr[, c(paste0(species_short, "_", sel_tissue),
                    "Tau", "coef")]
 colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
@@ -823,8 +772,9 @@ colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
 # null loadings for the same dimensions
 expr_null <- combine_expr_null[[species]]
 null_u <- osbf_shuf$u[[species]]
-expr_null[["coef"]] <- null_u[, sel_dim, drop = T]
-expr1_null <- expr_null[, c(paste0(species_short,"_",sel_tissue),"Tau","coef")]
+expr_null[["coef"]] <- null_u[, sel_dim, drop = TRUE]
+expr1_null <- expr_null[, c(paste0(species_short, "_", sel_tissue), "Tau",
+                            "coef")]
 if (sel_sign == "pos") {
   expr1 <- expr1[expr1$coef >= 0, ]
   expr1_null <- expr1_null[expr1_null$coef >= 0, ]
@@ -837,7 +787,9 @@ expr1$rank <- rank(-1 * expr1$score)
 expr1 <- expr1[order(expr1$rank), ]
 
 expr1_null$score <- expr1_null$Tau * abs(expr1_null$coef)
-expr1$pvalue <- sapply(expr1$score, function(x) { sum(as.integer(expr1_null$score > x))/length(expr1_null$score)})
+expr1$pvalue <- sapply(expr1$score, function(x) {
+  sum(as.integer(expr1_null$score > x)) / length(expr1_null$score)
+  })
 head(expr1)
 
 ## -----------------------------------------------------------------------------
@@ -848,8 +800,9 @@ summary(expr1$pvalue <= alpha)
 ## -----------------------------------------------------------------------------
 # set the path to the working directory. Change this accordingly
 path <- "~/Dropbox/0.Analysis/0.paper/"
-gene_info <- read.table(paste0(path, "ensembl94_annotation/", species_short, "_genes_completeinfo.tsv"),
-                               sep = "\t", header = T, quote = "\"")
+gene_info <- read.table(paste0(path, "ensembl94_annotation/", species_short,
+                               "_genes_completeinfo.tsv"),
+                               sep = "\t", header = TRUE, quote = "\"")
 gene_info <- gene_info[!duplicated(gene_info$ensembl_gene_id), ]
 gene_info <- gene_info[gene_info$ensembl_gene_id %in% row.names(expr1), ]
 row.names(gene_info) <- gene_info$ensembl_gene_id

@@ -243,83 +243,35 @@ approaches looks very similar.
 
 # Project datasets into common space
 
-Let us first compute $\Delta^{-1}$
-
-```{r}
-d_inv_NoVupdate <- list()
-for (sp in names(avg_counts)) {
-  if (length(osbf_noVupdate$delta[[sp]]) == 1) {
-    d_inv_NoVupdate[[sp]] <- as.matrix(diag(as.matrix(1 / osbf_noVupdate$delta[[sp]])))
-    } else {
-      d_inv_NoVupdate[[sp]] <- as.matrix(diag(1 / osbf_noVupdate$delta[[sp]]))
-    }
-}
-d_inv <- list()
-for (sp in names(avg_counts)) {
-  if (length(osbf$delta[[sp]]) == 1) {
-    d_inv[[sp]] <- as.matrix(diag(as.matrix(1 / osbf$delta[[sp]])))
-    } else {
-      d_inv[[sp]] <- as.matrix(diag(1 / osbf$delta[[sp]]))
-    }
-}
-```
-
-
-
 Project individual profiles and average counts to common space by computing
-$D_i^T U_i \Delta^{-1}$
+$D_i^T U_i \Delta^{-1}$. We will `projectCounts` function from the `SBF`
+package for this.
 
 ```{r}
-# project using no V update estimates
+# project profles using no V update estimates
 # we can project both mean expression profiles as well as individual expression
 # profiles
-avgcounts_projected_noVupdate  <- counts_projected_noVupdate <- list()
-n_noVupdate <- n1_noVupdate <- c()
-for (sp in names(avg_counts)) {
-  avgcounts_projected_noVupdate[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
-    as.matrix(osbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
-  n_noVupdate <- c(n_noVupdate, row.names(avgcounts_projected_noVupdate[[sp]]))
-  counts_projected_noVupdate[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
-    as.matrix(osbf_noVupdate$u[[sp]]) %*% d_inv_NoVupdate[[sp]]
-  n1_noVupdate <- c(n1_noVupdate, row.names(counts_projected_noVupdate[[sp]]))
-}
-
-# combine projected profiles
-df_proj_avg_noVupdate <- as.data.frame(do.call(rbind, avgcounts_projected_noVupdate))
-rownames(df_proj_avg_noVupdate) <- n_noVupdate
-colnames(df_proj_avg_noVupdate) <- paste0("Dim", seq_len(ncol(df_proj_avg_noVupdate)))
-meta <- tstrsplit(row.names(df_proj_avg_noVupdate), "_")
+df_proj_avg_noVupdate <- projectCounts(avg_counts, osbf_noVupdate)
+meta <- data.table::tstrsplit(row.names(df_proj_avg_noVupdate), "_")
 df_proj_avg_noVupdate$tissue <- factor(meta[[2]])
 df_proj_avg_noVupdate$species <- factor(meta[[1]])
-df_proj_avg_noVupdate <- df_proj_avg_noVupdate %>% mutate(species = factor(species,
-                            levels = species_short))
+df_proj_avg_noVupdate <- df_proj_avg_noVupdate %>%
+  mutate(species = factor(species, levels = species_short))
 
 
-df_proj_noVupdate <- as.data.frame(do.call(rbind, counts_projected_noVupdate))
-rownames(df_proj_noVupdate) <- n1_noVupdate
-colnames(df_proj_noVupdate) <- paste0("Dim", seq_len(ncol(df_proj_noVupdate)))
+df_proj_noVupdate <- projectCounts(counts_list_sub, osbf_noVupdate)
 meta1 <- data.table::tstrsplit(row.names(df_proj_noVupdate), "_")
 df_proj_noVupdate$tissue <- factor(meta1[[3]])
 df_proj_noVupdate$species <- factor(meta1[[2]])
 df_proj_noVupdate <- df_proj_noVupdate %>% mutate(species = factor(species,
                             levels = species_short))
+```
 
+Now let us also project profiles with the updated V
+
+```{r}
 # project using V update estimates
-avgcounts_projected  <- counts_projected <- list()
-n <- n1 <- c()
-for (sp in names(avg_counts)) {
-  avgcounts_projected[[sp]] <- as.matrix(t(avg_counts[[sp]])) %*%
-    as.matrix(osbf$u[[sp]]) %*% d_inv[[sp]]
-  n <- c(n, row.names(avgcounts_projected[[sp]]))
-  counts_projected[[sp]] <- as.matrix(t(counts_list_sub[[sp]])) %*%
-    as.matrix(osbf$u[[sp]]) %*% d_inv[[sp]]
-  n1 <- c(n1, row.names(counts_projected[[sp]]))
-}
-
-# combine projected profiles
-df_proj_avg <- as.data.frame(do.call(rbind, avgcounts_projected))
-rownames(df_proj_avg) <- n
-colnames(df_proj_avg) <- paste0("Dim", seq_len(ncol(df_proj_avg)))
+df_proj_avg <- projectCounts(avg_counts, osbf)
 meta <- data.table::tstrsplit(row.names(df_proj_avg), "_")
 df_proj_avg$tissue <- factor(meta[[2]])
 df_proj_avg$species <- factor(meta[[1]])
@@ -327,10 +279,8 @@ df_proj_avg <- df_proj_avg %>% mutate(species = factor(species,
                             levels = species_short))
 
 
-df_proj <- as.data.frame(do.call(rbind, counts_projected))
-rownames(df_proj) <- n1
-colnames(df_proj) <- paste0("Dim", seq_len(ncol(df_proj)))
-meta1 <- tstrsplit(row.names(df_proj), "_")
+df_proj <- projectCounts(counts_list_sub, osbf)
+meta1 <- data.table::tstrsplit(row.names(df_proj), "_")
 df_proj$tissue <- factor(meta1[[3]])
 df_proj$species <- factor(meta1[[2]])
 df_proj <- df_proj %>% mutate(species = factor(species,

@@ -15,7 +15,7 @@ analysis.
 
     git clone https://github.com/amalthomas111/SBF.git
 
-If git is not installed, go to code -&gt; Download ZIP. Unzip the file.
+If git is not installed, go to code -\> Download ZIP. Unzip the file.
 
 Then, inside an R console
 
@@ -117,16 +117,16 @@ sapply(mymat, function(x) {qr(x)$rank})
 ```
 
 We will use the test dataset as our
-![D\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;D_i "D_i")
+![D_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;D_i "D_i")
 matrices.
 
 ### OSBF examples
 
 The OSBF’s shared orthogonal
 ![V](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;V "V"),
-![U\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")’s
+![U_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")’s
 with orthonormal columns, and diagonal matrices
-![\\Delta\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5CDelta_i "\Delta_i")’s
+![\\Delta_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5CDelta_i "\Delta_i")’s
 can be estimated using the `SBF` function with argument
 `orthogonal = TRUE`.
 
@@ -134,14 +134,14 @@ Check the arguments for the SBF function call using `?SBF`.
 
 ``` r
 # OSBF call
-asbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
+osbf <- SBF(matrix_list = mymat, orthogonal = TRUE)
 #> 
 #> OSBF optimizing factorization error
 ```
 
 ``` r
-names(asbf)
-#>  [1] "v"             "u"             "d"             "error"        
+names(osbf)
+#>  [1] "v"             "u"             "delta"         "error"        
 #>  [5] "error_pos"     "error_vec"     "v_start"       "lambda_start" 
 #>  [9] "u_start"       "u_ortho_start" "delta_start"   "m"            
 #> [13] "error_start"
@@ -156,12 +156,12 @@ invoked. Optimization could take some time depending on the data matrix
 In OSBF,
 ![V](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;V "V")
 is orthogonal and columns of
-![U\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")’s
+![U_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")’s
 are orthonormal
-(![U\_i^T U\_i = I](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i%5ET%20U_i%20%3D%20I "U_i^T U_i = I")).
+(![U_i^T U_i = I](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i%5ET%20U_i%20%3D%20I "U_i^T U_i = I")).
 
 ``` r
-zapsmall(t(asbf$v) %*% asbf$v)
+zapsmall(t(osbf$v) %*% osbf$v)
 #>      [,1] [,2] [,3]
 #> [1,]    1    0    0
 #> [2,]    0    1    0
@@ -170,8 +170,8 @@ zapsmall(t(asbf$v) %*% asbf$v)
 
 ``` r
 # check the columns of first matrix of U_ortho
-zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
-           asbf$u[[names(asbf$u)[[1]]]])
+zapsmall(t(osbf$u[[names(osbf$u)[[1]]]]) %*%
+           osbf$u[[names(osbf$u)[[1]]]])
 #>      [,1] [,2] [,3]
 #> [1,]    1    0    0
 #> [2,]    0    1    0
@@ -179,15 +179,15 @@ zapsmall(t(asbf$u[[names(asbf$u)[[1]]]]) %*%
 ```
 
 OSBF is not an exact factorization. The decomposition error is minimized
-and the final factorization error is stored in `asbf$error`. The initial
-factorization error we started with is stored in `asbf$error_start`.
+and the final factorization error is stored in `osbf$error`. The initial
+factorization error we started with is stored in `osbf$error_start`.
 
 ``` r
 # initial decomposition error
-asbf$error_start
+osbf$error_start
 #> [1] 2329.73
 # final decomposition error
-asbf$error
+osbf$error
 #> [1] 1411.555
 ```
 
@@ -196,8 +196,8 @@ The error decreased by a factor of 1.65.
 The number of iteration taken for optimizing:
 
 ``` r
-cat("For asbf, # iteration =", asbf$error_pos, "final error =", asbf$error)
-#> For asbf, # iteration = 220 final error = 1411.555
+cat("For osbf, # iteration =", osbf$error_pos, "final error =", osbf$error)
+#> For osbf, # iteration = 220 final error = 1411.555
 ```
 
 A detailed explanation of the algorithm and example cases of
@@ -208,7 +208,7 @@ factorization can be found in the vignettes/docs directory.
 -   SBF package has a sample gene expression data with the mean
     expression of nine tissues in five species. Now we will use this
     data as our
-    ![D\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;D_i "D_i")
+    ![D_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;D_i "D_i")
     matrices.
 
 ``` r
@@ -228,19 +228,19 @@ names(avg_counts[["Homo_sapiens"]])
 OSBF computation based on inter-sample correlation.
 ![V](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;V "V")
 is estimated using the mean
-![R\_i^T R\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_i%5ET%20R_i "R_i^T R_i").
+![R_i^T R_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;R_i%5ET%20R_i "R_i^T R_i").
 
 ``` r
 # OSBF call using correlation matrix
-asbf_gem <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
+osbf_gem <- SBF(matrix_list = avg_counts, orthogonal = TRUE,
                 transform_matrix = TRUE, tol = 1e-4)
 #> 
 #> OSBF optimizing factorization error
 # initial decomposition error
-asbf_gem$error_start
+osbf_gem$error_start
 #> [1] 65865.92
 # final decomposition error
-asbf_gem$error
+osbf_gem$error
 #> [1] 7088.058
 ```
 
@@ -251,7 +251,7 @@ the computing time.
 When calling `SBF`, `orthogonal = FALSE` computes the SBF factorization,
 an exact joint matrix factorization we developed. In SBF, the estimated
 columns of
-![U\_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")
+![U_i](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;U_i "U_i")
 are not orthonormal. More details and examples can be found in the
 vignettes/docs directory.
 
