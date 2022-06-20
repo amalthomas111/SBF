@@ -46,7 +46,7 @@ getScientificName <- function(x) {
 #' @param x a column of gene expression profiles
 #' @param gene_len gene lengths (kb)
 #'
-#' @return
+#' @return normalized TPM values for a column
 #' @export
 #'
 #' @examples
@@ -86,7 +86,7 @@ normalizeTPM <- function(rawCounts, gene_len = NULL) {
 #' @param metadata data frame with species tissue key column
 #' @param ndecimal number of decimals to round
 #'
-#' @return
+#' @return a list with mean expression
 #' @export
 #'
 #' @examples

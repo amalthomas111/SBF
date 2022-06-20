@@ -13,6 +13,9 @@ calcAvgCounts(counts, metadata, ndecimal = 4)
 
 \item{ndecimal}{number of decimals to round}
 }
+\value{
+a list with mean expression
+}
 \description{
 Function to calculate mean expression values for each tissue/group
 }

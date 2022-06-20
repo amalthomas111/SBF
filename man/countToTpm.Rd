@@ -11,6 +11,9 @@ countToTpm(x, gene_len)
 
 \item{gene_len}{gene lengths (kb)}
 }
+\value{
+normalized TPM values for a column
+}
 \description{
 Calculate TPM normalization for a vector
 }
