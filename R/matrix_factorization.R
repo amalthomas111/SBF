@@ -1,6 +1,6 @@
 #' Compute GSVD factorization
 #'
-#' Function to GSVD factorization for two matrices D1 and D2
+#' Function to compute GSVD factorization for two matrices D1 and D2
 #' @param D1 A numeric matrix for GSVD factorization.
 #' @param D2 A numeric matrix for GSVD factorization.
 #'

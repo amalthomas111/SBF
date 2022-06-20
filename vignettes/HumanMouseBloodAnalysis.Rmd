@@ -89,7 +89,7 @@ for (sp in species) {
   counts <- read.table(paste0(path, "human_mouse_blood_counts/", sp,
                               "_blood_logtpm.tsv"), header = TRUE, sep = "\t",
                        row.names = 1)
-  info <- tstrsplit(colnames(counts), "_")
+  info <- data.table::tstrsplit(colnames(counts), "_")
   metadata <- data.frame(project = info[[1]],
         species = info[[2]],
         tissue = info[[3]],
@@ -848,7 +848,7 @@ for (sp in species) {
   counts <- read.table(paste0(path, "human_mouse_blood_counts/", sp,
                               "_blood_rawcounts.tsv"), header = TRUE,
                            sep = "\t", row.names = 1)
-  info <- tstrsplit(colnames(counts), "_")
+  info <- data.table::tstrsplit(colnames(counts), "_")
   metadata <- data.frame(project = info[[1]],
         species = info[[2]],
         tissue = info[[3]],
@@ -883,7 +883,7 @@ for (sp in species) {
   counts_tpm[counts_tpm < min_tpm] <- 1
   counts_tpm <- log2(counts_tpm)
 
-  info <- tstrsplit(colnames(counts_tpm), "_")
+  info <- data.table::tstrsplit(colnames(counts_tpm), "_")
   metadata <- data.frame(
         species = info[[1]],
         tissue = info[[2]],
