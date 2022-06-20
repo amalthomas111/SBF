@@ -209,6 +209,7 @@ optimizeFactorization <- function(mat_list, u, d, v, optimizeV = TRUE,
   min_error <- calcDecompError(mat_list, u, d, v)
   if (initial_exact == TRUE) {
     u <- updateU(mat_list, d, v)
+    v <- updateV(mat_list, u, d)
     min_error <- Inf
   }
   if (min_error < tol) {
