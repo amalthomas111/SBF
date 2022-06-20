@@ -15,7 +15,7 @@ GSVD(D1, D2)
 a list containing u1, u2, v, d1, and d2
 }
 \description{
-Function to GSVD factorization for two matrices D1 and D2
+Function to compute GSVD factorization for two matrices D1 and D2
 }
 \examples{
 set.seed(1231)
