@@ -255,10 +255,10 @@ We will add a dataset with a similar variance to the first list and
 a high variance to the second.
 
 ```{r}
-mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = T,
+mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = TRUE,
                     nrow = 3, ncol = 3)
 mat5_highvar <- matrix(c(406, 319, 388, 292, 473, 287, 390, 533, 452),
-                       byrow = T, nrow = 3, ncol = 3)
+                       byrow = TRUE, nrow = 3, ncol = 3)
 
 mymat_new <- mymat
 mymat_new[["mat5"]] <- mat5

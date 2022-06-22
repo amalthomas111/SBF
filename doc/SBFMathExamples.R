@@ -63,10 +63,10 @@ calcDecompError(mymat, sbf_cor$u, sbf_cor$delta, sbf_cor$v)
 sapply(mymat, function(x) sum(diag(cov(x))))
 
 ## -----------------------------------------------------------------------------
-mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = T,
+mat5 <- matrix(c(130, 183, 62, 97, 147, 94, 102, 192, 19), byrow = TRUE,
                     nrow = 3, ncol = 3)
 mat5_highvar <- matrix(c(406, 319, 388, 292, 473, 287, 390, 533, 452),
-                       byrow = T, nrow = 3, ncol = 3)
+                       byrow = TRUE, nrow = 3, ncol = 3)
 
 mymat_new <- mymat
 mymat_new[["mat5"]] <- mat5

@@ -681,7 +681,7 @@ for (sp in species) {
   # reading raw counts
   counts <- read.table(paste0(path, "counts/", sp, "_rawcounts.tsv"),
                        header = TRUE, sep = "\t", row.names = 1)
-  info <- tstrsplit(colnames(counts), "_")
+  info <- data.table::tstrsplit(colnames(counts), "_")
   metadata <- data.frame(project = info[[1]],
         species = info[[2]],
         tissue = info[[3]],
@@ -716,7 +716,7 @@ for (sp in species) {
   counts_tpm[counts_tpm < min_tpm] <- 1
   counts_tpm <- log2(counts_tpm)
 
-  info <- tstrsplit(colnames(counts_tpm), "_")
+  info <- data.table::tstrsplit(colnames(counts_tpm), "_")
   metadata <- data.frame(
         species = info[[1]],
         tissue = info[[2]],
@@ -810,6 +810,112 @@ gene_info <- gene_info[row.names(expr1), ]
 expr1$gene_name <- gene_info$external_gene_name
 expr1$biotype <- gene_info$gene_biotype
 head(expr1, n = 10)
+
+## -----------------------------------------------------------------------------
+sel_dim <- 1
+species <- "Homo_sapiens"
+expr <- combine_expr[[species]]
+osbf_coef <- osbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
+
+# plot scatter
+mid <- 0.5
+p1 <- ggplot2::ggplot(expr, aes(x = Tau, y = coef, col = Tau)) +
+  theme_bw() +
+  geom_point(size = 0.5) + xlab("Expression specificity") +
+  ylab(paste0("Dim", sel_dim, " Coefficient")) +
+  scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                        high = "red", space = "Lab") +
+  customTheme() +  theme(legend.position = "right",
+                         legend.direction = "vertical") +
+  labs(title = getScientificName(species), color = "Tau") +
+  theme(legend.key.size = unit(0.5, "cm"),
+        plot.title = element_text(face = "italic"))
+p1
+
+## -----------------------------------------------------------------------------
+sel_dim <- 1
+combine_expr_Dim1 <- list()
+for (sp in names(combine_expr)) {
+  expr <- combine_expr[[sp]]
+  osbf_coef <- osbf$u[[sp]]
+  expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
+  expr_null <- combine_expr_null[[sp]]
+  null_u <- osbf_shuf$u[[sp]]
+  expr_null[["coef"]] <- null_u[, sel_dim, drop = TRUE]
+  expr$score <- abs(expr$coef)
+  expr$rank <- rank(-1 * expr$score)
+  expr_null$score <- abs(expr_null$coef)
+  expr[[paste0("Dim", sel_dim, "_pval")]] <- sapply(expr$score, function(x) {
+    sum(as.integer(expr_null$score > x)) / length(expr_null$score)
+    })
+  combine_expr_Dim1[[sp]] <- expr
+}
+
+## -----------------------------------------------------------------------------
+# cut off for the p-value
+alpha <- 1e-3
+sapply(combine_expr_Dim1, function(x) {summary(x$Dim1_pval <= alpha)})
+
+## -----------------------------------------------------------------------------
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
+file <- "allwayOrthologs_hsapiens-ptroglodytes-mmulatta-mmusculus-rnorvegicus-btaurus-sscrofa-ggallus_ens94.tsv"
+orthologs <- read.table(file.path(path, "GOKeggFiles/", file), header = TRUE,
+                        sep = "\t")
+
+Dim1_genes <- list()
+for (sp in names(combine_expr_Dim1)) {
+  x <- combine_expr_Dim1[[sp]][combine_expr_Dim1[[sp]]$Dim1_pval <= alpha, ]
+  x <- x[order(x$rank), c("rank", "score", "Tau", "Dim1_pval"), drop = FALSE]
+  # get gene details
+  gene_info <- read.table(paste0(path, "ensembl94_annotation/",
+                                 getSpeciesShortName(sp),
+                                 "_genes_completeinfo.tsv"),
+                                 sep = "\t", header = TRUE, quote = "\"")
+  gene_info <- gene_info[!duplicated(gene_info$ensembl_gene_id), ]
+  gene_info <- gene_info[gene_info$ensembl_gene_id %in% row.names(x), ]
+  row.names(gene_info) <- gene_info$ensembl_gene_id
+  gene_info <- gene_info[row.names(x), ]
+  gene_info <- gene_info[, c("ensembl_gene_id", "external_gene_name",
+                             "gene_biotype", "chromosome_name")]
+  colnames(gene_info) <- c("id", "gene_name", "biotype", "chr")
+  species_allway_orthogs <- orthologs[, getSpeciesShortName(sp), drop = TRUE]
+  ortholog_status <- rep(FALSE, nrow(x))
+  ortholog_status[row.names(x) %in%  species_allway_orthogs] <- TRUE
+  x$allwayOrtholog <- as.factor(ortholog_status)
+  df <- cbind(gene_info, x)
+  row.names(df) <- NULL
+  Dim1_genes[[sp]] <- df
+}
+
+## -----------------------------------------------------------------------------
+head(Dim1_genes[["Homo_sapiens"]])
+
+## -----------------------------------------------------------------------------
+head(Dim1_genes[["Mus_musculus"]])
+
+## -----------------------------------------------------------------------------
+cnames <- c("Dim", "species", "nTotal", "nCoding", "nMt", "nAllwayOrtholog")
+summary_stats <- data.frame(matrix(NA, nrow = 0, ncol = length(cnames)))
+colnames(summary_stats) <- cnames
+
+for (sp in names(Dim1_genes)) {
+  df <- Dim1_genes[[sp]]
+  stats <- data.frame(matrix(0L, nrow = 1, ncol = length(cnames)))
+  colnames(stats) <- cnames
+  stats$Dim <- "Dim1"
+  stats$species <- getSpeciesShortName(sp)
+  stats$nTotal <- nrow(df)
+  stats$nCoding <- round(nrow(df[df$biotype == "protein_coding",
+                                 , drop = FALSE]) * 100 / nrow(df), 2)
+  stats$nMt <- round(nrow(df[tolower(df$chr) == "mt",
+                             , drop = FALSE]) * 100 / nrow(df), 2)
+  stats$nAllwayOrtholog <- round(nrow(df[df$allwayOrtholog == TRUE,
+                                , drop = FALSE]) * 100 / nrow(df), 2)
+  summary_stats <- rbind(summary_stats, stats)
+}
+summary_stats
 
 ## -----------------------------------------------------------------------------
 sessionInfo()
