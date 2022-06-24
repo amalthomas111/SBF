@@ -824,7 +824,22 @@ go_plot
 
 # Identify cell type specific genes
 
-Next, we will identify those genes with significant contribution to different
+The OSBF's $V$ represents the space "shared by all species".
+It is a space independent of species representing relationships between the
+column phenotypes.
+In all tissues/cell types, essential cellular processes related to translation,
+cellular transport, and cell cycle are common in all species. Since this is the
+most dominant shared property across all columns and species,
+our dimension 1 represents this.
+Next, there are commonalities between the same cell types/tissues across species.
+The shared properties of the same tissue/cell type across species are not as
+prominent as the basic cellular processes, and hence reflected in the rest of
+the dimensions of OSBF.
+We will now explore individual dimensions and identify
+the genes with significant contribution to each of these dimensions.
+
+
+First, we will identify those genes with significant contribution to different
 cell types. We will first create a null distribution of scores
 for the coefficient and identify genes of interest with respect to the null.
 
