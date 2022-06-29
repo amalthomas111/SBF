@@ -173,8 +173,8 @@ updateV <- function(mat_list, u, d) {
 }
 #' Function to minimize decomposition error
 #'
-#' Function iteratively updates u, delta, and V and finds the
-#' minimum decomposition error.
+#' Function iteratively updates u, delta, and V and decreases
+#' the decomposition error.
 #' @param mat_list A list containing numeric matrices
 #' @param u A list containing U matrices
 #' @param d A list containing delta matrices

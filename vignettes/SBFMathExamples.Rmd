@@ -51,6 +51,24 @@ singular value decomposition [GSVD; @van1976generalizing] was used by
 species.  This framework was later extended to develop higher-order
 generalized singular value decomposition (HO GSVD) to analyze data
 from more than two species [@ponnapalli2011higher].
+Using cell-cycle gene expression datasets, these approaches have shown
+examples of genes with highly conserved sequences across species but with
+significantly different cell-cycle peak times.
+Although these methods have shown the potential advantages of orthology-independent
+comparisons, the steps involved in estimating the shared factor and comparing the
+expression profiles using these methods require complex procedures.
+When estimating the shared factor, the pairwise quotients and their arithmetic
+mean involve the computation of inverses.
+As a result, the biological interpretation of the shared factor is difficult
+in HO GSVD.
+Similarly, to place new datasets to the space defined by the shared factor
+requires the computation of generalized inverses.
+Moreover, the independence of the columns of the species-specific factors and
+the shared factor is not guaranteed, making it challenging to differentiate the
+contribution of genes/features across different dimensions of the shared factor.
+These limitations restrict the application of these methods in cross-species
+studies.
+
 
 This study developed a joint diagonalization approach called
 Orthogonal Shared Basis Factorization (OSBF) for cross-species
@@ -123,6 +141,9 @@ and identical in all the $k$ matrix factorizations.
 We use an alternate least square algorithm to minimize the total factorization
 error:
 $\sum^{k}_{i=1} {\| \epsilon_i \|^2}_F = {\sum^{k}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$
+The estimation of the common space in cross-species gene expression analysis is
+explained in the `GeneExpressionAnalysis` vignette.
+
 
 # Use cases
 
@@ -352,19 +373,18 @@ zapsmall(t(osbf$u_ortho[[names(osbf$u_ortho)[1]]]) %*%
 zapsmall(t(osbf$v) %*% osbf$v)
 ```
 
-# Minimizing OSBF factorization error
+# Minimizing OSBF error
 
 We use an alternate least square algorithm to minimize the total factorization
 error:
 $\sum^{k}_{i=1} {\| \epsilon_i \|^2}_F = {\sum^{k}_{i=1}\|D_i - U_i\Delta_iV^T\|^2}_F$.
 Our algorithm determines the optimal learning rate in each update step
-and guarantees convergence to a stable function value (see additional file 2
-in manuscript).
+and converges to a local optimum (see additional file 2 in manuscript).
 
 
 ## Examples
 
-### Optimizing OSBF error
+### Minimizing error
 
 Let us optimize the factorization error using the `optimizeFactorization`
 function for the three cases of OSBF computation. The `optimizeFactorization`

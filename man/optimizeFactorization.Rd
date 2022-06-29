@@ -44,8 +44,8 @@ a list containing optimal U, delta, and V that
 minimizes the factorization error
 }
 \description{
-Function iteratively updates u, delta, and V and finds the
-minimum decomposition error.
+Function iteratively updates u, delta, and V and decreases
+the decomposition error.
 }
 \examples{
 set.seed(1231)
