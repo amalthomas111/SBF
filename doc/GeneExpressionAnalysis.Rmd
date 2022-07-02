@@ -122,7 +122,7 @@ tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
 # Load gene expression profiles
 
 Download the processed RNA-Seq counts file ("counts.tar.gz")
-from https://figshare.com/s/4d8d5cf9c1362bcbe90d
+from https://doi.org/10.6084/m9.figshare.20216858
 Uncompress the .tar.gz file and add it to the working directory.
 ```{r}
 # set the path to the working directory. Change this accordingly
@@ -712,8 +712,8 @@ p2
 
 ## GO analysis
 
-Download the GO files from: https://figshare.com/s/d96c586d5e53199d5370
-<!-- 10.6084/m9.figshare.19633131 -->
+Download the GO files from: 
+https://doi.org/10.6084/m9.figshare.19633131
 We will perform the gene ontology analysis for genes with high coefficients.
 For GO analysis, we will use shared 1-to-1 orthologs in eight species as
 the background.
@@ -948,6 +948,8 @@ for the coefficient and identify genes of interest with respect to the null.
 We will create random average counts based on shuffled reads. Then we will 
 apply TPM normalization for these counts using `normalizeTPM` function
 from the `SBF` package.
+Download raw counts files from
+https://doi.org/10.6084/m9.figshare.20216858
 
 ```{r}
 # set seed
@@ -1100,7 +1102,9 @@ alpha <- 1e-3
 summary(expr1$pvalue <= alpha)
 ```
 
-Lets check the top 10 genes for dimension 4
+Lets check the top 10 genes for dimension 2.
+Download annotation files from 
+https://doi.org/10.6084/m9.figshare.20216876
 
 ```{r}
 # set the path to the working directory. Change this accordingly

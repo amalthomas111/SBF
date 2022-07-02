@@ -78,6 +78,7 @@ common_celltypes <- c("hsc", "clp", "cmp", "nkcell", "cd8tcell", "cd4tcell",
 
 Download the processed RNA-Seq counts of human and mouse
 ("human_mouse_blood_counts.tar.gz") from
+https://doi.org/10.6084/m9.figshare.20216858
 
 Uncompress the .tar.gz file and add it to the working directory.
 ```{r}
@@ -623,8 +624,8 @@ p1
 
 ## GO analysis
 
-Download the GO files from: https://figshare.com/s/d96c586d5e53199d5370
-<!-- 10.6084/m9.figshare.19633131 -->
+Download the GO files from:
+https://doi.org/10.6084/m9.figshare.19633131
 We will perform the gene ontology analysis for genes with high coefficients.
 We will use the goseq Bioconductor package to perform GO enrichment analysis.
 
@@ -849,6 +850,9 @@ for the coefficient and identify genes of interest with respect to the null.
 We will create mean profiles based on shuffled reads.Then we will 
 apply TPM normalization for these counts using `normalizeTPM` function
 from the `SBF` package.
+Download raw counts files from
+https://doi.org/10.6084/m9.figshare.20216858
+
 ```{r}
 # set seed
 s1 <- 32
@@ -996,7 +1000,9 @@ alpha <- 1e-3
 summary(expr1$pvalue <= alpha)
 ```
 
-Lets check the top 10 genes for dimension 4
+Lets check the top 10 genes for dimension 4.
+Download annotation files from 
+https://doi.org/10.6084/m9.figshare.20216876
 
 ```{r}
 # set the path to the working directory. Change this accordingly
