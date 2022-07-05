@@ -39,9 +39,9 @@ GSVD <- function(D1, D2) {
   return(list(u1 = U1, u2 = U2, v = V, d1 = sigma1, d2 = sigma2))
 }
 
-#' Compute HOGSVD factorization
+#' Compute HO GSVD factorization
 #'
-#' Function to compute HOGSVD factorization
+#' Function to compute HO GSVD factorization (Ponnapalli et al., 2011)
 #' @param matrix_list A list containing Di matrices for joint matrix
 #' factorization. Column names of each Di matrix may or may not have information
 #' about tissue or cell type.
@@ -60,8 +60,8 @@ GSVD <- function(D1, D2) {
 #' Only checked if check_col_matching = TRUE. Default NULL.
 #' @param verbose if TRUE print verbose lines. Default FALSE.
 #'
-#' @return a list containing u, v, lambda, d, and other outputs
-#' of HOGSVD factorization.
+#' @return a list containing u, v, lambda, delta, and other outputs
+#' of HO GSVD factorization.
 #' @export
 #'
 #' @examples
@@ -122,7 +122,7 @@ HOGSVD <- function(matrix_list = NULL, check_col_matching = FALSE,
           cat("\nDim of sigma:", dim(as.matrix(diag(sigma[[mat]]))))
       }
     }
-    return(list(v = V, lambda = lambda, u = U, d = sigma, s = S))
+    return(list(v = V, lambda = lambda, u = U, delta = sigma, s = S))
     } else {
     stop("\nInvalid matrix list. It should be a list. Exiting!")
   }

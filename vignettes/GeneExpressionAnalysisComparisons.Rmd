@@ -1,0 +1,634 @@
+---
+title: "Gene expression analysis comparison with other methods"
+author: "Amal Thomas"
+output:
+  pdf_document:
+    toc: yes
+    number_section: yes
+  knitr:::html_vignette:
+    toc: yes
+  html_document:
+    toc: yes
+    df_print: paged
+bibliography: references.bib
+vignette: |
+  %\VignetteIndexEntry{GeneExpressionAnalysisComparison}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+\newcommand{\diag}{\mathrm{diag}}
+
+# Introduction
+
+Joint matrix factorization facilitates the comparison of expression
+profiles from different species without using gene mapping.
+Transforming gene expression profiles into reduced eigengene space
+using singular value decomposition (SVD) has been shown to capture
+meaningful biological information [@alter2000singular].
+@tamayo2007metagene used a non-negative matrix factorization approach
+to learn a low-dimensional approximation of the microarray expression
+datasets and used the reduced space for comparisons.  Matrix
+factorization-based methods are commonly used for gene expression
+analysis [@alter2000singular; @tamayo2007metagene].  An orthology
+independent matrix factorization framework based on generalized
+singular value decomposition [GSVD; @van1976generalizing] was used by
+@alter2003generalized to compare gene-expression profiles from two
+species.  This framework was later extended to develop higher-order
+generalized singular value decomposition (HO GSVD) to analyze data
+from more than two species [@ponnapalli2011higher].
+Using cell-cycle gene expression datasets, these approaches have shown
+examples of genes with highly conserved sequences across species but with
+significantly different cell-cycle peak times.
+Although these methods have shown the potential advantages of orthology-independent
+comparisons, the steps involved in estimating the shared factor and comparing the
+expression profiles using these methods require complex procedures.
+When estimating the shared factor, the pairwise quotients and their arithmetic
+mean involve the computation of inverses.
+As a result, the biological interpretation of the shared factor is difficult
+in HO GSVD.
+Similarly, to place new datasets to the space defined by the shared factor
+requires the computation of generalized inverses.
+Moreover, the independence of the columns of the species-specific factors and
+the shared factor is not guaranteed, making it challenging to differentiate the
+contribution of genes/features across different dimensions of the shared factor.
+These limitations restrict the application of these methods in cross-species
+studies.
+
+
+This study developed a joint diagonalization approach called
+Orthogonal Shared Basis Factorization (OSBF) for cross-species
+expression comparisons.
+In this workflow, we will compare the gene expression analysis results of OSBF
+with the HO GSVD factorization.
+We will use the same gene expression datasets that we used for the
+`GeneExpressionAnalysis` workflow. We will also perform similar analysis
+steps demonstrated in that workflow.
+
+```{r setup}
+library(SBF)
+```
+
+Additional packages required for the workflow
+
+```{r}
+# install packages
+pkgs <- c("data.table", "dplyr", "matrixStats")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+suppressPackageStartupMessages({
+  library(data.table)
+  library(dplyr)
+  library(matrixStats)
+})
+```
+
+
+# Species and organs
+
+In this workflow, we will work with gene expression profile of six tissues 
+from eight species.
+
+```{r}
+species <- c("Homo_sapiens", "Pan_troglodytes", "Macaca_mulatta",
+             "Mus_musculus", "Rattus_norvegicus", "Bos_taurus",
+             "Sus_scrofa", "Gallus_gallus")
+species_short <- sapply(species, getSpeciesShortName)
+species_short
+# common tissues present in all 8 species
+tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
+```
+
+
+# Load gene expression profiles
+
+Download the processed RNA-Seq counts file ("counts.tar.gz")
+from https://doi.org/10.6084/m9.figshare.20216858
+Uncompress the .tar.gz file and add it to the working directory.
+```{r}
+# set the path to the working directory. Change this accordingly
+path <- "~/Dropbox/0.Analysis/0.paper/"
+counts_list <- metadata_list <- list()
+require(data.table)
+for (sp in species) {
+  # read logTPM counts for each species
+  counts <- data.table::fread(paste0(path, "counts/", sp, "_logTPM.tsv"),
+                              sep = "\t", header = TRUE, data.table = FALSE,
+                              nThread = 4)
+  row.names(counts) <- counts$V1
+  counts$V1 <- NULL
+  col_fields <- data.table::tstrsplit(colnames(counts), "_")
+  metadata <- data.frame(
+      project = col_fields[[1]],
+      species = col_fields[[2]],
+      tissue = col_fields[[3]],
+      gsm = col_fields[[4]],
+      name = colnames(counts),
+      stringsAsFactors = FALSE)
+  metadata_sel <- metadata[metadata$tissue %in% tissues, , drop = FALSE]
+  counts_sel <- counts[, colnames(counts) %in% metadata_sel$name, drop = FALSE]
+  metadata_sel$ref <- seq_len(nrow(metadata_sel))
+  metadata_sel$key <- paste0(metadata_sel$species, "_", metadata_sel$tissue)
+
+  counts_list[[sp]] <- counts_sel
+  metadata_list[[sp]] <- metadata_sel
+}
+```
+
+The dimensions and the number of RNA-Seq profiles for different species.
+
+```{r}
+sapply(counts_list, dim)
+```
+
+## Compute mean expression profiles
+
+Now, for each species, let us compute the mean expression profile for each
+tissue. We will use `calcAvgCounts` function from the `SBF` package.
+
+```{r}
+avg_counts <- list()
+for (sp in species) {
+    avg_counts[[sp]] <- calcAvgCounts(counts_list[[sp]],
+                                      metadata_list[[sp]])
+}
+# check tissue columns are matching in each species
+c_tissues <- as.data.frame(sapply(avg_counts, function(x) {
+            data.table::tstrsplit(colnames(x), "_")[[2]]
+  }))
+if (!all(apply(c_tissues, 1, function(x) all(x == x[1])))) {
+        stop("Error! tissues not matching")
+}
+```
+
+The dimension of mean expression profiles
+```{r}
+sapply(avg_counts, dim)
+```
+
+Remove genes not expressed.
+
+```{r}
+# remove empty rows
+removeZeros <- function(df) {
+    return(df[rowSums(df) > 0, ])
+}
+
+avg_counts <- lapply(avg_counts, removeZeros)
+sapply(avg_counts, dim)
+# update counts_list
+counts_list_sub <- list()
+for (sp in names(avg_counts)) {
+  counts_list_sub[[sp]] <- counts_list[[sp]][row.names(avg_counts[[sp]]), ,
+                                                 drop = FALSE]
+}
+```
+
+
+# OSBF and HO GSVD
+
+OSBF call
+
+```{r}
+t1 <- proc.time()
+# decrease tol to minimize error
+osbf <- SBF(avg_counts, transform_matrix = TRUE, orthogonal = TRUE,
+                     optimizeV = TRUE, tol = 1e-3)#, tol = 1e-10)
+t2 <- proc.time()
+cat("Time taken:\n")
+t2 - t1
+```
+
+
+HO GSVD factorization call. We will use the `HOGSVD` function from the `SBF`
+package for this.
+
+```{r}
+hogsvd <- HOGSVD(avg_counts)
+```
+
+
+```{r}
+names(hogsvd)
+```
+
+Let us compare the factorization error of these two approaches. We can use
+the `calcDecompError` function from the `SBF` package.
+
+```{r}
+calcDecompError(avg_counts, osbf$u, osbf$delta, osbf$v)
+```
+This is same as that stored in the `osbf$error`. Now, for HO GSVD, we have
+
+```{r}
+calcDecompError(avg_counts, hogsvd$u, hogsvd$delta, hogsvd$v)
+```
+
+HO GSVD is an exact factorization while that is not the case for OSBF.
+
+
+## Properties of different factors
+
+Now we will check the properties of $U_i$'s, $V$, and $\Delta_i$'s.
+
+```{r}
+zapsmall(osbf$v %*% t(osbf$v))
+```
+Estimated $V$ is orthogonal in OSBF.
+
+```{r}
+zapsmall(t(hogsvd$v) %*% hogsvd$v)
+```
+
+The shared $V$ is not orthogonal in HO GSVD.
+
+Now let us compare the $U_i$ factors.
+
+
+```{r}
+# get u factor for fist species
+osbf_u <- osbf$u[[names(osbf$u)[1]]]
+zapsmall(t(osbf_u) %*% osbf_u)
+```
+
+
+```{r}
+# get u factor for fist species
+hogsvd_u <- hogsvd$u[[names(hogsvd$u)[1]]]
+zapsmall(t(hogsvd_u) %*% hogsvd_u)
+```
+
+The columns of $U_i$ factors are orthonormal in OSBF and not in HO GSVD.
+
+Information represented by different dimensions.
+For OSBF, the percentage of correlation information
+($p_{ij}$) represented by a common space dimension is defined as
+$p_{ij} = \delta_{ij}^2 / \sum_{j=1}^6 \delta_{ij}^2 \times 100,
+ \mbox{ where }  \Delta_i = \diag(\delta_{i1},\ldots, \delta_{i6})$.
+
+```{r}
+percentInfo_osbf <- calcPercentInfo(osbf)
+for (i in names(osbf$delta)) {
+  cat("\n", sprintf("%-25s:", i), sprintf("%8.2f", percentInfo_osbf[[i]]))
+}
+```
+
+```{r}
+percentInfo_hogsvd <- calcPercentInfo(hogsvd)
+for (i in names(hogsvd$delta)) {
+  cat("\n", sprintf("%-25s:", i), sprintf("%8.2f", percentInfo_hogsvd[[i]]))
+}
+```
+In OSBF, dimension 1 captures most of inter-tissue correlation relationship as it
+represents basic cellular functions shared by different species.
+In HO GSVD dimension 3 captures most of the information. We will first compare
+these two dimensions.
+
+
+# Exploring properties of dimensions
+
+
+We will first investigate dimension 1 of OSBF and dimension 3 of HO GSVD.
+
+Functions to compute tissue specificity ($\tau$) and scaled average
+expression profile.
+
+```{r}
+# function to compute Tau
+calc_tissue_specificity <- function(a) {
+    a <- as.matrix(a)
+    b <- a / matrixStats::rowMaxs(a)
+    return(rowSums(1 - b) / (ncol(b) - 1))
+}
+Tau <- lapply(avg_counts, function(x) { calc_tissue_specificity(x)})
+avg_counts_scaled <- lapply(avg_counts, function(x) { t(scale(t(x)))})
+
+combine_expr <- list()
+for (sp in names(avg_counts_scaled)) {
+  x <- as.data.frame(avg_counts_scaled[[sp]])
+  x[["Tau"]] <- Tau[[sp]]
+  combine_expr[[sp]] <- x
+}
+```
+
+
+Lets plot the OSBF $U_1$ loadings vs expression specificity for human
+
+
+```{r}
+# install packages
+pkgs <- c("grid", "ggthemes", "ggplot2")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+suppressPackageStartupMessages({
+  library(grid)
+  library(ggthemes)
+  library(ggplot2)
+})
+```
+
+We will use the following custom theme for the ggplots.
+
+```{r}
+# custom theme function for ggplot2
+customTheme <- function(base_size = 10, base_family = "helvetica") {
+   require(grid)
+   require(ggthemes)
+   (ggthemes::theme_foundation(base_size = base_size)
+   + ggplot2::theme(plot.title = element_text(face = "bold",
+                                   size = rel(1.2), hjust = 0.5),
+         text = element_text(),
+         panel.background = element_rect(colour = NA),
+         plot.background = element_rect(colour = NA),
+         panel.border = element_rect(colour = NA),
+         axis.title = element_text(size = rel(1)),
+         axis.title.y = element_text(angle = 90, vjust = 2),
+         axis.title.x = element_text(vjust = -0.2),
+         axis.text = element_text(),
+         axis.line = element_line(colour = "black"),
+         axis.ticks = element_line(),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.key = element_rect(colour = NA),
+         legend.position = "top",
+         legend.direction = "horizontal",
+         legend.key.size = unit(0.2, "cm"),
+         legend.spacing = unit(0, "cm"),
+         legend.title = element_text(face = "italic"),
+         plot.margin = unit(c(10, 5, 5, 5), "mm"),
+         strip.background = element_rect(colour = "#f0f0f0", fill = "#f0f0f0"),
+         strip.text = element_text(face = "bold")))
+}
+```
+
+```{r}
+sel_dim <- 1
+species <- "Homo_sapiens"
+expr <- combine_expr[[species]]
+osbf_coef <- osbf$u[[species]]
+expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
+
+# plot scatter
+mid <- 0.5
+p1 <- ggplot2::ggplot(expr, aes(x = Tau, y = coef, col = Tau)) +
+  theme_bw() +
+  geom_point(size = 0.5) + xlab("Expression specificity") +
+  ylab(paste0("OSBF Dim", sel_dim, " Coefficient")) +
+  scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                        high = "red", space = "Lab") +
+  customTheme() +  theme(legend.position = "right",
+                         legend.direction = "vertical") +
+  labs(title = getScientificName(species), color = "Tau") +
+  theme(legend.key.size = unit(0.5, "cm"),
+        plot.title = element_text(face = "italic"))
+p1
+```
+
+In OSBF, we see that genes with high loading have low expression specificity and
+are generally house-keeping genes (see Gene expression analysis vignettes).
+
+
+Now let us plot for the loading vs expression specificity for dimension 3 of
+HO GSVD
+
+```{r}
+sel_dim <- 3
+species <- "Homo_sapiens"
+expr <- combine_expr[[species]]
+hogsvd_coef <- hogsvd$u[[species]]
+expr[["coef"]] <- hogsvd_coef[, sel_dim, drop = TRUE]
+
+# plot scatter
+mid <- 0.5
+p1 <- ggplot2::ggplot(expr, aes(x = Tau, y = coef, col = Tau)) +
+  theme_bw() +
+  geom_point(size = 0.5) + xlab("Expression specificity") +
+  ylab(paste0("HO GSVD Dim", sel_dim, " Coefficient")) +
+  scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                        high = "red", space = "Lab") +
+  customTheme() +  theme(legend.position = "right",
+                         legend.direction = "vertical") +
+  labs(title = getScientificName(species), color = "Tau") +
+  theme(legend.key.size = unit(0.5, "cm"),
+        plot.title = element_text(face = "italic"))
+p1
+```
+
+We do not see any a trend of high coefficient for low expression specificity
+here. Thus no direct interpretation is available from this. 
+
+Now let us explore properties of other dimensions. 
+
+# Project libraries into common space
+
+In OSBF, the columns of $U_i$'s are orthonormal. This allows us to easily
+project individual expression profiles to the common space by
+computing $D_i^T U_i \Delta^{-1}$.
+We will `projectCounts` function from the `SBF` package for this.
+
+```{r}
+df_proj <- projectCounts(counts_list_sub, osbf)
+meta1 <- data.table::tstrsplit(row.names(df_proj), "_")
+df_proj$tissue <- factor(meta1[[3]])
+df_proj$species <- factor(meta1[[2]])
+df_proj <- df_proj %>% mutate(species = factor(species,
+                            levels = species_short))
+```
+
+We will use the same projection strategy ($D_i^T U_i \Delta^{-1}$) for HO GSVD.
+
+```{r}
+ho_proj <- projectCounts(counts_list_sub, hogsvd)
+meta1 <- data.table::tstrsplit(row.names(ho_proj), "_")
+ho_proj$tissue <- factor(meta1[[3]])
+ho_proj$species <- factor(meta1[[2]])
+ho_proj <- ho_proj %>% mutate(species = factor(species,
+                            levels = species_short))
+```
+
+## Clustering in the common space
+
+```{r}
+# install packages
+pkgs <- c("RColorBrewer")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+pkgs <- c("ComplexHeatmap")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install)) {
+  if (!require("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+  BiocManager::install("ComplexHeatmap")
+}
+suppressPackageStartupMessages({
+  library(ComplexHeatmap)
+  library(RColorBrewer)
+})
+```
+
+
+Clustering of profiles in OSBF's common space $V$.
+
+```{r}
+data <- df_proj
+data$tissue <- NULL
+data$species <- NULL
+data <- as.matrix(data)
+data_dist <- as.matrix(dist(data, method = "euclidean"))
+meta <- data.table::tstrsplit(colnames(data_dist), "_")
+ht <- ComplexHeatmap::HeatmapAnnotation(tissue = meta[[3]], species = meta[[2]],
+                        col = list(tissue = c("brain" = "#1B9E77",
+                                              "heart" = "#D95F02",
+                                              "kidney" = "#7570B3",
+                                              "liver" = "#E7298A",
+                                              "lung" = "#66A61E",
+                                              "testis" = "#E6AB02"),
+                                   species = c("hsapiens" = "#66C2A5",
+                                               "ptroglodytes" = "#FC8D62",
+                                               "mmulatta" = "#8DA0CB",
+                                               "mmusculus" = "#E78AC3",
+                                               "rnorvegicus" = "#A6D854",
+                                               "btaurus" = "#FFD92F",
+                                               "sscrofa" = "#E5C494",
+                                               "ggallus" = "#B3B3B3")),
+                        #show_annotation_name = F,
+                        annotation_name_side = "left")
+mypalette <- RColorBrewer::brewer.pal(9, "Blues")
+morecolors <- colorRampPalette(mypalette)
+
+myheatmap <- ComplexHeatmap::Heatmap(as.matrix(data_dist), cluster_rows = TRUE,
+                                     clustering_method_rows = "centroid",
+                                     cluster_columns = TRUE,
+                                     clustering_method_columns = "centroid",
+                                     top_annotation = ht, col = morecolors(50),
+                                     show_row_names = FALSE,
+                                     show_column_names = FALSE,
+                                     name = "distance")
+myheatmap
+```
+
+Clustering of profiles in HO GSVD's common space $V$.
+
+
+```{r}
+data <- ho_proj
+data$tissue <- NULL
+data$species <- NULL
+data <- as.matrix(data)
+data_dist <- as.matrix(dist(data, method = "euclidean"))
+meta <- data.table::tstrsplit(colnames(data_dist), "_")
+ht <- ComplexHeatmap::HeatmapAnnotation(tissue = meta[[3]], species = meta[[2]],
+                        col = list(tissue = c("brain" = "#1B9E77",
+                                              "heart" = "#D95F02",
+                                              "kidney" = "#7570B3",
+                                              "liver" = "#E7298A",
+                                              "lung" = "#66A61E",
+                                              "testis" = "#E6AB02"),
+                                   species = c("hsapiens" = "#66C2A5",
+                                               "ptroglodytes" = "#FC8D62",
+                                               "mmulatta" = "#8DA0CB",
+                                               "mmusculus" = "#E78AC3",
+                                               "rnorvegicus" = "#A6D854",
+                                               "btaurus" = "#FFD92F",
+                                               "sscrofa" = "#E5C494",
+                                               "ggallus" = "#B3B3B3")),
+                        #show_annotation_name = F,
+                        annotation_name_side = "left")
+myheatmap <- ComplexHeatmap::Heatmap(as.matrix(data_dist), cluster_rows = TRUE,
+                                     clustering_method_rows = "centroid",
+                                     cluster_columns = TRUE,
+                                     clustering_method_columns = "centroid",
+                                     top_annotation = ht, col = morecolors(50),
+                                     show_row_names = FALSE,
+                                     show_column_names = FALSE,
+                                     name = "distance")
+myheatmap
+```
+We do not see a clear clustering by tissue type in this case.
+
+
+## 2 D plots
+
+Next, we will explore the 2D projection plots in the common space.
+
+```{r}
+# install packages
+pkgs <- c("gridExtra")
+require_install <- pkgs[!(pkgs %in% row.names(installed.packages()))]
+if (length(require_install))
+  install.packages(require_install)
+suppressPackageStartupMessages({
+  library(gridExtra)
+})
+```
+
+2 D plots for dimension 2-6
+
+```{r}
+sel_colors <- RColorBrewer::brewer.pal(8, "Dark2")[seq_len(length(unique(df_proj$tissue)))]
+
+p_list <- lapply(c(1, 3:6), function(k) {
+  ggplot2::ggplot(df_proj, aes(x = df_proj[, 2], y = df_proj[, k], col = tissue,
+                             shape = species, fill = tissue)) +
+  xlab(paste("OSBF Dim", 2)) + ylab(paste("OSBF Dim", k)) +
+  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
+  scale_shape_manual(values = c(21:25, 3:7)) +
+  scale_fill_manual(values = sel_colors) +
+  customTheme(base_size = 6) +
+  theme(legend.title = element_blank())
+})
+h_list <- lapply(c(1, 3:6), function(k) {
+  ggplot2::ggplot(ho_proj, aes(x = ho_proj[, 2], y = ho_proj[, k], col = tissue,
+                             shape = species, fill = tissue)) +
+  xlab(paste("HO GSVD Dim", 2)) + ylab(paste("HO GSVD Dim", k)) +
+  geom_point(size = 1.5) + scale_color_manual(values = sel_colors) +
+  scale_shape_manual(values = c(21:25, 3:7)) +
+  scale_fill_manual(values = sel_colors) +
+  customTheme(base_size = 6) +
+  theme(legend.title = element_blank())
+})
+```
+
+
+Dimensions 1 vs 2 
+
+```{r}
+grid.arrange(p_list[[1]], h_list[[1]], ncol = 2)
+```
+
+Dimensions 2 vs 3 and 2 vs 4
+
+```{r}
+grid.arrange(p_list[[2]], h_list[[2]], p_list[[3]], h_list[[3]], ncol = 2)
+```
+
+Dimensions 2 vs 5 and 2 vs 6
+
+
+```{r}
+grid.arrange(p_list[[4]], h_list[[4]], p_list[[5]], h_list[[5]], ncol = 2)
+```
+
+Using the same projection strategy as that of the OSBF, we do not see a clear
+separation of tissues along different dimensions of the HO GSVD shared space
+$V$.
+
+
+# Session info
+
+
+```{r}
+sessionInfo()
+```
+
+# References

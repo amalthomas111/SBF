@@ -2,7 +2,7 @@
 % Please edit documentation in R/matrix_factorization.R
 \name{HOGSVD}
 \alias{HOGSVD}
-\title{Compute HOGSVD factorization}
+\title{Compute HO GSVD factorization}
 \usage{
 HOGSVD(
   matrix_list = NULL,
@@ -36,11 +36,11 @@ Only checked if check_col_matching = TRUE. Default underscore.}
 \item{verbose}{if TRUE print verbose lines. Default FALSE.}
 }
 \value{
-a list containing u, v, lambda, d, and other outputs
-of HOGSVD factorization.
+a list containing u, v, lambda, delta, and other outputs
+of HO GSVD factorization.
 }
 \description{
-Function to compute HOGSVD factorization
+Function to compute HO GSVD factorization (Ponnapalli et al., 2011)
 }
 \examples{
 set.seed(1231)
