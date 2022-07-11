@@ -581,7 +581,6 @@ Save all 2D plots
 ```{r}
 sel_colors <- c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "mediumturquoise",
                 "#E6AB02", "darkmagenta", "#666666", "black", "darkolivegreen2")
-outputname <- "human_mouse_blood"
 finished <- c()
 for (i in 1:(ncol(df_proj) - 2)) {
   for (j in 1:(ncol(df_proj) - 2)) {
