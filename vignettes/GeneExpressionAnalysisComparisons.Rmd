@@ -422,9 +422,122 @@ p1 <- ggplot2::ggplot(expr, aes(x = Tau, y = coef, col = Tau)) +
         plot.title = element_text(face = "italic"))
 p1
 ```
+Lets plot by z-score expression of different tissues.
 
+```{r}
+tissues <-  c("brain", "heart", "kidney", "liver", "lung", "testis")
+sel_dim <- 3
+sp <- "Homo_sapiens"
+h_list <- lapply(tissues, function (k){
+  sel_tissue <- k
+  expr <- combine_expr[[sp]]
+  hogsvd_coef <- hogsvd$u[[sp]]
+  expr[["coef"]] <- hogsvd_coef[, sel_dim, drop = TRUE]
+  expr1 <- expr[, c(paste0(getSpeciesShortName(sp), "_", sel_tissue),
+                     "Tau", "coef")]
+  colnames(expr1) <- c("tissue_zscore", "Tau", "coef")
+  # plot scatter
+  mid <- 0
+ ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = tissue_zscore)) +
+    theme_bw() +
+    geom_point(size = 0.5) + xlab("Expression specificity") +
+    ylab(paste0("Dim", sel_dim, " Coefficient")) +
+    scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                          high = "red", space = "Lab") +
+    scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)),
+                                  max(abs(expr1$coef))),
+                       breaks = seq(-1 * round(max(abs(expr$coef)), 2),
+                                    round(max(abs(expr$coef)), 2), by = 0.01)) +
+    customTheme(base_size = 6) +  theme(legend.position = "right",
+                           legend.direction = "vertical") +
+    labs(title = paste0(getScientificName(sp), " ", k), color = "Z-score") +
+    theme(legend.key.size = unit(0.5, "cm"),
+          plot.title = element_text(face = "italic"))
+})
+grid.arrange(h_list[[1]], h_list[[2]], h_list[[3]], h_list[[4]], h_list[[5]], h_list[[6]], ncol = 3)
+```
+
+Lets plot Dim3 across species for HO GSVD
+
+
+```{r}
+species_list <-c("Homo_sapiens", "Pan_troglodytes",
+             "Mus_musculus", "Rattus_norvegicus",
+             "Sus_scrofa", "Gallus_gallus")
+sel_dim <- 3
+h_list <- lapply(species_list, function (k){
+  sp <- k
+  expr <- combine_expr[[sp]]
+  hogsvd_coef <- hogsvd$u[[sp]]
+  expr[["coef"]] <- hogsvd_coef[, sel_dim, drop = TRUE]
+  expr1 <- expr[, c("Tau", "coef")]
+  colnames(expr1) <- c("Tau", "coef")
+  # plot scatter
+  mid <- 0.5
+ ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = Tau)) +
+    theme_bw() +
+    geom_point(size = 0.5) + xlab("Expression specificity") +
+    ylab(paste0("HO GSVD Dim", sel_dim, " Coefficient")) +
+    scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                          high = "red", space = "Lab") +
+    scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)),
+                                  max(abs(expr1$coef))),
+                       breaks = seq(-1 * round(max(abs(expr$coef)), 2),
+                                    round(max(abs(expr$coef)), 2), by = 0.01)) +
+    customTheme(base_size = 6) +  theme(legend.position = "right",
+                           legend.direction = "vertical") +
+    labs(title = paste0(getScientificName(sp)), color = "Tau") +
+    theme(legend.key.size = unit(0.5, "cm"),
+          plot.title = element_text(face = "italic")) + geom_hline(yintercept = 0)
+})
+```
+
+
+Lets plot Dim1 across species for OSBF
+
+```{r}
+species_list <-c("Homo_sapiens", "Pan_troglodytes",
+             "Mus_musculus", "Rattus_norvegicus",
+             "Sus_scrofa", "Gallus_gallus")
+sel_dim <- 1
+o_list <- lapply(species_list, function (k){
+  sp <- k
+  expr <- combine_expr[[sp]]
+  osbf_coef <- osbf$u[[sp]]
+  expr[["coef"]] <- osbf_coef[, sel_dim, drop = TRUE]
+  expr1 <- expr[, c("Tau", "coef")]
+  colnames(expr1) <- c("Tau", "coef")
+  # plot scatter
+  mid <- 0.5
+ ggplot2::ggplot(expr1, aes(x = Tau, y = coef, col = Tau)) +
+    theme_bw() +
+    geom_point(size = 0.5) + xlab("Expression specificity") +
+    ylab(paste0("OSBF Dim", sel_dim, " Coefficient")) +
+    scale_color_gradient2(midpoint = mid, low = "blue", mid = "white",
+                          high = "red", space = "Lab") +
+    scale_y_continuous(limits = c(-1 * max(abs(expr1$coef)),
+                                  max(abs(expr1$coef))),
+                       breaks = seq(-1 * round(max(abs(expr$coef)), 2),
+                                    round(max(abs(expr$coef)), 2), by = 0.01)) +
+    customTheme(base_size = 6) +  theme(legend.position = "right",
+                           legend.direction = "vertical") +
+    labs(title = paste0(getScientificName(sp)), color = "Tau") +
+    theme(legend.key.size = unit(0.5, "cm"),
+          plot.title = element_text(face = "italic")) + geom_hline(yintercept = 0)
+})
+```
+
+
+
+```{r}
+grid.arrange(h_list[[1]], h_list[[2]], h_list[[3]], h_list[[4]], h_list[[5]], h_list[[6]], ncol = 3)
+```
+
+```{r}
+grid.arrange(o_list[[1]], o_list[[2]], o_list[[3]], o_list[[4]], o_list[[5]], o_list[[6]], ncol = 3)
+```
 We do not see any a trend of high coefficient for low expression specificity
-here. Thus no direct interpretation is available from this. 
+for the HO GSVD case. Thus no direct interpretation is available from this. 
 
 Now let us explore properties of other dimensions. 
 
