@@ -185,16 +185,19 @@ in the vignettes/docs directory.
 
 ***Amal Thomas*** *amalthom@usc.edu*
 
-***Andrew D Smith*** *andrewds@usc.edu*
 
 Contact us via e-mail or submit
 a [GitHub issue](https://github.com/amalthomas111/SBF/issues)
 
+### Publication
+
+Available on [bioRxiv](https://biorxiv.org/cgi/content/short/2022.08.26.505467v1)
+
 ### Copyright
 
-Copyright (C) 2018-2021  Amal Thomas and Andrew D. Smith
+Copyright (C) 2018-2021  Amal Thomas
 
-Authors: Amal Thomas and Andrew D. Smith
+Authors: Amal Thomas
 
 SBF is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
